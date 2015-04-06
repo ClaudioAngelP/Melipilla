@@ -14,3 +14,4 @@ ficha_clinica/adjuntos/*
 conectores/informe_controlados/nohup.out
 conectores/zebra/log/*
 *.dump
+*.out
