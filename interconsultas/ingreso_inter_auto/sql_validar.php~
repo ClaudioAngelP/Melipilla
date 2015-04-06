@@ -1,0 +1,94 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$pac_id=$_POST['pac_id']*1;
+
+	pg_query("START TRANSACTION;");
+	
+	$ic=cargar_registros_obj("SELECT *, i2.inst_nombre AS inst_descr FROM interconsulta
+				LEFT JOIN instituciones AS i1 ON inter_inst_id1=i1.inst_id 
+				LEFT JOIN instituciones AS i2 ON inter_inst_id2=i2.inst_id 
+				WHERE inter_pac_id=$pac_id AND 
+				inter_estado=-1
+				ORDER BY inter_ingreso DESC");
+
+	$oa=cargar_registros_obj("SELECT *, oa_fecha::date AS oa_fecha FROM orden_atencion
+				LEFT JOIN instituciones ON oa_inst_id=inst_id 
+				LEFT JOIN especialidades ON oa_especialidad=esp_id 
+				WHERE oa_pac_id=$pac_id AND
+				(NOT oa_motivo=-1) AND oa_estado=-1
+				ORDER BY orden_atencion.oa_fecha DESC");
+
+
+	for($i=0;$i<sizeof($ic);$i++) {
+		if(isset($_POST['inter_'.$ic[$i]['inter_id']])) {
+
+			$prioridad=$_POST['prioridad_ic_'.$ic[$i]['inter_id']];
+			
+			$esp_id=0;
+			
+			if($ic[$i]['inter_estado']<0)
+				$estado=0;
+			else 
+				$estado=$ic[$i]['inter_estado'];
+			
+			if($ic[$i]['inter_inst_id2']!=$sgh_inst_id) {
+				pg_query("
+					INSERT INTO interconsulta_errores VALUES (
+						DEFAULT,
+						".$ic[$i]['inter_id'].",
+						0,
+						'I.C. DIRIGIDA A OTRA INSTITUCION: 
+						[".$ic[$i]['inter_inst_id2']."] 
+						".pg_escape_string($ic[$i]['inst_descr'])."'					
+					);				
+				");				
+			}
+							
+			pg_query("UPDATE interconsulta SET 
+						 inter_estado=$estado, inter_prioridad=$prioridad, 
+						 func_id=".$_SESSION['sgh_usuario_id'].",
+						 inter_inst_id2=$sgh_inst_id,
+						 inter_unidad=$esp_id 
+						 WHERE inter_id=".$ic[$i]['inter_id']);
+		}
+			
+	}		
+
+	for($i=0;$i<sizeof($oa);$i++) {
+		if(isset($_POST['oa_'.$oa[$i]['oa_id']])) {
+
+			$prioridad=$_POST['prioridad_oa_'.$oa[$i]['oa_id']];
+
+			$esp_id=0;
+			if($oa[$i]['oa_estado']<0)
+				$estado=0;
+			else 
+				$estado=$ic[$i]['inter_estado'];
+			
+			/*if($oa[$i]['oa_inst_id2']!=$sgh_inst_id) {
+				pg_query("
+					INSERT INTO interconsulta_errores VALUES (
+						DEFAULT,
+						".$ic[$i]['inter_id'].",
+						0,
+						'I.C. DIRIGIDA A OTRA INSTITUCION: 
+						[".$ic[$i]['inter_inst_id2']."] 
+						".pg_escape_string($ic[$i]['inst_descr'])."'					
+					);				
+				");				
+			}*/
+							
+			pg_query("UPDATE orden_atencion SET 
+						 oa_estado=$estado, oa_prioridad=$prioridad, 
+						 func_id=".$_SESSION['sgh_usuario_id'].",
+						 oa_inst_id2=$sgh_inst_id, oa_especialidad2=$esp_id 
+						 WHERE oa_id=".$oa[$i]['oa_id']);
+		}	
+	}		
+
+
+	pg_query("COMMIT;");
+
+?>

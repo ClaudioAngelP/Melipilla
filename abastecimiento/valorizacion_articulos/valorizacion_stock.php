@@ -1,0 +1,552 @@
+<?php
+
+  require_once('../../conectar_db.php');
+  
+  $bodega = $_GET['bodega'];
+  $item = $_GET['item'];
+  $clasifica = $_GET['clasifica'];
+  
+  if(isset($_GET['controlado'])) {
+    $controlados = $_GET['controlado'];
+  } else {
+    $controlados = 0;
+  }
+  
+  $orden = $_GET['orden'];
+  $valorizar = $_GET['valorizar'];
+  $valorizar_nro = ($_GET['valorizar']*1);
+  
+  if(isset($_GET['fecha_ref'])) {
+    if(trim($_GET['fecha_ref'])!=date('d/m/Y')) {
+      $fecha_ref=$_GET['fecha_ref'];
+      $fref=true;
+    } else {
+      $fecha_ref=date('d/m/Y');
+      $fref=false;
+    }
+  } else {
+    $fecha_ref=date('d/m/Y');
+    $fref=false;
+  }
+  
+  if(!strstr($bodega,'.')) {
+    $infobodega=cargar_registro('SELECT * FROM bodega WHERE bod_id='.$bodega);
+    $ubica=$infobodega['bod_glosa'];
+    $tipo=0; $tabla_stock='stock'; $mt=2;
+    $condicion="stock_bod_id=$bodega"; $campo='stock_bod_id';
+  } else {
+    $infobodega=cargar_registro('SELECT * FROM centro_costo 
+                                  WHERE centro_ruta=\''.$bodega.'\'');
+    $ubica=$infobodega['centro_nombre'];
+    $tipo=1; $tabla_stock='stock_servicios'; $mt=18;
+    $condicion="stock_centro_ruta='$bodega'"; $campo='stock_centro_ruta';
+  }
+  
+  
+  if(isset($_GET['xls'])) {
+    header("Content-type: application/vnd.ms-excel");
+    if(!$fref) {
+      header("Content-Disposition: filename=\"InformeStock_".$ubica."---".date('d-m-Y').".XLS\";");
+    } else {
+      header("Content-Disposition: filename=\"InformeStock_".$ubica."---".str_replace('/','-',$fecha_ref).".XLS\";");
+    }
+  } else {
+  
+    print('<html><title>Listado de Saldos Valorizado</title>');
+    
+    cabecera_popup('../..');
+    
+    print('<body class="fuente_por_defecto popup_background">');
+  
+  }
+  
+  
+  $largo_datos=2;
+  
+  if(isset($_GET['mostrar_item'])) {
+    $mostrar_item=true; $largo_datos++;
+  } else {
+    $mostrar_item=false;
+  }
+  
+  if(isset($_GET['mostrar_forma'])) {
+    $mostrar_forma=true; $largo_datos++;
+  } else {
+    $mostrar_forma=false;
+  }
+  
+  if(isset($_GET['mostrar_clasif'])) {
+    $mostrar_clasif=true; $largo_datos++;
+  } else {
+    $mostrar_clasif=false;
+  }
+  
+  if(isset($_GET['mostrar_lotes'])) {
+    $mostrar_lotes=true; $largo_datos+=2;
+  } else {
+    $mostrar_lotes=false;
+  }
+  
+  if(isset($_GET['mostrar_prioridad'])) {
+    $mostrar_prioridad=true; $largo_datos++;
+  } else {
+    $mostrar_prioridad=false;
+  }
+  
+  $cadena = pg_escape_string($_GET['buscar']);
+  
+  switch($valorizar) {
+    case 0: $valorizar='art_val_min'; break;
+    case 2: $valorizar='art_val_max'; break;
+    case 3: $valorizar='art_val_ult'; break;
+    case 10: $valorizar='0'; break;
+    default: $valorizar='art_val_med'; break;
+  }
+  
+  if($bodega!=0) {
+    $bodega = ($bodega*1);
+  } 
+  
+  $consulta='';
+  $conector='';
+  
+  if($item!=0) {
+    $consulta='WHERE ';
+    $item = "(art_item='".$item."')";
+    $conector = " AND ";
+  } else {
+    $item = "";
+  }
+  
+  if($clasifica!=0) {
+  $consulta='WHERE ';
+  $clasifica = $conector."(art_clasifica_id=".$clasifica.")";
+  $conector = " AND ";
+  } else {
+  $clasifica = "";
+  }
+  
+  if($controlados!=0) {
+  $consulta='WHERE ';
+  $controlados = $conector."art_controlado";
+  $conector = " AND ";
+  } else {
+  $controlados = "";
+  }
+  
+	if(strlen($cadena)>0) {
+  $consulta='WHERE ';
+  $cadena = str_replace('*','%',$cadena);
+  $cadena_w = $conector." art_codigo LIKE '".$cadena."'";
+  $conector= " AND ";
+  } else {
+  $cadena_w='';
+  }
+
+
+  if(isset($_GET['mostrar_lotes_cero'])) {
+    $lotes_en_cero='';
+  } else {
+    $lotes_en_cero='WHERE stock>0';
+  }
+  
+  if(isset($_GET['mostrar_solo_lotes_cero'])) {
+    $lotes_en_cero='WHERE stock=0';
+  } 
+  
+  if(isset($_GET['ascendente'])) {
+		$ascen = '';
+	} else {
+		$ascen='DESC';
+	}
+  
+  switch ($orden) {
+				case 0: $orden='articulo.art_codigo '.$ascen; break;
+				case 1: $orden='articulo.art_glosa '.$ascen; break;
+				case 2: $orden='articulo.art_nombre '.$ascen; break;
+				case 3: $orden='articulo.clasifica_nombre '.$acen; break;
+				case 4: $orden='ss.item_glosa '.$ascen; break;
+				case 5: $orden='articulo.art_prioridad_id'; break;
+	}
+  
+	
+	// Se crea una vista temporal de los datos para ser utilizada
+	// por el proceso de mas abajo como tabla de stock.
+	
+	$q_view="
+
+    CREATE TEMP VIEW stock_precalc_temp AS
+    	 SELECT 
+        $campo, stock_art_id, stock_vence, 
+        SUM(stock_cant) AS stock_cant, 0 AS stock_cant_trans
+	     FROM $tabla_stock 
+	     JOIN logs ON stock_log_id=log_id
+	     LEFT JOIN pedido ON log_id_pedido=pedido_id
+	     LEFT JOIN pedido_detalle 
+		    ON pedido_detalle.pedido_id=pedido.pedido_id 
+		    AND pedido_detalle.art_id=stock_art_id
+	     WHERE 
+       (NOT logs.log_tipo = $mt OR 
+       (logs.log_tipo = $mt AND pedido_detalle.pedidod_estado))
+	     AND date_trunc('day',log_fecha)<='".$fecha_ref."'
+	     AND $condicion
+	     GROUP BY $campo, stock_art_id, stock_vence;
+
+  ";
+      
+	pg_query($conn, $q_view);
+	
+  $q_table = 'stock_precalc_temp';
+	
+	if($valorizar=='0') {
+    $groupby = '';
+  } else {
+    $groupby = $valorizar.',';
+  }
+
+	// Listado sin Lotes	
+
+	if(!$mostrar_lotes) {
+	   
+  $query="
+		SELECT ss.*, 
+    (ss.stock*ss.unitario) AS total
+		
+		FROM
+		
+		(    
+    
+    SELECT 
+    articulo.art_id,
+		art_codigo,
+		art_glosa,
+		COALESCE(clasifica_nombre, '(No Asignado...)'),
+		COALESCE(item_codigo || ' ' || item_glosa, '(No Asignado...)') ,
+	  COALESCE(SUM(stock_cant),0) AS stock,
+    $valorizar AS unitario,
+    clasifica_nombre,
+    item_glosa,
+    COALESCE(forma_nombre, '(No Asignado...)'),
+    art_prioridad_glosa
+		
+		FROM articulo
+		
+		JOIN articulo_bodega ON artb_art_id=articulo.art_id AND artb_bod_id=$bodega
+		
+		LEFT JOIN $q_table ON stock_art_id=art_id AND $condicion
+		LEFT JOIN bodega_clasificacion
+		ON clasifica_id=art_clasifica_id
+		LEFT JOIN item_presupuestario
+		ON item_codigo=art_item
+		LEFT JOIN bodega_forma
+		ON art_forma=forma_id
+		LEFT JOIN art_prioridad ON articulo.art_prioridad_id=art_prioridad.art_prioridad_id
+		
+		$consulta
+		$item
+		$clasifica
+		$controlados
+		$cadena_w
+		
+		GROUP BY 
+    articulo.art_id, art_codigo, art_glosa, 
+    clasifica_nombre, item_codigo, art_prioridad_glosa, 
+    $groupby 
+    clasifica_nombre, item_glosa, forma_nombre
+		
+    ) AS ss
+		
+		LEFT JOIN articulo ON ss.art_id=articulo.art_id
+		
+		JOIN articulo_bodega ON artb_art_id=articulo.art_id AND artb_bod_id=$bodega
+		
+		
+    $lotes_en_cero
+		
+    ORDER BY $orden
+		
+		";
+   
+  $listado = pg_query($conn, $query);
+		
+		} else {
+  
+  	// Listado con Lotes
+
+  $query="
+		SELECT ss.*, 
+    (ss.stock*ss.unitario) AS total,
+    array(
+    SELECT COALESCE(stock_vence::varchar,'') FROM ".$q_table." 
+    WHERE stock_art_id=ss.art_id AND $condicion AND stock_cant>0
+    ORDER BY stock_vence 
+    ) AS lotes,
+    array(
+    SELECT stock_cant FROM ".$q_table." 
+    WHERE stock_art_id=ss.art_id AND $condicion AND stock_cant>0
+    ORDER BY stock_vence 
+    ) AS cant_lotes
+    
+		
+		FROM
+		
+		(    
+    
+    SELECT 
+    art_id,
+		art_codigo,
+		art_glosa,
+		COALESCE(clasifica_nombre, '(No Asignado...)'),
+		COALESCE(item_codigo || ' ' || item_glosa, '(No Asignado...)') ,
+	  COALESCE(SUM(stock_cant),0) AS stock,
+    $valorizar AS unitario,
+    clasifica_nombre,
+    item_glosa,
+    COALESCE(forma_nombre, '(No Asignado...)'),
+    art_prioridad_glosa
+		
+		FROM articulo
+		
+		JOIN articulo_bodega ON artb_art_id=articulo.art_id AND artb_bod_id=$bodega
+		
+		LEFT JOIN $q_table ON stock_art_id=art_id AND $condicion
+    LEFT JOIN bodega_clasificacion
+		ON clasifica_id=art_clasifica_id
+		LEFT JOIN item_presupuestario
+		ON item_codigo=art_item
+		LEFT JOIN bodega_forma
+		ON art_forma=forma_id
+		LEFT JOIN art_prioridad ON articulo.art_prioridad_id=art_prioridad.art_prioridad_id
+		
+		$consulta
+		$item
+		$clasifica
+		$controlados
+		$cadena_w
+		
+		GROUP BY 
+    art_id, art_codigo, art_glosa, 
+    clasifica_nombre, item_codigo, art_prioridad_glosa, 
+    $groupby 
+    clasifica_nombre, item_glosa, forma_nombre
+
+    ) AS ss
+
+		LEFT JOIN articulo ON ss.art_id=articulo.art_id
+
+    $lotes_en_cero
+
+    ORDER BY $orden
+
+		";
+
+		$listado = pg_query($conn, $query);
+
+		}
+
+		if(isset($_GET['xls'])) {
+      $xls_table_style='border=1';
+    } else {
+      $xls_table_style='';
+    }
+
+    print("
+    <table width=100% class='tabla_informe' $xls_table_style >
+    <tr style=text-align:left;>
+   <td colspan=3 font-weight:bold;>
+   <font size=+1>
+          ".htmlentities($sghservicio)."<br>
+          ".htmlentities($sghinstitucion)."
+   </font>
+   </td>
+  </tr>
+   ");
+
+    if(isset($_GET['xls'])) {
+
+      if(!$fref)
+        print("<tr><td colspan=".($largo_datos+1)." style='text-align: right;'>
+        Fecha de Referencia: <b>".date("d/m/Y")."</b></td></tr>");
+      else
+        print("<tr><td colspan=".($largo_datos+1)." style='text-align: right;'>
+        Fecha de Referencia: <b>".$fecha_ref."</b></td></tr>");
+        
+    }
+    
+    print("
+    <tr class='tabla_header' style='font-weight: bold;'>
+    <td colspan=".$largo_datos.">Datos del Producto</td>
+    <td rowspan=2>Stock</td>");
+    
+    if($valorizar!='0')
+    print("<td colspan=2>Valor Neto ($)</td>");
+    
+    print("
+    </tr>
+    <tr class='tabla_header' style='font-weight: bold;'>
+    <td>C&oacute;digo Int.</td>
+    <td>Glosa</td>
+    ");
+    
+    if($mostrar_clasif)
+    print("<td>Clasificaci&oacute;n</td>");
+    
+    if($mostrar_forma)
+    print("<td>Forma Farmac&eacute;utica</td>");
+    
+    if($mostrar_item)
+    print("<td>Item Presupuestario</td>");
+    
+    if($mostrar_prioridad AND $mostrar_lotes)
+    print("<td>Prioridad</td>");
+    
+    if($mostrar_lotes)
+    print("<td>Fecha de Venc.</td><td>Stock</td>");
+    
+    if($mostrar_prioridad AND !$mostrar_lotes)
+    print("<td>Prioridad</td>");
+    
+
+    if($valorizar!='0')
+    print("
+    <td>P. Unit.</td>
+    <td>Subtotal</td>
+    ");
+    
+    print("</tr>");
+		
+		$total=0;
+		
+    $clase='tabla_fila';
+		
+		for($i=0;$i<pg_num_rows($listado);$i++) {
+      
+      $fila = pg_fetch_row($listado, $i);
+      
+      if($mostrar_lotes) {
+        
+        $fecha_lotes = pg_array_parse($fila[12]);
+        $cant_lotes = pg_array_parse($fila[13]);
+        $tam='rowspan='.count($fecha_lotes);
+        
+      } else {
+      
+        $tam='rowspan=1';
+      
+      }
+     
+      if($i%2==0)  
+        $clase='tabla_fila';
+      else
+        $clase='tabla_fila2';
+      
+      $textocolor='';
+      
+      $subtotal=($fila[5]*$fila[6]);
+      $total+=($fila[5]*$fila[6]);
+      
+      print("
+      <tr class='".$clase."' 
+      style='
+      $textocolor
+      '
+      >
+      <td style='text-align: right;' $tam>
+      <b><i>".$fila[1]."</i></b></td>
+      <td $tam><b>".htmlentities($fila[2])."</b></td>");
+      
+      if($mostrar_clasif) print("<td $tam>".htmlentities($fila[3])."</td>");
+      if($mostrar_forma) print("<td $tam>".htmlentities($fila[9])."</td>");
+      if($mostrar_item) print("<td $tam>".htmlentities($fila[4])."</td>");
+      
+      if($mostrar_prioridad AND $mostrar_lotes)
+        print("<td $tam>".htmlentities($fila[10]).'</td>');
+        
+      if($mostrar_lotes) { 
+          print("
+          <td style='text-align: center; font-style: italic;'>
+          ".htmlentities($fecha_lotes[0])."</td>
+          <td style='text-align: right;'>".
+          number_format((($cant_lotes[0]!='')?$cant_lotes[0]:0), 2, ',', '.')."</td>
+          ");
+      }
+      
+      if($mostrar_prioridad AND !$mostrar_lotes) 
+        print('<td>'.htmlentities($fila[10]).'</td>');
+      
+        
+        print("
+          <td style='text-align: right;' $tam>
+          ".number_format($fila[5], 2, ',','.')."
+          </td>
+          ");
+        
+        if($valorizar!='0') {
+		  if(isset($_GET['xls'])) {
+			  print("
+			  <td style='text-align: right;' $tam>".ceil($fila[6])."</td>
+			  <td style='text-align: right;' $tam>".ceil($subtotal)."</td>");			  
+		  } else {
+			  print("
+			  <td style='text-align: right;' $tam>
+			  \$".number_format($fila[6]).".-</td>
+			  <td style='text-align: right;' $tam>
+			  \$".number_formats($subtotal).".-</td>");
+		  }
+         }
+          
+        print("</tr>");
+        
+        if($mostrar_lotes AND count($fecha_lotes)>1)
+        for($k=1;$k<count($fecha_lotes);$k++) {
+          
+          print("<tr class='$clase'>");
+          
+          print("
+          <td style='text-align: center; font-style: italic;'>
+          ".htmlentities($fecha_lotes[$k])."</td>
+          <td style='text-align: right;'>".
+          number_format($cant_lotes[$k], 2, ',','.')."</td>
+          ");
+          
+          print('</tr>');
+          
+        }
+      
+      
+    }
+		
+		
+		if($valorizar!='0') {
+		  
+      $total_iva=floor(($total*1.19))-$total;
+		  $total_total=floor(($total*1.19));
+		
+		
+		  print("
+      <tr><td rowspan=3 style='text-align: center;' class='tabla_header' 
+      colspan=".($largo_datos+1)." width='75%'>
+      <b>Totales Generales</b></td>	
+			<td width=100 style='text-align: right;' class='tabla_header'>
+      <b>Neto:</b></td>		
+			<td width=100 style='text-align: right;' class='tabla_header'>
+      <b>\$".number_formats($total).".-</b></td></tr>
+			<tr><td style='text-align: right;' class='tabla_header'>
+      <b>I.V.A.:</b></td>				
+			<td style='text-align: right;' class='tabla_header'>
+      <b>\$".number_formats($total_iva).".-</b></td></tr>
+			<tr><td style='text-align: right;' class='tabla_header'>
+      <b>Total:</b></td>					
+			<td style='text-align: right;' class='tabla_header'>
+      <b>\$".number_formats($total_total).".-</b></td></tr>");
+    
+    }
+      
+    print("</table>");
+    
+    if(!isset($_GET['xls'])) {
+      print('</body></html>');
+    }
+
+
+?>

@@ -1,0 +1,56 @@
+/* CSS Document */
+
+.autocomplete {
+
+  background-image: url('../imagenes/autocomplete_zoom.gif');
+  background-color: #ffffff;
+  background-repeat: no-repeat;
+  background-position: right;  
+}
+
+.autocomplete_charge {
+
+  background-image: url('../imagenes/autocomplete_spinner.gif');
+  background-color: #ffffff;
+  background-repeat: no-repeat;
+  background-position: right;  
+
+}
+
+.autocomplete_empty {
+
+  background-image: url('../imagenes/autocomplete_empty.gif');
+  background-color: #ffffff;
+  background-repeat: no-repeat;
+  background-position: right;  
+
+}
+
+.autocomplete_container {
+
+  font-size: 12px;
+  
+}
+
+.autocomplete_container td {
+  border: none;
+}
+
+.autocomplete_row_1 {
+
+  background-color: #dfe6ef;
+
+}
+
+.autocomplete_row_2 {
+
+  background-color: #cfd6df;
+
+}
+
+.autocomplete_row_s {
+
+  background-color: #8f96bf;
+  color: white;
+
+}

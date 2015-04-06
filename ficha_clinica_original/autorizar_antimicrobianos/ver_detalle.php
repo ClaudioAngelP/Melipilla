@@ -1,0 +1,158 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$id=$_GET['hospam_id'];
+	
+	//print($_GET['recetad_id']);
+	
+	$det=cargar_registro("SELECT *,hospam_fecha_digitacion::date AS hospam_fecha_digitacion,
+			extract(YEAR FROM age(current_timestamp,pac_fc_nac))AS edad,
+			upper(func1.func_nombre) AS generador, upper(func2.func_nombre) AS visador,
+			(hospam_fecha_digitacion+(hospam_dias||' days')::interval)::date AS fecha_fin
+			FROM hospitalizacion_autorizacion_meds
+				JOIN hospitalizacion USING (hosp_id)
+			JOIN pacientes ON hosp_pac_id=pac_id
+			JOIN articulo USING (art_id)
+			JOIN funcionario AS func1 ON hospam_func_id=func1.func_id
+			LEFT JOIN funcionario AS func2 ON hospam_func_id2=func2.func_id 
+			JOIN doctores ON hospam_doc_id=doc_id
+			LEFT JOIN bodega_forma ON art_forma=forma_id
+			LEFT JOIN tipo_camas ON
+                               cama_num_ini<=hosp_numero_cama AND cama_num_fin>=hosp_numero_cama
+            LEFT JOIN clasifica_camas AS t1 ON 
+                               t1.tcama_num_ini<=hosp_numero_cama AND t1.tcama_num_fin>=hosp_numero_cama
+			WHERE hospam_id=".$id);
+			
+
+	
+	$art=$det['art_glosa'];
+	
+	$fecha_ini=$det['hospam_fecha_digitacion'];
+		
+	$fecha_fin=$det['fecha_fin'];
+	
+?>
+
+
+<?php cabecera_popup('../..'); ?> 
+<body class='fuente_por_defecto popup_background'>
+<title>Detalle Solicitud Autorizaci&oacute;n Medicamentos</title>
+<center>
+<h2>Detalle Solicitud Antimicrobianos</h2>
+
+<div class='sub-content'>
+<table style='width:100%;'>
+<tr>
+	<td class='tabla_fila2'>Nombre:</td>
+	<td class='tabla_fila'><b><?php echo(htmlentities(trim($det['pac_appat']." ".$det['pac_apmat']." ".$det['pac_nombres']))); ?></b></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>RUT/Ficha:</td>
+	<td class='tabla_fila'><?php echo ($det['pac_rut']." / ".$det['pac_ficha']); ?></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>M&eacute;dico:</td>
+	<td class='tabla_fila'><?php echo (htmlentities($det['doc_nombres']." ".$det['doc_paterno']." ".$det['doc_materno'])); ?></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>Estado:</td>
+	<td class='tabla_fila'><b><?php 
+			if($det['hospam_estado']==0){$estado='Pendiente';
+					}else if($det['hospam_estado']==1){$estado='Aceptado';
+					}else if($det['hospam_estado']==2){$estado='Modificado por '.htmlentities($det['visador']);
+					}else{$estado='Rechazado por '.htmlentities($det['visador']);
+					}
+			echo ($estado); 
+	?></b></td>
+</tr>
+<?php
+
+	if($det['hospam_estado']==2 OR $det['hospam_estado']==3){
+			print("<tr>
+						<td class='tabla_fila2'>Fundamento:</td>
+						<td class='tabla_fila'><b>".htmlentities($det['hospam_fundamento'])."</b></td>
+					</tr>");		
+		} 
+
+?>
+
+</table>
+</div>
+
+<div class='sub-content2'>
+<table style='width:100%;'>
+<tr>
+	<td class='tabla_fila2'>Medicamento:</td>
+	<td class='tabla_fila'><b><?php echo(htmlentities($det['art_glosa']));?></b></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>Dosis:</td>
+	<td class='tabla_fila'><?php echo("<b>".$det['hospam_cant']." ".$det['forma_nombre']."</b> cada <b>".$det['hospam_horas']."</b> horas durante <b>".$det['hospam_dias']."</b> d&iacute;as."); ?></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>Duraci&oacute;n:</td>
+	<td class='tabla_fila'><?php echo("desde <b>".$det['hospam_fecha_digitacion']."</b> hasta <b>".$det['fecha_fin']."</b>"); ?></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>Diagn&oacute;stico:</td>
+	<td class='tabla_fila'><?php echo(htmlentities($det['hospam_diagnostico'])); ?></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>Tipo:</td>
+<?php 
+	if($det['hospam_terapia']=='0'){
+		$det['hospam_terapia']='Terapia Emp&iacute;rica';	
+	}else
+		$det ['hospam_terapia']='Terapia Espec&iacute;fica';
+?>
+	<td class='tabla_fila'><?php echo($det['hospam_motivo']); ?></td>
+</tr>
+<tr>
+	<td class='tabla_fila2'>Terapia:</td>
+<?php 
+	if($det['hospam_terapia']=='0'){
+		$det['hospam_terapia']='Terapia Emp&iacute;rica';	
+	}else
+		$det ['hospam_terapia']='Terapia Espec&iacute;fica';
+?>
+	<td class='tabla_fila'><?php echo($det['hospam_terapia']); ?></td>
+</tr>
+<?php 
+	
+	//if($det['hospam_terapia']=='1' OR $det['hospam_terapia']=='Terapia Específica'){
+	
+		print("<tr>
+			<td class='tabla_fila2'>Cultivo:</td>
+			<td class='tabla_fila'>".htmlentities($det['hospam_cultivo'])."</td>
+		</tr>");
+	
+	
+	//}
+	
+	//if($det['hospam_motivo']=='Continuación'){
+		
+		$dias=cargar_registros("SELECT hospam_fecha_digitacion::date AS desde, 
+								(hospam_fecha_digitacion+(hospam_dias||' days')::interval)::date AS hasta,
+								hospam_dias
+							FROM hospitalizacion_autorizacion_meds
+							WHERE art_id=".$det['art_id']." and hosp_id=".$det['hosp_id']."
+							ORDER BY hospam_fecha_digitacion DESC");
+		
+		$diashtml='';
+		for($d=0;$d<sizeof($dias)-1;$d++){
+		$diashtml.="<tr>
+				<td class='tabla_fila'><b>".$dias[$d][2]."</b> D&iacute;as <i>(Desde ".$dias[$d][0]." Hasta ".$dias[$d][1].")</i></td>			
+				</tr>";
+			$d++;
+		}
+		print("<tr><td class='tabla_fila2' rowspan=$d>Tratamientos Anteriores:</td></tr>");
+		print($diashtml);
+		
+	//}
+
+?>
+</table>
+</div>
+<?php print("Digitado por: ".$det['generador']); ?>
+</center>

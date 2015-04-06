@@ -1,0 +1,160 @@
+<?php 
+
+  ob_start();
+  require_once('../../conectar_db.php');
+  require_once('../hgf.php');
+  ob_end_clean();
+
+	if(isset($_GET['win'])) {
+		echo '<html><title>Actualizando FAP...</title><body><center><br><br>
+				<img src="../../imagenes/ajax-loader3.gif" />
+				<h2>Espere un momento...</h2><br /><br /></center>';	
+		flush();
+	}		
+	
+  if($_GET['fecha'])	
+  	$fecha=pg_escape_string($_GET['fecha']);
+  else 
+  	$fecha=date('d/m/Y');	
+	
+  $f=explode('/',$fecha);
+  
+  $fecha2=mktime(0,0,0,$f[1],(($f[0]*1)+1),$f[2]);
+  
+  $fecha2=date('d/m/Y',$fecha2);	
+	  
+  $datos = mssql_query("
+  	SELECT * 
+  	FROM dbo.RPA_Formulario 
+  	WHERE 
+  		RPA_FOR_FechaDigit>='$fecha 00:00:00' AND
+  		RPA_FOR_FechaDigit<'$fecha2 00:00:00'");
+
+  $c=0;
+    
+  while($r = mssql_fetch_object($datos)) {
+
+		// print_r($r);
+
+		$datos2=mssql_query("
+			SELECT * FROM dbo.RPA_ForDau
+			WHERE RPA_FOR_TipoFormu='".$r->RPA_FOR_TipoFormu."'
+			AND RPA_FOR_NumerFormu='".$r->RPA_FOR_NumerFormu."'		
+		");
+
+		$ftipo=$r->RPA_FOR_TipoFormu*1;
+		$fnumero=$r->RPA_FOR_NumerFormu;
+		$fec=$r->RPA_FOR_FechaDigit;
+		
+		$chk=cargar_registro("SELECT * FROM fap 
+					WHERE fap_ftipo=$ftipo AND fap_fnumero='$fnumero'");		
+		
+		if($chk) continue;		
+
+		$tipo_consulta=1;
+		$pronostico="-1";
+		$destino="0";
+		$clase="''";
+		
+		$origen="0";
+		
+		$accidente='0';
+		$sexo='0';
+
+		$hora_atencion="null";
+		$hora_alta="null";
+
+		$atendido_por="0";
+		$diag_cod="''";
+
+		$pac=$r->PAC_PAC_Numero;
+		
+		$pac_id=cargar_paciente($pac*1);
+		
+		$doc_id=0;
+		
+		if(mssql_num_rows($datos2)>=1) {
+			
+			$r2=mssql_fetch_object($datos2);		
+
+		   $prevision="''";	
+			$prioridad=($r2->RPA_FDA_MedioTrans)*1;
+			$prioridad_post='0';
+			$prevision="-1";
+			$comuna="0";	
+			$tipo_atencion=($r2->RPA_FDA_TipoAtenc)*1;		
+
+			$q="INSERT INTO fap VALUES (
+				DEFAULT,
+				$ftipo,
+				'$fnumero',
+				'$fec',
+				$tipo_consulta,
+				$pronostico,
+				$destino,
+				$accidente,
+				$clase,
+				$sexo,
+				$prevision,
+				$comuna,
+				$tipo_atencion,
+				$origen,
+				$hora_atencion,
+				$hora_alta,
+				$doc_id,
+				$prioridad,
+				$prioridad_post,
+				$atendido_por,
+				$diag_cod,
+				$pac_id		
+			);";
+			
+			//print($q.'<br><br>');		
+			
+			pg_query($q);
+
+		} 
+		
+/*
+
+CREATE TABLE fap
+(
+  fap_id bigserial NOT NULL,
+  fap_ftipo smallint,
+  fap_fnumero character varying(30),
+  fap_fecha timestamp without time zone,
+  fap_tipo_consulta smallint,
+  fap_pronostico smallint,
+  fap_destino smallint,
+  fap_accidente smallint,
+  fap_clase character varying(50),
+  fap_sexo smallint,
+  fap_prevision character varying(15),
+  fap_comuna integer,
+  fap_tipo_atencion smallint,
+  fap_origen smallint,
+  fap_hora_atencion time without time zone,
+  fap_hora_alta time without time zone,
+  fap_doc_id bigint,
+  fap_prioridad smallint,
+  fap_prioridad_post smallint,
+  fap_atendido_por smallint,
+  fap_diag_cod character varying(20),
+  fap_pac_id bigint,
+  fap_ges boolean,
+  fap_ges_folio bigint,
+  fap_pat_id bigint,
+  fap_patrama_id bigint,
+  CONSTRAINT fap_fap_id_key PRIMARY KEY (fap_id)
+)
+WITH (OIDS=FALSE);
+
+*/
+	}
+	
+	if(isset($_GET['win'])) {
+		echo '<center><h2>Actualizaci&oacute;n Finalizada...</h2></center>
+		</body></html><script> setTimeout("window.close();",1000); </script>';	
+	}		
+	
+?>

@@ -1,0 +1,105 @@
+<?php 
+    
+    require_once('../../conectar_db.php');
+    
+    $fechashtml = desplegar_opciones_sql( 
+    "SELECT fecha, fecha FROM fechas_monitoreo_ges
+    ORDER BY fecha", NULL, '', ""); 
+
+    $siggespathtml = desplegar_opciones_sql( 
+    "SELECT DISTINCT pst_patologia_interna,pst_patologia_interna  FROM patologias_sigges_traductor
+    ORDER BY pst_patologia_interna", NULL, '', ""); 
+
+    
+?>
+
+<script>
+
+listado_proceso=function() {
+
+    params=$('filtro').serialize();
+    
+    var myAjax=new Ajax.Updater(
+    'listado',
+    'prestaciones/monitoreo_ges/listado_monitoreo.php',
+    {
+            method:'post', parameters:params
+    });
+
+}
+
+abrir_proceso=function() {
+
+    proceso_ges = window.open('prestaciones/monitoreo_ges/abrir_proceso.php',
+    'proceso_ges', 'left='+(screen.width/2-250)+',top='+(screen.height/2-100)+',width=480,height=270,status=0,scrollbars=1');
+			
+    proceso_ges.focus();
+
+}
+
+</script>
+
+<center>
+<div class='sub-content' style='width:750px;'>
+
+<div class="sub-content">
+<img src='iconos/error.png'>
+<b>Monitoreo GES</b>
+</div>
+
+<div class="sub-content">
+
+<form id='filtro' name='filtro' onSubmit='return false;'>
+
+<table style='width:100%;'>
+
+
+<tr>
+<td style='text-align:right;width:200px;'>Fecha Monitoreo:</td>
+<td>
+<select name='fecha' id='fecha'>
+<?php echo $fechashtml; ?>
+</select>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Patolog&iacute;a:</td>
+<td>
+<select id='pat' name='pat'>
+<?php echo $siggespathtml; ?>
+</select>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Estado:</td>
+<td>
+<select id='estado' name='estado'>
+<option value=0>Vigente</option>
+<option value=1>Vencido</option>
+<option value=2>Cerrado</option>
+<option value=3>Esceptuado</option>
+</select>
+</td>
+</tr>
+
+</table>
+
+</form>
+
+<center>
+<input type='button' onClick='listado_proceso();' value='-- Actualizar Listado --'>
+<input type='button' onClick='abrir_proceso();' value='-- Apertura de Proceso de Monitoreo GES --'>
+
+</center>
+</div>
+
+<div class='sub-content2' id='listado' name='listado'
+style='height:250px;overflow:auto;'>
+
+</div>
+
+</div>
+</center>
+

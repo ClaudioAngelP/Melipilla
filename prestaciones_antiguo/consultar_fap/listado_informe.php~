@@ -1,0 +1,1045 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$tipo=$_POST['tipo']*1;
+	$fecha1=pg_escape_string($_POST['fecha1']);
+	$fecha2=pg_escape_string($_POST['fecha2']);
+	$inf=$_POST['tipo_informe']*1;
+	$xls=(isset($_POST['xls']) AND $_POST['xls']*1==1);
+
+	switch($inf) {
+ 		case -1: $titulo='Informe Completo Registro FAP'; break;
+ 		case 6: $titulo='Informe General FAP'; break;
+  		case 3: $titulo='Consultas por Comuna y Sexo'; break;
+  		case 0: $titulo='Consultas por Comuna y Sexo Oftalmol&oacute;gicos'; break;
+  		case 1: $titulo='Consultas por Comuna y Sexo Otorrinos'; break;
+  		case 2: $titulo='Consultas por Comuna y Sexo Psiqui&aacute;tricos'; break;
+  		case 5: $titulo='Categorizaci&oacute;n de Pacientes mediante Selector de Demanda'; break;
+  		case 7: $titulo='Tabulado de Procedimientos Seg&uacute;n Previsi&oacute;n'; break;
+  		case 8: $titulo='Tipo de Atenci&oacute;n y Grupo Etario'; break;
+  		case 9: $titulo='Pacientes Hospitalizados en Camilla de Observaci&oacute;n'; break;
+  		case 10: $titulo='Prestaciones Dentales Seg&uacute;n Grupo Etario';	 break;
+	}
+
+  	switch($tipo) {
+
+		case 1: $tipo_w='(fap_tipo_atencion=1)'; $tfap='INFANTIL'; break;
+		case 2: $tipo_w='(fap_tipo_atencion=2)'; $tfap='MATERNAL'; break;
+		case 3: $tipo_w='(fap_tipo_atencion=3 OR fap_tipo_atencion=4)'; $tfap='ADULTO'; break;
+		case 5: $tipo_w='(fap_tipo_atencion=5)'; $tfap='PABELLON'; break;
+  	
+  	}
+  	
+  	if($xls) {
+  	
+  	   header("Content-type: application/vnd.ms-excel");
+    	header("Content-Disposition: filename=\"Informe_FAP.xls\";");
+
+		print("<table><tr><td colspan=4 align='center'><b>$titulo</b></td></tr>
+		<tr><td>&nbsp;</td><td align='right'>Tipo FAP:</td><td>".$tfap."</td></tr>
+		<tr><td>&nbsp;</td><td align='right'>Fecha Inicio:</td><td>".$fecha1."</td></tr>
+		<tr><td>&nbsp;</td><td align='right'>Fecha T&eacute;rmino:</td><td>".$fecha2."</td></tr>
+		</table>");  	
+  		
+	}	
+	
+	if($inf==-1) {
+
+		$f=cargar_registros_obj("
+			SELECT *, fap_fecha::date,
+			date_part('year',age(fap_fecha::date, pac_fc_nac)) as edad_anios,  
+			date_part('month',age(fap_fecha::date, pac_fc_nac)) as edad_meses,  
+			date_part('day',age(fap_fecha::date, pac_fc_nac)) as edad_dias,
+			COALESCE(fap_hora_atencion, '00:00') AS fap_hora_atencion,
+			COALESCE(fap_hora_alta, '00:00') AS fap_hora_alta,
+			COALESCE(fap_hora_nsp, '00:00') AS fap_hora_nsp
+			FROM fap 
+			JOIN pacientes ON pac_id=fap_pac_id
+			LEFT JOIN comunas USING (ciud_id)	
+			LEFT JOIN prevision ON fap_prev_id=prev_id	
+			LEFT JOIN doctores ON fap_doc_id=doc_id
+			LEFT JOIN diagnosticos ON fap_diag_cod=diag_cod	
+			LEFT JOIN fap_destino ON fapd_id=fap_destino
+			LEFT JOIN fap_accidente ON fapa_id=fap_accidente
+			LEFT JOIN fap_origen ON fapo_id=fap_origen
+			LEFT JOIN fap_atendido ON fapat_id=fap_atendido_por
+			LEFT JOIN fap_ges ON  fapg_id=fap_pat_id
+			WHERE 		
+			fap_fecha::date>='$fecha1' AND 
+			fap_fecha::date<='$fecha2' AND
+			$tipo_w
+			ORDER BY fap_fnumero
+		", true);
+
+?>
+
+<table style='width:100%'>
+<tr class='tabla_header' style='white-space:nowrap;'>
+<td>FAP Nro.</td>
+<td>Fecha</td>
+
+<td>RUT</td>
+<td>Ficha</td>
+<td>Nombre Completo</td>
+<td>Sexo</td>
+<td>Edad</td>
+<td>Fecha Nac</td>
+<td>Previsi&oacute;n</td>
+<td>Ciudad</td>
+
+<td>RUT Doctor</td>
+<td>Nombre Doctor</td>
+
+<td>Hora Atenci&oacute;n</td>
+<td>Hora Alta</td>
+<td>Hora NSP</td>
+
+<td>Destino</td>
+<td>Atendido</td>
+<td>Origen</td>
+<td>Atendido por</td>
+<td>GES</td>
+
+<td>Prestaci&oacute;n 1</td>
+<td>Cant. 1</td>
+<td>Prestaci&oacute;n 2</td>
+<td>Cant. 2</td>
+<td>Prestaci&oacute;n 3</td>
+<td>Cant. 3</td>
+
+</tr>
+
+<?php
+		
+		for($i=0;$i<sizeof($f);$i++) {
+	
+			$edad='';
+			
+			if($f[$i]['edad_anios']*1>1) $edad.=$f[$i]['edad_anios'].' a ';
+			elseif($f[$i]['edad_anios']*1==1) $edad.=$f[$i]['edad_anios'].' a ';
+
+			if($f[$i]['edad_meses']*1>1) $edad.=$f[$i]['edad_meses'].' m ';
+			elseif($f[$i]['edad_meses']*1==1) $edad.=$f[$i]['edad_meses'].' m ';
+
+			if($f[$i]['edad_dias']*1>1) $edad.=$f[$i]['edad_dias'].' d ';
+			elseif($f[$i]['edad_dias']*1==1) $edad.=$f[$i]['edad_dias'].' d ';
+			
+			if( $f[$i]['pac_sexo'] == 0 )
+				$sexo='M';
+			elseif( $fap[$i]['pac_sexo'] == 1 )
+				$sexo='F';
+			else 
+				$sexo='I';
+		
+			$class=$i%2==0?'tabla_fila':'tabla_fila2';		
+		
+			print("<tr class='$class' style='white-space:nowrap;'>
+
+				<td align='center'>".$f[$i]['fap_fnumero']."</td>			
+				<td align='center'>".$f[$i]['fap_fecha']."</td>			
+				<td align='right'>".$f[$i]['pac_rut']."</td>			
+				<td align='center'>".$f[$i]['pac_ficha']."</td>			
+				<td>".$f[$i]['pac_appat']." ".$f[$i]['pac_apmat']." ".$f[$i]['pac_nombres']."</td>
+				<td align='center'>".$sexo."</td>			
+				<td align='center'>".$edad."</td>			
+				<td align='center'>".$f[$i]['pac_fc_nac']."</td>			
+				<td>".$f[$i]['prev_desc']."</td>			
+				<td>".$f[$i]['ciud_desc']."</td>
+				");
+
+			if($f[$i]["fap_doc_id"]!=0)			
+			print("				
+				<td align='right'>".$f[$i]['doc_rut']."</td>			
+				<td>".$f[$i]['doc_paterno']." ".$f[$i]['doc_materno']." ".$f[$i]['doc_nombres']."</td>			
+				");
+			else   
+			print("<td>&nbsp;</td><td>&nbsp;</td>");			
+			
+					
+			print("
+				<td align='center'>".$f[$i]['fap_hora_atencion']."</td>			
+				<td align='center'>".$f[$i]['fap_hora_alta']."</td>			
+				<td align='center'>".$f[$i]['fap_hora_nsp']."</td>			
+				
+				<td align='left'>".$f[$i]['fapd_desc']."</td>			
+				<td align='left'>".$f[$i]['fapa_desc']."</td>			
+				<td align='left'>".$f[$i]['fapo_desc']."</td>			
+				<td align='left'>".$f[$i]['fapat_desc']."</td>			
+				<td align='left'>".$f[$i]['fapg_desc']."</td>			
+
+			");
+
+			$presta=cargar_registros_obj("SELECT * FROM fap_prestacion WHERE fap_id=".$f[$i]['fap_id']);
+
+			for($j=0;$j<3;$j++) {
+			
+				if( isset($presta[$j]) ) {
+					print("<td align='center'>".$presta[$j]['fappr_codigo']."</td>");	
+					print("<td align='center'>".$presta[$j]['fappr_cantidad']."</td>");	
+				} else {
+					print("<td>&nbsp;</td><td>&nbsp;</td>");
+				}			
+				
+			}
+
+			print("</tr>");			
+			
+		}
+
+?>
+
+</table>
+
+<?php
+		
+	}  		
+
+	if($inf>=0 AND $inf<=3) {
+		
+		if($inf==0){$tipo_i='7777706';}
+		if($inf==1){$tipo_i='7777707';}
+		if($inf==2){$tipo_i='7777704';}
+		
+		if($inf <= 2) {
+	
+		$query="SELECT DISTINCT
+			fap.fap_id,  
+			ciud_desc, 
+			date_part('year',age(fap_fecha::date, pac_fc_nac)) as edad_anios,  
+			sex_id	
+			FROM fap 
+			JOIN pacientes ON fap_pac_id=pac_id
+			LEFT JOIN comunas USING (ciud_id)
+			LEFT JOIN fap_prestacion USING ( fap_id )
+			WHERE 
+			fap_fecha::date>='$fecha1' AND 
+			fap_fecha::date<='$fecha2' AND
+			$tipo_w AND
+			fappr_codigo = '$tipo_i'
+			ORDER BY ciud_desc";
+			
+		} else {
+			
+			$tipo_i='7777706';			
+			
+			$query="SELECT DISTINCT
+				fap.fap_id,  
+				ciud_desc, 
+				date_part('year',age(fap_fecha::date, pac_fc_nac)) as edad_anios,  
+				sex_id	
+				FROM fap 
+				JOIN pacientes ON fap_pac_id=pac_id
+				LEFT JOIN comunas USING (ciud_id)
+				LEFT JOIN fap_prestacion USING ( fap_id )
+				WHERE 
+				fap_fecha::date>='$fecha1' AND 
+				fap_fecha::date<='$fecha2' AND
+				fap_tipo_consulta=1 AND
+				$tipo_w AND
+				NOT fappr_codigo = '$tipo_i'
+				ORDER BY ciud_desc";			
+		}
+			
+			
+		$c=cargar_registros_obj($query);
+		
+		// Inicializar Array vacio...
+		$ciudades=array();		
+
+		$getn=array('< 10','10-14','15-19','20-24','25-64','> 65');
+		$getat_masc=array(0,0,0,0,0,0);
+		$getat_feme=array(0,0,0,0,0,0);
+		
+		if($c)
+		for($i=0;$i<sizeof($c);$i++) {
+
+			// Si el item del array no existe, crea un array nuevo
+			// con los datos de cantidad de masculinos y femeninos en cero...
+			
+			if(!isset($ciudades[$c[$i]['ciud_desc']])) {
+				$ciudades[$c[$i]['ciud_desc']]->get_masc=array(0,0,0,0,0,0);
+				$ciudades[$c[$i]['ciud_desc']]->get_feme=array(0,0,0,0,0,0);
+			}
+			
+			// Dependiendo de la edad del paciente durante el registro,
+			// lo clasifica dentro del array en el espacio correspondiente...
+			
+				$val=$c[$i]['edad_anios']*1;
+			
+			// Si es masculino $geta sera un puntero al array donde se guardan
+			// los pacientes masculinos, y es femenino el puntero apunta al otro
+			// array...			
+				
+				if($c[$i]['sex_id']*1==0) 
+					$geta=&$ciudades[$c[$i]['ciud_desc']]->get_masc;
+				else
+					$geta=&$ciudades[$c[$i]['ciud_desc']]->get_feme;
+
+				if($val<10) { $esp=0; }
+				if($val>=10 AND $val<=14) { $esp=1; }
+				if($val>=15 AND $val<=19) { $esp=2; }
+				if($val>=20 AND $val<=24) { $esp=3; }
+				if($val>=25 AND $val<=64) { $esp=4; }
+				if($val>=65) { $esp=5; }
+				
+				$geta[$esp]++;
+				
+				if($c[$i]['sex_id']*1==0) 
+					$getat_masc[$esp]++;
+				else
+					$getat_feme[$esp]++;				
+			
+		}	
+		
+	
+		
+		// Crea la cabecera de la tabla tomando en cuenta
+		// los grupos etarios definidos en el array $getn
+				
+		print("<table style='width:100%;'>
+				<tr class='tabla_header'><td rowspan=2>Comuna</td>");
+				
+		for($i=0;$i<sizeof($getn);$i++) 
+			print("<td colspan=2>".$getn[$i]."</td>");
+		
+		print("<td rowspan=2>Total</td></tr><tr class='tabla_header'>");		
+		
+		for($i=0;$i<sizeof($getn);$i++) 
+			print("<td>Masc.</td><td>Fem.</td>");
+			
+		print("</tr>");		
+		
+		$i=0;		
+		
+		if($c)
+		foreach($ciudades AS $ciud => $dato) {
+
+			$i++; $clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+
+			// Imprime el nombre de la ciudad...
+			
+			if($ciud!='')	
+				print("<tr class='$clase'><td>".htmlentities($ciud)."</td>");
+			else 
+				print("<tr class='$clase'><td><i>(Comuna Indefinida...)</i></td>");
+			
+			// imprime uno a uno los registros de cantidad de pacientes
+			// por sexo y grupo etario...
+	
+			$total=0;	
+			
+			for($j=0;$j<sizeof($getn);$j++) {
+				print('
+					<td align="center">'.number_format($dato->get_masc[$j],0,',','.').'</td>
+					<td align="center">'.number_format($dato->get_feme[$j],0,',','.').'</td>');
+					
+				$total+=$dato->get_masc[$j]+$dato->get_feme[$j];	
+			}	
+			
+			print('<td align="center">'.number_format($total,0,',','.').'</td></tr>');			
+				
+		}
+		
+		print("<tr class='tabla_header'><td>Total General:</td>");		
+		
+		$total=0;		
+		
+		for($j=0;$j<sizeof($getn);$j++) {
+				print('
+					<td align="center">'.number_format($getat_masc[$j],0,',','.').'</td>
+					<td align="center">'.number_format($getat_feme[$j],0,',','.').'</td>
+				');
+				
+				$total+=$getat_masc[$j]+$getat_feme[$j];	
+		}
+
+		print('<td align="center">'.number_format($total,0,',','.').'</td></tr>');			
+		
+		// Fin...		
+		
+		print('</table>');	
+		
+	}
+	
+	//Tipo de Atencion y Grupo Etario.	
+	
+	if($inf == 8) {
+		
+			$query = "SELECT
+				date_part('year',age(fap_fecha::date, pac_fc_nac)) 
+				as edad_anios,
+				fappr_codigo,
+				glosa
+				FROM fap_prestacion
+				JOIN fap USING (fap_id)
+				JOIN codigos_prestacion ON (fappr_codigo = codigo)
+				JOIN pacientes ON (fap_pac_id = pac_id)
+				WHERE 
+				fap_fecha::date>='$fecha1' AND 
+				fap_fecha::date<='$fecha2' AND
+				$tipo_w AND
+				fappr_codigo IN ('0903001',
+				'7777701','7777702','7777703','7777704','7777706','7777707')
+				ORDER BY fappr_codigo";
+			
+			$c=cargar_registros_obj($query);
+			
+			$tipoAtencion=array();
+			
+			$getn=array('< 10','10-14','15-19','20-24','25-64','> 65');
+			$geta=array(0,0,0,0,0,0);
+			
+			if($c)
+			for($i=0;$i<sizeof($c);$i++) {
+			
+				if(!isset($tipoAtencion[$c[$i]['fappr_codigo']])) {
+					$tipoAtencion[$c[$i]['fappr_codigo']]->glosa=$c[$i]['glosa'];
+					$tipoAtencion[$c[$i]['fappr_codigo']]->cantEdad=array(0,0,0,0,0,0);
+				}
+			
+				$val=$c[$i]['edad_anios']*1;
+
+				if($val<10) { $esp=0; }
+				if($val>=10 AND $val<=14) { $esp=1; }
+				if($val>=15 AND $val<=19) { $esp=2; }
+				if($val>=20 AND $val<=24) { $esp=3; }
+				if($val>=25 AND $val<=64) { $esp=4; }
+				if($val>=65) { $esp=5; }
+				
+				$tipoAtencion[$c[$i]['fappr_codigo']]->cantEdad[$esp]++;
+				$geta[$esp]++;
+			
+		}
+	
+		print("<table style='width:100%;'>
+				<tr class='tabla_header'><td colspan=2>Tipo de Atenci&oacute;n</td>");
+				
+		for($i=0;$i<sizeof($getn);$i++) 
+			print("<td>".$getn[$i]."</td>");
+		
+		print("<td>Total</td></tr>");			
+		
+		$i=0;
+		
+		if($c)
+		foreach($tipoAtencion AS $tipo => $dato) {
+
+			$i++; $clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+				
+			print("<tr class='$clase'><td>".htmlentities($tipo)."</td><td>".htmlentities(substr($dato->glosa, 0, 70))."</td>");
+			
+			// imprime uno a uno los registros de cantidad de pacientes
+	
+			$total=0;	
+			
+			for($j=0;$j<sizeof($getn);$j++) {
+				print('
+					<td align="right">'.number_format($dato->cantEdad[$j],0,',','.').'</td>');
+					
+				$total+=$dato->cantEdad[$j];	
+			}	
+			
+			print('<td align="right">'.$total.'</td></tr>');			
+				
+		}
+		
+		print("<tr class='tabla_header'><td colspan='2'>Total General:</td>");		
+		
+		$total=0;		
+		
+		for($j=0;$j<sizeof($getn);$j++) {
+				print('<td align="right">'.number_format($geta[$j],0,',','.').'</td>');
+				
+				$total+=$geta[$j];
+		}
+
+		print('<td align="right">'.$total.'</td></tr>');
+		
+		print('</table>');
+		
+		}
+
+	if($inf==5) {
+	
+		$query="SELECT * FROM fap WHERE
+			fap_fecha::date>='$fecha1' AND 
+			fap_fecha::date<='$fecha2' AND
+			$tipo_w AND fap_tipo_consulta=1";
+			
+		$c=cargar_registros_obj($query);
+		
+		$prioridades=array('Sin Prioridad',
+									'Prioridad 1',
+									'Prioridad 2',
+									'Prioridad 3',
+									'Prioridad 4',
+									'Prioridad 5');
+	
+		$cant_p=array(0,0,0,0,0,0);
+		
+		$total=0;		
+			
+		if($c) {
+
+			$total=sizeof($c);
+			 
+			for($i=0;$i<sizeof($c);$i++) {
+
+				$cant_p[$c[$i]['fap_prioridad']*1]++;
+
+			}
+
+		}
+		
+		print("<table style='width:100%;'>
+					<tr class='tabla_header'>
+					<td>Categorizaci&oacute;n</td>
+					<td>Total</td><td>%</td></tr>");	
+	
+		for($i=0;$i<sizeof($prioridades);$i++) {
+	
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+			
+			print("<tr class='$clase'>
+				<td>".htmlentities($prioridades[$i])."</td>
+				<td style='text-align:right;'>".number_format($cant_p[$i],0,',','.')."</td>
+				<td style='text-align:right;'>".(($total>0)?number_format($cant_p[$i]*100/$total,2,',','.'):'0,00')."%</td>
+			</tr>");			
+					
+		}				
+	
+		print("<tr class='tabla_header'><td align='right'>Total:</td>
+						<td align='right'>".number_format($total,0,',','.')."</td><td>&nbsp;</td></tr>");
+						
+						print("</table>");	
+		
+	}
+
+
+	if($inf==6) {
+	
+		$query="SELECT * FROM fap WHERE
+			fap_fecha::date>='$fecha1' AND 
+			fap_fecha::date<='$fecha2' AND
+			$tipo_w";
+			
+			$query2 = "SELECT codigo, glosa, (
+
+			SELECT COUNT(*) FROM fap_prestacion
+			JOIN fap USING (fap_id)
+			
+			WHERE fap_fecha::date>='$fecha1' AND fap_fecha::date<='$fecha2' AND $tipo_w
+			AND fappr_codigo=codigo
+			
+			) AS cantidad
+			
+			from codigos_prestacion where codigo like '7777%'";
+			
+		$c=cargar_registros_obj($query);
+		$c2=cargar_registros_obj($query2);
+
+		$tipoConsulta=Array();
+		$tc=cargar_registros_obj("SELECT * FROM fap_tipo_consulta ORDER BY faptc_id", true);
+		for($i=0;$i<sizeof($tc);$i++) $tipoConsulta[$i]=$tc[$i]['faptc_desc'];		
+				
+		$procedencia=array('SAMU', 'V&iacute;a P&uacute;blica', 'SAPU', 'Otros Hospitales', 'Otros Servicios');
+		$pronosticos=array('Sin Pron&oacute;stico', 'Leve', 'Med. Gravedad', 'Grave');
+		$prevision=array('A', 'B', 'C', 'D', 'Isapre', 'Particular','Libre Elecci&oacute;n' , 'Otros', 'Convenio');
+		
+		$cant_ta=array(0,0,0,0,0,0,0,0);		
+		$cant_o=array(0,0,0,0,0);
+		$cant_p=array(0,0,0,0);
+		$cant_prevision=array(0,0,0,0,0,0,0,0,0);
+		
+
+		$total=0;
+		$total2=0;
+		$total3=0;
+		
+		for($i=0;$i<sizeof($c2);$i++)
+			$total2+=$c2[$i]['cantidad']*1;
+
+		if($c) {
+			
+			$total=sizeof($c);
+			
+			for($i=0;$i<sizeof($c);$i++) {
+				
+				$cant_ta[($c[$i]['fap_tipo_consulta']*1)]++;
+				
+				$cant_o[($c[$i]['fap_origen']*1)-1]++;
+			
+				if($c[$i]['fap_tipo_consulta']==1) { 
+				
+					$cant_p[($c[$i]['fap_pronostico']*1)+1]++;	
+					$cant_prevision[($c[$i]['fap_prevision']*1)-1]++;
+					
+					$total3++;
+					
+				}			
+			
+			}
+			
+		}
+		
+		//Tabla Tipo Consulta
+		
+		print("<table style='width:100%;'>
+					<tr class='tabla_header'>
+					<td>Tipo de Consulta</td>
+					<td>Total</td><td>%</td></tr>");	
+		
+		$totalFinal = 0;
+	
+		for($i=0;$i<sizeof($tipoConsulta);$i++) {
+	
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+			
+			print("<tr class='$clase'>
+				<td>".($tipoConsulta[$i])."</td>
+				<td style='text-align:right;'>".number_format($cant_ta[$i],0,',','.')."</td>
+				<td style='text-align:right;'>".(($total>0)?number_format($cant_ta[$i]*100/$total,2,',','.'):'0,00')."%</td>
+			</tr>");
+				$totalFinal += $cant_ta[$i];			
+		}				
+			print("<tr class='tabla_header'>
+						<td><b>
+						Total General
+						</b></td>
+						<td align='right'><b>".
+						$totalFinal
+						."</b></td>
+						<td>&nbsp;</td>
+					</tr>");	
+	
+		print("</table>");
+		
+		$totalConsultas=$totalFinal;		
+		
+		//Tabla Procedencia		
+		
+		print("<table style='width:100%;'>
+					<tr class='tabla_header'>
+					<td>Procedencia</td>
+					<td>Total</td><td>%</td></tr>");
+					
+		$totalFinal = 0;	
+	
+		for($i=0;$i<sizeof($procedencia);$i++) {
+	
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+			
+			print("<tr class='$clase'>
+				<td>".($procedencia[$i])."</td>
+				<td style='text-align:right;'>".number_format($cant_o[$i],0,',','.')."</td>
+				<td style='text-align:right;'>".(($total>0)?number_format($cant_o[$i]*100/$totalConsultas,2,',','.'):'0,00')."%</td>
+			</tr>");			
+					
+				$totalFinal += $cant_o[$i];					
+					
+		}
+
+		$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+
+		print("<tr class='$clase'>
+				<td>Otras Procedencias...</td>
+				<td style='text-align:right;'>".number_format(($totalConsultas-$totalFinal),0,',','.')."</td>
+				<td style='text-align:right;'>".(($total>0)?number_format(($totalConsultas-$totalFinal)*100/$totalFinal,2,',','.'):'0,00')."%</td>
+			</tr>");			
+		
+		print("<tr class='tabla_header'>
+						<td><b>
+						Total General
+						</b></td>
+						<td align='right'><b>".
+						$totalConsultas
+						."</b></td>
+					<td>&nbsp;</td>
+					</tr>");		
+	
+		print("</table>");			
+		
+		//Tabla Pronosticos
+		
+		print("<table style='width:100%;'>
+					<tr class='tabla_header'>
+					<td>Tipo de Pron&oacute;stico</td>
+					<td>Total</td><td>%</td></tr>");
+					
+		$totalFinal = 0;	
+	
+		for($i=0;$i<sizeof($pronosticos);$i++) {
+	
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+			
+			print("<tr class='$clase'>
+				<td>".($pronosticos[$i])."</td>
+				<td style='text-align:right;'>".number_format($cant_p[$i],0,',','.')."</td>
+				<td style='text-align:right;'>".(($total>0)?number_format($cant_p[$i]*100/$total3,2,',','.'):'0,00')."%</td>
+			</tr>");
+			
+			$totalFinal += $cant_p[$i];			
+					
+		}
+		
+		print("<tr class='tabla_header'>
+				<td><b>
+				Total General
+				</b></td>
+				<td align='right'><b>".
+				$totalFinal
+				."</b></td>
+				<td>&nbsp;</td>
+			</tr>");					
+	
+		print("</table>");	
+		
+		//Tabla Total de Consultas		
+		
+		print("<table style='width:100%;'>
+			<tr class='tabla_header'>
+			<td>C&oacute;digo</td>
+			<td>Glosa</td>
+			<td>Total</td><td>%</td></tr>");	
+	
+			$totalFinal = 0;
+	
+		for($i=0;$i<sizeof($c2);$i++) {
+	
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+			
+			print("<tr class='$clase'>
+				<td>".($c2[$i]['codigo'])."</td>
+				<td>".($c2[$i]['glosa'])."</td>
+				<td style='text-align:right;'>".number_format($c2[$i]['cantidad'],0,',','.')."</td>
+				<td style='text-align:right;'>".(($total2>0)?number_format($c2[$i]['cantidad']*100/$total2,2,',','.'):'0,00')."%</td>
+			</tr>");
+			
+			$totalFinal += $c2[$i]['cantidad'];			
+					
+		}
+		
+		print("<tr class='tabla_header'>
+				<td colspan='2'><b>
+				Total General
+				</b></td>
+				<td align='right'><b>".
+				$totalFinal
+				."</b></td>
+				<td>&nbsp;</td>
+			</tr>");		
+		
+		print("</table>");
+		
+		//Tabla Prevision
+		
+		print("<table style='width:100%;'>
+					<tr class='tabla_header'>
+					<td>Tipo de Previsi&oacute;n</td>
+					<td>Total</td><td>%</td></tr>");
+
+		$totalFinal = 0;
+	
+		for($i=0;$i<sizeof($prevision);$i++) {
+	
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+			
+			print("<tr class='$clase'>
+				<td>".($prevision[$i])."</td>
+				<td style='text-align:right;'>".number_format($cant_prevision[$i],0,',','.')."</td>
+				<td style='text-align:right;'>".(($total>0)?number_format($cant_prevision[$i]*100/$total3,2,',','.'):'0,00')."%</td>
+			</tr>");
+			
+			$totalFinal += $cant_prevision[$i];
+					
+		}
+		
+		print("<tr class='tabla_header'>
+				<td><b>
+				Total General
+				</b></td>
+				<td align='right'><b>".
+				$totalFinal
+				."</b></td>
+				<td>&nbsp;</td>
+			</tr>");		
+	
+		print("</table>");	
+
+	}
+	
+	if($inf == 7){
+		
+		$query="SELECT COALESCE(fappr_codigo,'CERTDEF') AS fappr_codigo, glosa, fap_prevision FROM fap 
+		LEFT JOIN fap_prestacion USING (fap_id)
+		LEFT JOIN codigos_prestacion ON fappr_codigo = codigo
+		WHERE
+		fap_fecha::date>='$fecha1' AND 
+		fap_fecha::date<='$fecha2' AND
+		fap_tipo_consulta IN (1,2,8) AND
+		$tipo_w ORDER BY fappr_codigo";
+			
+		$c=cargar_registros_obj($query);
+		
+		$procedimientos=array();
+		$procedimientos['CERTDEF']->glosa='CERTIFICADO DE DEFUNCI&Oacute;N';
+		$procedimientos['CERTDEF']->cant_p=array(0,0,0,0,0,0,0,0,0,0);
+		
+		$prevision=array('A', 'B', 'C', 'D', 'ISAPRE', 'Particular','Libre Elecci&oacute;n','Otros', 'Convenio', 'Accidente');
+		
+		$total=0;
+
+			if($c) {
+				
+				$total=sizeof($c);
+				
+				for($i=0;$i<sizeof($c);$i++) {
+					
+					if($c[$i]['fap_tipo_consulta']*1!=8) { 
+					
+						if(!isset($procedimientos[$c[$i]['fappr_codigo']])) {
+							$procedimientos[$c[$i]['fappr_codigo']]->glosa=$c[$i]['glosa'];
+							$procedimientos[$c[$i]['fappr_codigo']]->cant_p=array(0,0,0,0,0,0,0,0,0,0);
+						}					
+
+						$procedimientos[$c[$i]['fappr_codigo']]->cant_p[($c[$i]['fap_prevision']*1)-1]++;
+					
+					} else {
+					
+						$procedimientos[$c[$i]['fappr_codigo']]->cant_p[($c[$i]['fap_prevision']*1)-1]++;
+					
+					}
+					
+					if($c[$i]['fap_accidente']!=0){
+						$procedimientos[$c[$i]['fappr_codigo']]->cant_p[10]++;
+					}			
+				
+				}
+				
+			}
+			
+		print("<table style='width:100%;'>
+			<tr class='tabla_header'>
+			<td>Codigo</td>
+			<td>Glosa</td>");
+			
+		for($i=0;$i<sizeof($prevision);$i++) {
+			print "<td>".$prevision[$i]."</td>";
+			}	
+			
+		print("<td>Total</td></tr>");
+		
+		$i = 0;
+		
+		$totalColumna = array(0,0,0,0,0,0,0,0,0,0);		
+		
+		foreach($procedimientos as $codigo => $dato){
+			
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+			
+		
+			print("<tr class='$clase'><td>$codigo</td><td>".substr($dato->glosa, 0, 50)."</td>");
+
+			$total = 0;
+
+			for($x=0;$x<10;$x++) {
+				print("<td align='right'>".number_format($dato->cant_p[$x],0,',','.')."</td>");
+				$total += $dato->cant_p[$x];
+				$totalColumna[$x] += $dato->cant_p[$x];				
+			}		
+				
+			print("<td align='right'><b>".number_format($total,0,',','.')."</b></td></tr>");
+			
+			$i++;
+			
+		}				
+	
+		print("<tr class='tabla_header'><td align='right' colspan='2'>Total</td>");
+		$total = 0;
+		
+		for($y=0;$y<10;$y++) {
+			$calculo = $totalColumna[$y];
+			$total+=$totalColumna[$y];
+			print("<td align='right'>".number_format($calculo,0,',','.')."</td>");	
+		}
+		print("<td align='right'>".number_format($total,0,',','.')."</td></tr>");
+	
+		print("</table>");	
+
+	}
+
+	if($inf==9){
+
+		$query =
+		"SELECT
+		fap_fecha,
+		fap_fnumero,
+		pac_appat,
+		pac_apmat,
+		pac_nombres,
+		prev_desc,
+		date_part('year',age(fap_fecha::date, pac_fc_nac)) as edad_anios,
+		ciud_desc
+		FROM
+		fap_prestacion
+		JOIN fap USING (fap_id)
+		JOIN prevision ON (prev_id = fap_prevision)
+		JOIN pacientes ON (pac_id = fap_pac_id)
+		JOIN comunas USING (ciud_id)
+		WHERE
+		fappr_codigo = '0203111' AND
+		fap_fecha::date>='$fecha1' AND 
+		fap_fecha::date<='$fecha2' AND
+		$tipo_w";
+		
+		print("<table style='width:100%;'>");
+		print("<tr class='tabla_header'>
+		<td>Fecha</td>
+		<td>Nº Fap</td>
+		<td colspan='3'>Nombre</td>
+		<td>Previsi&oacute;n</td>
+		<td>Edad</td>
+		<td>Comuna</td>
+		</tr>");
+		
+		$res = pg_query($query);
+		
+		$i=0;
+
+		while($datos = pg_fetch_object($res)){
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+			printf("<tr class=$clase>
+				<td align='right'>".htmlentities(substr($datos->fap_fecha, 0, 10))."</td>
+				<td align='right'>".htmlentities($datos->fap_fnumero)."</td>
+				<td align='center'>".htmlentities($datos->pac_appat)."</td>
+				<td align='center'>".htmlentities($datos->pac_apmat)."</td>
+				<td align='center'>".htmlentities($datos->pac_nombres)."</td>
+				<td align='center'>".htmlentities($datos->prev_desc)."</td>
+				<td align='right'>".htmlentities($datos->edad_anios)."</td>
+				<td align='center'>".htmlentities($datos->ciud_desc)."</td>			
+			</tr>");
+			
+				$i++;
+			}		
+		
+		print("</table>");
+		
+		}
+		
+		if($inf == 10){
+		$query="SELECT  
+			fap_ges,
+			date_part('year',age(fap_fecha::date, pac_fc_nac)) as edad_anios,  
+			sex_id	
+			FROM fap 
+			LEFT JOIN pacientes ON fap_pac_id=pac_id
+			JOIN fap_prestacion USING ( fap_id )
+			WHERE 
+			fap_fecha::date>='$fecha1' AND 
+			fap_fecha::date<='$fecha2' AND
+			$tipo_w AND
+			fappr_codigo = '7777706'";
+			
+		$c=cargar_registros_obj($query);
+		
+		$ges=array();		
+
+		$getn=array('< 10','10-14','15-19','20-24','25-64','> 65');
+		$getat_masc=array(0,0,0,0,0,0);
+		$getat_feme=array(0,0,0,0,0,0);
+		
+		if($c)
+		for($i=0;$i<sizeof($c);$i++) {
+			
+			if(!isset($ges[$c[$i]['fap_ges']])) {
+				$ges[$c[$i]['fap_ges']]->get_masc=array(0,0,0,0,0,0);
+				$ges[$c[$i]['fap_ges']]->get_feme=array(0,0,0,0,0,0);
+			}
+			
+				if($c[$i]['sex_id']*1==0) 
+					$geta=&$ges[$c[$i]['fap_ges']]->get_masc;
+				else
+					$geta=&$ges[$c[$i]['fap_ges']]->get_feme;
+				
+				$val=$c[$i]['edad_anios']*1;	
+				
+				if($val<10) { $esp=0; }
+				if($val>=10 AND $val<=14) { $esp=1; }
+				if($val>=15 AND $val<=19) { $esp=2; }
+				if($val>=20 AND $val<=24) { $esp=3; }
+				if($val>=25 AND $val<=64) { $esp=4; }
+				if($val>=65) { $esp=5; }
+				
+				$geta[$esp]++;
+				
+				if($c[$i]['sex_id']*1==0) 
+					$getat_masc[$esp]++;
+				else
+					$getat_feme[$esp]++;				
+			
+		}
+				
+		print("<table style='width:100%;'>
+				<tr class='tabla_header'><td rowspan=2>Tipo</td>");
+				
+		for($i=0;$i<sizeof($getn);$i++) 
+			print("<td colspan=2>".$getn[$i]."</td>");
+		
+		print("<td rowspan=2>Total</td></tr><tr class='tabla_header'>");		
+		
+		for($i=0;$i<sizeof($getn);$i++) 
+			print("<td>Masc.</td><td>Fem.</td>");
+			
+		print("</tr>");		
+		
+		$i=0;		
+		
+		if($c)
+		foreach($ges AS $g => $dato) {
+
+			$i++; $clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+			
+			if($g == 'f'){
+					$estadoGes = "Consultas Odon. No GES";
+			} else {
+					$estadoGes = "Consultas Odon. GES";					
+			}
+				
+			print("<tr class='$clase'><td>".htmlentities($estadoGes)."</td>");
+	
+			$total=0;	
+			
+			for($j=0;$j<sizeof($getn);$j++) {
+				print('
+					<td align="center">'.number_format($dato->get_masc[$j],0,',','.').'</td>
+					<td align="center">'.number_format($dato->get_feme[$j],0,',','.').'</td>');
+					
+				$total+=$dato->get_masc[$j]+$dato->get_feme[$j];	
+			}	
+			
+			print('<td align="center">'.$total.'</td></tr>');			
+				
+		}
+		
+		//print("<tr class='$clase'><td>".htmlentities("Consultas Ges")."</td>");
+		
+		print("<tr class='tabla_header'><td>Total General:</td>");		
+		
+		$total=0;		
+		
+		for($j=0;$j<sizeof($getn);$j++) {
+				print('
+					<td align="center">'.number_format($getat_masc[$j],0,',','.').'</td>
+					<td align="center">'.number_format($getat_feme[$j],0,',','.').'</td>
+				');
+				
+				$total+=$getat_masc[$j]+$getat_feme[$j];	
+		}
+
+		print('<td align="center">'.$total.'</td></tr>');
+
+		print('</table>');
+	}
+
+?>

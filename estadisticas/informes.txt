@@ -1,0 +1,10 @@
+Recetas y Preescripciones|recpreescrip.php
+Recetas y Preescripciones(Controlados)|recpreescrip_control.php
+Perfíl farmacológico|perfil_farma.php
+Pacientes con Patología (Medicamentos Retirados)|farmacos_patologia.php
+Pacientes con Medicamento (AUGE)|pac_auge.php
+Pacientes por Ubicación (medicamento)|pac_farmacias.php
+Consumo Valorizado Por Paciente|consumo_pac_valorizado.php
+Consumo Valorizado Por Medico|consumo_med_valorizado.php
+Listado de Pacientes con recetas|listado_pac_recetas.php
+Listado de Recetas por Centro de Costo|listado_recetas_centro_costo.php

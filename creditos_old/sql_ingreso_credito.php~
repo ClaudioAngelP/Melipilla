@@ -1,0 +1,507 @@
+<?php 
+
+	require_once('../conectar_db.php');
+
+	$clirut=pg_escape_string($_POST['clirut']);
+	$clipat=pg_escape_string(utf8_decode($_POST['clipat']));
+	$climat=pg_escape_string(utf8_decode($_POST['climat']));
+	$clinom=pg_escape_string(utf8_decode($_POST['clinom']));
+	$clidir=pg_escape_string(utf8_decode($_POST['clidir']));
+	$comcod=pg_escape_string(utf8_decode($_POST['comcod']))*1;
+	$clifon=pg_escape_string($_POST['clifon']);
+	$clicel=pg_escape_string($_POST['clicel']);
+	$climail=pg_escape_string(utf8_decode($_POST['climail']));
+	$cliobs=pg_escape_string(utf8_decode($_POST['cliobs']));
+	$clifnac=fecha_sql(pg_escape_string(utf8_decode($_POST['clifnac'])));
+	
+	$d=explode('-',$clirut);
+
+	$efectivo=$_POST['pago_efectivo']*1;
+	
+	if($_POST['pago_cheques']!='')	
+		$cheques=explode('[|]',substr($_POST['pago_cheques'],0,-3));
+	else
+		$cheques=false;	
+	
+	if($_POST['pago_otras']!='')	
+		$otras=explode('[|]',substr($_POST['pago_otras'],0,-3));
+	else
+		$otras=false;	
+
+	$chk=cargar_registro("SELECT * FROM clientes WHERE clirut=".($d[0]*1));	
+
+	if($chk) {
+	
+		pg_query("
+			UPDATE clientes SET
+			clipat='$clipat',
+			climat='$climat',
+			clinom='$clinom',
+			clidir='$clidir',
+			comcod=$comcod,
+			clifon='$clifon',
+			clicel='$clicel',
+			climail='$climail',
+			cliobs='$cliobs',
+			clifnac=$clifnac
+			WHERE clirut=".($d[0]*1));	
+	
+	} else {
+
+		pg_query("
+			INSERT INTO clientes VALUES (
+			".($d[0]*1).",'".$d[1]."',
+			'$clipat', '$climat', '$clinom',
+			5, 89, $comcod,
+			'$clifon', '$clicel', '$climail', 
+			'$cliobs', '$clidir', $clifnac			
+			);		
+		");
+
+	}	
+
+	pg_query("START TRANSACTION;");
+
+	$nbolnum=$_POST['nbolnum']*1;
+	$nbolfec=fecha_sql($_POST['nbolfec']);
+
+	//$prodesc=pg_escape_string($_POST['prodesc']);
+	$proval=floor($_POST['proval']*1);
+	$total_descuento = floor($_POST['total_descuento']*1);
+	$pie=floor($_POST['pie']*1);
+	$cuonro=$_POST['cuonro']*1;
+	
+	if( ( $proval - $total_descuento ) > 0 AND 
+			$pie < ( $proval - $total_descuento ) ) {	
+	
+	$interes = $conf['interes']*1;
+
+	if(isset($_POST['aplicaint'])) {
+	
+		$inf = $interes/100;
+		$fact = pow(1+$inf,$cuonro);	
+	
+		$saldo = ($proval - $total_descuento - $pie);
+		$cuomon = $saldo*(($inf*$fact)/($fact-1));
+
+		$credito = $cuomon*$cuonro; 
+	
+	} else {
+
+		$inf = $interes/100;
+		$fact = pow(1+$inf,$cuonro);	
+	
+		$saldo = ($proval - $total_descuento - $pie);
+		$cuomon = $saldo*(($inf*$fact)/($fact-1));
+
+		$credito_interes = $cuomon*$cuonro; 
+
+		$saldo = ($proval - $total_descuento - $pie);
+		$cuomon = $saldo/$cuonro;
+
+		$credito = $cuomon*$cuonro;
+		$dif_credito=$credito_interes-$credito; 
+
+	}
+	
+	pg_query("INSERT INTO creditos VALUES (
+		".($d[0]*1).",
+		NEXTVAL('creditos_crecod_seq'),
+		$proval, $pie, ".$saldo.", ".$cuomon.",
+		".$credito.", current_timestamp, current_timestamp, '$prodesc',
+		$cuonro,'.1455','N' 	
+	);");
+	
+	$crecod="CURRVAL('creditos_crecod_seq')";
+	
+	} else $crecod='0';
+	
+	if(($proval-$total_descuento)<0) {
+		$saldo_favor=-($proval-$total_descuento);
+		$coming="NEXTVAL('boletines_coming_seq')";
+	} else {
+		$saldo_favor=0;
+		$coming='0';
+	}	
+	
+	if($nbolnum!=0) {
+		$bolnum=$nbolnum;
+		$currval=$nbolnum;
+		$bolfec=$nbolfec;
+	} else {
+		$bolnum="NEXTVAL('boletines_bolnum_seq')";
+		$currval="CURRVAL('boletines_bolnum_seq')";
+		$bolfec='current_timestamp';
+	}	
+	
+	$chk=cargar_registro("SELECT $bolnum AS bnum;");
+	$chk2=cargar_registro("SELECT *, bolfec::date AS bolfec FROM boletines WHERE bolnum=".$chk['bnum']);
+	
+	if($chk2) {
+		die('BOLETÍN # '.number_format($chk['bnum'],0,',','.').' YA EXISTE ( FECHA: '.$chk2['bolfec'].' ), EL ADMINISTRADOR DEBE CORREGIR LA NUMERACIÓN ACTUAL DE LOS BOLETINES.');
+	} else {
+		$bolnum = ($chk['bnum']*1);
+	}	
+	
+	pg_query("INSERT INTO boletines VALUES (
+		$bolnum,
+		$bolfec,
+		$pie,
+		'',
+		1,
+		0,
+		$crecod, ".$_SESSION['sgh_usuario_id'].", ".($d[0]*1).",
+		null, $saldo_favor, $coming	
+	);");
+
+	$boletin=cargar_registro("SELECT *, bolfec::date AS bolfec FROM boletines WHERE bolnum=$currval;");			
+
+	if(!isset($_POST['aplicaint']))
+		pg_query("INSERT INTO descuentos VALUES (DEFAULT, $currval, '', $dif_credito, 0, 0, 'i');");
+	
+
+
+	// Anulación de boletines en caso de ser necesario...
+
+	if($_POST['bolnums']!='') {
+	
+		$d=explode('|',utf8_decode(pg_escape_string($_POST['bolnums'])));
+		
+		$banular='';		
+		
+		for($i=0;$i<sizeof($d);$i++) {
+			$dr=explode('/',$d[$i]);
+			if($dr[0]=='b') {
+				$banular.=($dr[1]*1).',';
+				pg_query("INSERT INTO descuentos VALUES (DEFAULT, $currval, '".($dr[1])."', ".($dr[2]*1).", 0, ".($dr[1]).", 'b');");
+			} elseif($dr[0]=='c') {
+				$bcred=cargar_registros_obj("
+					SELECT * FROM boletines WHERE crecod=".($dr[1]*1)."				
+				");
+				for($j=0;$j<sizeof($bcred);$j++) {
+					$banular.=$bcred[$j]['bolnum'].',';
+					pg_query("INSERT INTO descuentos VALUES (DEFAULT, $currval, '".($dr[1])."', ".($dr[2]*1).", 0, ".($bcred[$j]['bolnum']).", 'c');");
+				}
+			} elseif($dr[0]=='d') {
+				pg_query("INSERT INTO descuentos VALUES (DEFAULT, $currval, '".($dr[1])."', ".($dr[2]*1).", 0, 0, 'd');");
+			} elseif($dr[0]=='bn') {
+				pg_query("INSERT INTO boletines VALUES (".($dr[1]*1).", null, ".($dr[2]*1).", '', 0,0,0, ".$_SESSION['sgh_usuario_id'].",0,$currval);");
+				pg_query("INSERT INTO descuentos VALUES (DEFAULT, $currval, '".($dr[1])."', ".($dr[2]*1).", 0, ".($dr[1]).", 'bn');");			
+			}
+		}
+		
+		$banular=substr($banular,0,-1);
+		
+		if($banular!='') {
+		
+		// Marca anulación de los documentos y asociaciones...		
+		
+		pg_query("UPDATE boletines SET bolnumx=$currval 
+					 WHERE bolnum IN ($banular)");
+		
+		pg_query("UPDATE propiedad_sepultura SET ps_vigente=false 
+					 WHERE bolnum IN ($banular)");	
+	
+		pg_query("UPDATE uso_sepultura SET us_vigente=false 
+					 WHERE bolnum IN ($banular)");
+		}	
+	
+	}	
+
+
+	
+	$prods=json_decode($_POST['productos']);	
+	
+	for($i=0;$i<sizeof($prods);$i++) {
+	
+		if(  ($prods[$i]->prod_formula==null OR 
+				$prods[$i]->prod_formula=='') AND 
+				$prods[$i]->valor>0 )
+			$valorp=$prods[$i]->valor;
+		else
+			$valorp=round($_POST['valp_'.$i]*1);	
+
+		$pr=cargar_registros_obj("
+			SELECT * FROM productos WHERE prod_id=".($prods[$i]->prod_id*1)."			
+		");
+	
+		pg_query("INSERT INTO boletin_detalle VALUES (
+			DEFAULT, $currval, 
+			".$prods[$i]->prod_id.", ".($valorp*1).",
+			".($pr[0]['prod_comision']*1).", 
+			'".pg_escape_string($pr[0]['prod_nombre'])."',		
+			'".pg_escape_string($pr[0]['prod_item'])."'		
+		);");
+
+		if($prods[$i]->prod_asignar=='t') {
+
+			list($clase,$codigo,$numero,$letra)=explode('|',pg_escape_string($prods[$i]->prod_sel));
+			
+			pg_query("
+				INSERT INTO productos_sepultura VALUES (
+					DEFAULT,
+					".$boletin['bolnum'].",
+					CURRVAL('boletin_detalle_bdet_id_seq'),
+					'$clase', '$codigo', $numero, '$letra'				
+				);			
+			");	
+			
+		}
+		
+		if($prods[$i]->prod_asignar!='t' AND $prods[$i]->prod_sel!='' AND $prods[$i]->prod_sep_clase[0]!='*') {
+
+			list($clase,$codigo,$numero,$letra)=explode('|',pg_escape_string($prods[$i]->prod_sel));
+
+			$letra=trim($letra);
+
+			if($pr[0]['prod_vence']*1>0) {
+				$bfec=$boletin['bolfec'];				
+				$fs=explode('/',$bfec);		
+				$fven="'".date('d/m/Y', mktime(0,0,0,$fs[1]*1,$fs[0]*1,($fs[2]*1)+($pr[0]['prod_vence']*1)))."'";
+			} else {
+				$fven='null';
+			}
+
+			$ps_refcliente=pg_escape_string(utf8_decode($_POST['ps_refcliente']));
+			
+			if($ps_refcliente!='') {
+				
+				$psr=explode('|',$ps_refcliente);
+
+				if(trim($psr[0])!='') {
+					
+					$clr=explode('-',$psr[0]);
+					$chk=cargar_registros("SELECT * FROM clientes WHERE clirut=".$clr[0]);
+				
+					$clipat=$psr[1];				
+					$climat=$psr[2];				
+					$clinom=$psr[3];				
+					$clidir=$psr[5];				
+					$comcod=$psr[6]*1;				
+					$clifon=$psr[8];				
+					$clicel=$psr[9];				
+					$climail=$psr[10];				
+					$cliobs=$psr[11];				
+					$clifnac=fecha_sql($psr[4]);				
+				
+					if($chk) {
+					
+						pg_query("
+							UPDATE clientes SET
+							clipat='$clipat',
+							climat='$climat',
+							clinom='$clinom',
+							clidir='$clidir',
+							comcod=$comcod,
+							clifon='$clifon',
+							clicel='$clicel',
+							climail='$climail',
+							cliobs='$cliobs',
+							clifnac=$clifnac
+							WHERE clirut=".($clr[0]*1));	
+					
+					} else {
+				
+						pg_query("
+							INSERT INTO clientes VALUES (
+							".($clr[0]*1).",'".$clr[1]."',
+							'$clipat', '$climat', '$clinom',
+							5, 89, $comcod,
+							'$clifon', '$clicel', '$climail', 
+							'$cliobs', '$clidir', $clifnac			
+							);		
+						");
+				
+					}	
+				
+					$clirut=$clr[0]*1;
+					$refcliente='';
+						
+				} else {
+					
+					$clirut=0;
+					$refcliente=$psr[0].'|'.
+									$psr[3].' '.$psr[1].' '.$psr[2].'|'.
+									$psr[5].'|'.$psr[6].'|'.$psr[8];
+
+				}	
+
+			} else {
+
+				$clirut=($d[0]*1);
+				$refcliente='';
+
+			}
+			
+			pg_query("INSERT INTO propiedad_sepultura VALUES (
+				DEFAULT, '$clase', '$codigo', $numero, '$letra', ".($clirut).", 
+				".$boletin['bolnum'].", true,	'$refcliente', 
+				CURRVAL('boletin_detalle_bdet_id_seq'), $fven			
+			);");
+
+		} elseif($prods[$i]->prod_sep_clase[0]=='*') {
+
+			list($clase,$codigo,$numero,$letra,$fecha_sep,$rut_sep,$nombre_sep,$referencias,$ubicacion,$estado)=explode('|',utf8_decode(pg_escape_string($prods[$i]->prod_sel)));
+			
+			$letra=trim($letra);			
+			
+			$fsep=$fecha_sep;
+			$fecha_sep=fecha_sql($fecha_sep);
+			
+			$numero*=1;
+			$estado*=1;			
+			
+			$ubicacion=trim($ubicacion);
+						
+			$fven='null';
+						
+			pg_query("INSERT INTO uso_sepultura VALUES (
+						DEFAULT,
+						$fecha_sep, 
+						'$rut_sep', '$nombre_sep', '$referencias', 
+						null, $estado, true, 
+						".$boletin['bolnum'].", 
+						CURRVAL('boletin_detalle_bdet_id_seq'),
+						'$clase', '$codigo', $numero, '$letra',
+						'$ubicacion', $fven
+					);");
+	
+		}
+	
+	}
+	
+	if($cheques)
+	for($i=0;$i<sizeof($cheques);$i++) {
+
+		$c=explode('|',$cheques[$i]);
+		
+		if($c[2]=='')		
+			$c[2]=date('d/m/Y');
+		else {
+			switch(strlen($c[2])) {			
+				case 8:
+				$c[2]=substr($c[2],0,2).'/'.substr($c[2],2,2).'/'.substr($c[2],4,5);
+				break;
+				case 6:
+				$c[2]=substr($c[2],0,2).'/'.substr($c[2],2,2).'/20'.substr($c[2],4,2);
+				break;
+			}
+		}		
+		
+		pg_query("INSERT INTO cheques VALUES (
+			DEFAULT,
+			$currval,
+			'".pg_escape_string($c[0])."',		
+			'".pg_escape_string($c[1])."',		
+			'".pg_escape_string($c[2])."',		
+			'".pg_escape_string($c[3])."',		
+			".pg_escape_string($c[4]).",		
+			'".pg_escape_string($c[5])."'		
+		);");
+		
+	}
+
+	if($otras)
+	for($i=0;$i<sizeof($otras);$i++) {
+
+		$c=explode('|',$otras[$i]);
+		
+		if($c[2]=='')		
+			$c[2]=date('d/m/Y');
+		else {
+			switch(strlen($c[2])) {			
+				case 8:
+				$c[2]=substr($c[2],0,2).'/'.substr($c[2],2,2).'/'.substr($c[2],4,5);
+				break;
+				case 6:
+				$c[2]=substr($c[2],0,2).'/'.substr($c[2],2,2).'/20'.substr($c[2],4,2);
+				break;
+			}
+		}		
+		
+		pg_query("INSERT INTO forma_pago VALUES (
+			DEFAULT,
+			$currval,
+			".(pg_escape_string($c[0])*1).",		
+			'".pg_escape_string($c[1])."',		
+			'".pg_escape_string($c[2])."',		
+			".(pg_escape_string($c[3])*1)."		
+		);");
+	}
+
+
+
+	if( $pie < ( $proval - $total_descuento ) ) {
+
+	$diapago=$_POST['diapago']*1;
+	$offset_mes=0;
+	
+	for($i=0;$i<=$cuonro;$i++) {
+	
+		//$cuofec=date('d-m-Y',mktime(0,0,0,date('m')+$i));	
+		
+		if($i>0) {
+				
+			if((mktime(0,0,0,date('m')+$i,$diapago,date('Y')) - time()) < (86400*30)) {
+				// Si la fecha de la primera cuota es menor a 30 días desde la creación del crédito
+				// empieza al mes próximo...
+				$offset_mes=1;
+			}		
+			
+			$cuofec=date('d-m-Y',mktime(0,0,0,date('m')+$offset_mes+$i,$diapago,date('Y')));	
+
+			pg_query("
+			INSERT INTO cuotas VALUES (
+			CURRVAL('creditos_crecod_seq'),
+			$i, $cuomon, '$cuofec', null, 0, null, null, null,
+			NEXTVAL('cuotas_cuoid_seq')		
+			);		
+			");
+			
+		} else {	
+			
+			$cuofec=date('d-m-Y',mktime(0,0,0,date('m'),date('d'),date('Y')));	
+
+			pg_query("
+			INSERT INTO cuotas VALUES (
+			CURRVAL('creditos_crecod_seq'),
+			0, $pie, '$cuofec', current_timestamp,
+			$currval, 'P', $pie, null,
+			NEXTVAL('cuotas_cuoid_seq')		
+			);		
+			");
+			
+		}
+			
+
+	}
+		
+	}
+
+	// Marca Uso de Sepultura para bloqueo por crédito
+	
+	$ids_bloqueo=($_POST['ids_bloqueos']);	
+	
+	if($ids_bloqueo!='') {
+		$regs=explode('&&',$ids_bloqueo);
+		$idb='';
+		for($i=1;$i<sizeof($regs);$i++) {
+			$rid=explode('|',$regs[$i]);
+			$idb.=($rid[0]*1).',';
+		}	
+
+		$idb=substr($idb,0,-1);
+		
+		pg_query("UPDATE uso_sepultura SET 
+						crecod=$crecod, 
+						bolnum2=".($boletin['bolnum']*1).",
+						us_bloqueo=true
+						WHERE us_id IN ($idb);");
+	}	
+
+	
+	pg_query('COMMIT;');
+	
+	print(json_encode(array(true,$boletin['bolnum'])));
+
+?>

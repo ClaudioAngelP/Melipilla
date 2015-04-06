@@ -1,0 +1,253 @@
+<?php
+
+  require_once('../../conectar_db.php');
+
+  $bodega_id = ($_GET['bodega_id']*1);  //***********************************
+
+  $where='';
+  $fecha_w='';
+  $paciente_w='';
+  $medico_w='';
+  $art_w='';
+  $centro_w='';
+  $receta_w='';  //***********************************
+  $conector='';
+  $conector2='';
+  $conector3='';
+  $conector4='';
+  $conector5='';  //***********************************
+
+
+  if(isset($_GET['fecha'])) {
+    $where='WHERE';
+    $fecha = $_GET['fecha'];
+    $fecha_w = "date_trunc('day', receta_fecha_emision) = '".pg_escape_string($fecha)."'";
+  }
+
+  if(isset($_GET['pac_c'])) {
+    $where='WHERE';
+    if(isset($_GET['fecha'])) $conector='AND';
+    $paciente_id = $_GET['pac_id'];
+    $paciente_w = 'pac_id='.($paciente_id*1);
+  }
+
+  if(isset($_GET['med_c'])) {
+    $where='WHERE';
+
+    if(isset($_GET['fecha']) OR
+    isset($_GET['pac_c']))
+      $conector2='AND';
+
+    $medico_rut = $_GET['rut_medico'];
+
+    $medico_q = pg_query($conn, "
+    SELECT doc_id FROM doctores WHERE
+    doc_rut='".pg_escape_string($medico_rut)."'
+    ");
+
+    if(pg_num_rows($medico_q)!=1) {
+      die('<b>Error Inesperado. <i>(recetas/ver_recetas/buscar_recetas.php: medico buscado no existe en db.)</i></b>');
+    }
+
+    $medico_a = pg_fetch_row($medico_q);
+
+    $medico_id=$medico_a[0];
+
+    $medico_w = 'receta_doc_id='.($medico_id*1);
+  }
+
+  if(isset($_GET['art_c'])) {
+    $where='WHERE';
+
+    if(isset($_GET['fecha']) OR
+    isset($_GET['pac_c']) OR
+    isset($_GET['med_c']))
+        $conector3='AND';
+
+    $art_id = $_GET['art_id'];
+    $art_w = "stock_art_id=".($art_id*1);
+  }
+
+  if(isset($_GET['centro_c'])) {
+    $where='WHERE';
+
+    if(isset($_GET['fecha'])
+    OR isset($_GET['pac_c'])
+    OR isset($_GET['med_c'])
+    OR isset($_GET['art_c']))
+        $conector4='AND';
+
+    if($_GET['centro_servicio']==-1) {
+      $centro_costo = $_GET['centro_costo'];
+    } else {
+      $centro_costo = $_GET['centro_servicio'];
+    }
+
+    $centro_w = "receta_centro_ruta='".pg_escape_string($centro_costo)."'";
+
+  }
+
+ //*******************************************************************
+   if(isset($_GET['receta_c'])) {
+      $where='WHERE';
+
+    if(isset($_GET['fecha'])
+    OR isset($_GET['pac_c'])
+    OR isset($_GET['med_c'])
+    OR isset($_GET['centro_c'])
+    OR isset($_GET['art_c']))
+        $conector5='AND';
+
+    $receta_num = $_GET['receta_num']*1;
+
+    $receta_q = pg_query($conn, "
+    SELECT receta_id FROM receta WHERE
+    receta_numero=".($receta_num)."
+    ");
+
+    if(!$receta_q OR pg_num_rows($receta_q)==0) {
+      die('<center><br><br><b>Error Inesperado. <i>(N&uacute;mero de Receta no existente.)</i></b></center>');
+    }
+
+    $receta_ids='(';
+    $num=pg_num_rows($receta_q);
+
+    for($i=0;$i<$num;$i++) {    
+      
+      $receta_a = pg_fetch_row($receta_q);
+      
+      if($i<$num-1)
+        $receta_ids .= $receta_a[0].',';
+      else
+        $receta_ids .= $receta_a[0];
+
+    }
+    
+    $receta_ids.=')';
+
+    $receta_w = 'receta_id IN '.($receta_ids);
+
+
+  }
+//*******************************************************************
+
+
+
+?>
+
+
+<div class='sub-content3' style='height:450px;overflow:auto;'>
+
+<table width=100%>
+<tr class='tabla_header' style='font-weight: bold;'>
+<td colspan=4>
+Datos de la Receta
+</td>
+<td colspan=3 style='width: 100px;'>
+Acciones
+</td>
+</tr>
+<tr class='tabla_header' style='font-weight: bold;'>
+<td>Fecha Emisi&oacute;n</td>
+<td>RUT Paciente</td>
+<td width='40%'>Nombre Paciente</td>
+<td>Centro de Costo</td>
+<td>Detalle</td>
+<?php
+   if(_cax(21)) { print('<td>Eliminar</td>'); }
+?>
+
+
+</tr>
+
+<?php
+
+  $query="
+  SELECT DISTINCT
+  receta_id, date_trunc('second', receta_fecha_emision), pac_rut,
+  pac_appat || ' ' || pac_apmat || ' ' || pac_nombres,
+  centro_nombre
+  FROM receta
+  LEFT JOIN pacientes ON receta_paciente_id=pac_id
+  LEFT JOIN centro_costo ON receta_centro_ruta=centro_ruta
+  LEFT JOIN recetas_detalle ON recetad_receta_id=receta_id
+  LEFT JOIN logs ON log_recetad_id=recetad_id
+  LEFT JOIN stock ON stock_log_id=log_id
+  $where
+  $fecha_w
+  $conector
+  $paciente_w
+  $conector2
+  $medico_w
+  $conector3
+  $art_w
+  $conector4
+  $centro_w
+  $conector5
+  $receta_w
+  and stock_bod_id=".$bodega_id."
+  ";
+
+  // print($query);
+
+  $recetas = pg_query($conn, $query);
+
+  for($i=0;$i<pg_num_rows($recetas);$i++) {
+
+    $fila = pg_fetch_row($recetas);
+
+    ($i%2==0) ? $clase='tabla_fila' : $clase='tabla_fila2';
+
+    print('
+    <tr class="'.$clase.'">
+    <td style="text-align: center;">
+    <i>'.htmlentities($fila[1]).'</i>
+    </td>
+    <td style="text-align: center;">
+    <b><i>'.htmlentities($fila[2]).'</i></b>
+    </td>
+    <td>
+    '.htmlentities($fila[3]).'
+    </td>
+    <td style="text-align: center;">
+    '.htmlentities($fila[4]).'
+    </td>
+
+
+    ');
+
+      print('
+    <td>
+    <center>
+    <img src="iconos/zoom_in.png" style="cursor: pointer;"
+    onClick="visualizar_receta('.$fila[0].');"
+    alt="Ver Receta..."
+    title="Ver Receta...">
+    </center>
+    </td>
+
+    ');
+
+
+    if(_cax(21)) {
+
+    print('
+    <td>
+    <center>
+    <img src="iconos/delete.png" style="cursor: pointer;"
+    onClick="eliminar_receta('.$fila[0].');"
+    alt="Eliminar Receta..."
+    title="Eliminar Receta...">
+    </center>
+    </td>
+    </tr>
+    ');
+
+  	 }
+   // onClick="editar_receta('.$fila[0].' );"
+ }
+
+?>
+
+</table>
+</div>

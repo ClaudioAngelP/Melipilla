@@ -1,0 +1,88 @@
+<?php 
+    require_once('../../conectar_db.php');
+    pg_query("START TRANSACTION;");	
+    $hosp_id=($_POST['hosp_id']*1);	
+    $folio=-1;
+    $pac_id=$_POST['paciente_id']*1;
+    $chk=cargar_registro("select * from hospitalizacion where hosp_pac_id=$pac_id and hosp_fecha_egr is null");
+    if($chk)
+    {
+        print( 'Paciente actualmente esta ingresado al sistema.|'.$chk['hosp_id']);
+        $hosp_id=$chk['hosp_id'];
+	exit();
+    }
+    
+    $prev=$_POST['prevision']*1; 
+    $prev_clase=$_POST['prevision_clase']*1;
+    $modalidad=$_POST['modalidad']*1;
+    $ges=$_POST['ges']*1;
+    $motivo=$_POST['motivo']*1;
+    $procedencia=$_POST['procedencia']*1;
+    $inst_id=$_POST['inst_id']*1;
+    $criticidad=pg_escape_string($_POST['criticidad']);
+    $fecha_ing=pg_escape_string($_POST['fecha0']);
+    $hora_ing=pg_escape_string($_POST['hora1']);	
+    $serv_id=pg_escape_string($_POST['centro_ruta0']*1);
+    $doc_id=$_POST['doc_id']*1;
+    $nro_cama=0;
+    $fecha_egr='null';
+    $hora_egr='';
+    $condicion='null';
+    $parto='null';
+    $nacimiento='null';
+    $cie10=pg_escape_string(utf8_decode($_POST['diag_cod']));
+    $diag=pg_escape_string(utf8_decode($_POST['diagnostico']));	
+    $esp_id = pg_escape_string($_POST['esp_id']*1);
+    $esp_id2 = pg_escape_string($_POST['esp_id2']*1);
+    if($hosp_id==0)
+    {
+        $tipo_reg='N';	
+	pg_query("
+            INSERT INTO hospitalizacion VALUES (
+            DEFAULT, '$fecha_ing $hora_ing', $folio, $pac_id, $modalidad, $ges, 
+            $motivo, $procedencia, $inst_id, $fecha_egr $hora_egr, 
+            $condicion, $parto, $nacimiento, $doc_id, $nro_cama,
+            $prev, $prev_clase, '', current_timestamp,
+            ".($_SESSION['sgh_usuario_id']*1).", 
+            '$criticidad', true,
+            '$cie10', '$diag', $esp_id, $serv_id, 
+            null, null, null, null, 
+            $esp_id2
+	);	
+	");
+        $hosp_id="CURRVAL('hospitalizacion_hosp_id_seq')";
+	$h_id=cargar_registro("SELECT CURRVAL('hospitalizacion_hosp_id_seq')AS id");
+	$tipo_reg.='|'.$h_id['id'];
+    }
+    else
+    {
+        $tipo_reg='E';	
+	pg_query("UPDATE hospitalizacion SET
+	hosp_folio=$folio,
+	hosp_pac_id=$pac_id,
+	hosp_modalidad=$modalidad,
+	hosp_ges=$ges,
+	hosp_motivo=$motivo,
+	hosp_procedencia=$procedencia,
+	hosp_inst_id=$inst_id,
+	hosp_fecha_ing='$fecha_ing $hora_ing',
+	hosp_fecha_egr=$fecha_egr $hora_egr,
+	hosp_condicion_egr=$condicion,
+	hosp_parto=$parto,
+	hosp_nacimiento=$nacimiento,
+	hosp_doc_id=$doc_id,
+	hosp_numero_cama=$nro_cama,
+	hosp_prevision=$prev,
+	hosp_prevision_clase=$prev_clase,
+	hosp_servicio=$serv_id,
+	hosp_criticidad='$criticidad',
+	hosp_solicitud=true,
+	hosp_diag_cod='$cie10',
+	hosp_diagnostico='$diag',
+	hosp_esp_id=$esp_id
+	WHERE hosp_id=$hosp_id");
+	$tipo_reg.='|'.$hosp_id;	
+    }
+    pg_query("COMMIT;");
+    echo $tipo_reg;
+?>

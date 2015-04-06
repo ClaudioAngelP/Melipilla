@@ -1,0 +1,73 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$tcama_id=$_GET['tcama_id'];
+	
+	if($tcama_id>0) {
+		$t=cargar_registro("
+			SELECT * FROM clasifica_camas WHERE tcama_id=$tcama_id	
+		");
+	
+		$ini=$t['tcama_num_ini']*1;
+		$fin=$t['tcama_num_fin']*1;
+	
+		$cant=$fin-$ini;
+
+		$o=cargar_registros_obj("
+		SELECT * FROM hospitalizacion 
+		WHERE hosp_fecha_egr IS NULL AND hosp_numero_cama>0 AND  
+		hosp_numero_cama BETWEEN $ini AND $fin;	
+		");
+
+	} else {
+		
+		$t=cargar_registro("
+			SELECT 
+			MIN(tcama_num_ini) AS tcama_num_ini,			
+			MAX(tcama_num_fin) AS tcama_num_fin 
+			FROM clasifica_camas	
+		");
+	
+		$ini=$t['tcama_num_ini']*1;
+		$fin=$t['tcama_num_fin']*1;
+	
+		$cant=$fin-$ini;		
+
+		$o=cargar_registros_obj("
+		SELECT * FROM hospitalizacion 
+		WHERE hosp_fecha_egr IS NULL AND 
+		hosp_solicitud AND hosp_numero_cama>0;	
+		");
+
+	}
+		
+	$rojo=0;
+	$amarillo=0;
+	$verde=0;	
+	
+	if($o)
+		$blanco=$cant-sizeof($o);
+	else 
+		$blanco=$cant;
+	
+	if($o)
+	for($i=0;$i<sizeof($o);$i++) {
+	
+		$cat=$o[$i]['hosp_criticidad'];
+
+		switch($cat) {
+					case 'A1': case 'A2': case 'A3': case 'B1': case 'B2': 
+						$rojo++; break;	
+					case 'B3': case 'C1': case 'C2': case 'D1': 
+						$amarillo++; break;	
+					case 'C3': case 'D2': case 'D3': 
+						$verde++; break;	
+					default: $verde++; break;	
+		}	
+	
+	}
+	
+	echo json_encode(array($tcama_id,array($rojo, $amarillo, $verde, $blanco)));
+	
+?>

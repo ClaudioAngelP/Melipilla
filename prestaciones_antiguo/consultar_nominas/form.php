@@ -1,0 +1,160 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$esp=desplegar_opciones_sql("
+		SELECT DISTINCT esp_id, esp_desc FROM nomina
+		JOIN especialidades ON nom_esp_id=esp_id
+  		ORDER BY esp_desc  ");
+
+
+?>
+
+<script>
+
+listar_nominas=function() {
+
+	$('xls').value=0;
+	$('listado').innerHTML='<br><br><br><img src="imagenes/ajax-loader3.gif"><br>Espere un momento...';
+
+	var myAjax=new Ajax.Updater(
+		'listado',
+		'prestaciones/consultar_nominas/listar_nominas.php',
+		{
+			method:'post',
+			parameters:$('consulta').serialize()
+		}	
+	);
+	
+}
+
+descargar_nominas=function() {
+
+	$('xls').value=1;
+
+	$('consulta').submit();
+	
+}
+
+</script>
+
+<center>
+<div class='sub-content' style='width:950px;'>
+<div class='sub-content'>
+<img src='iconos/table.png' />
+<b>Informe Estad&iacute;stico de N&oacute;minas</b> 
+</div>
+
+<div class='sub-content'>
+
+<form id='consulta' name='consulta' 
+method='post' action='prestaciones/consultar_nominas/listar_nominas.php' 
+onSubmit='return false;' />
+
+<input type='hidden' id='xls' name='xls' value='0' />
+
+<table style='width:100%;'>
+
+  <tr><td style='text-align: right;'>Fecha Inicio:</td>
+  <td><input type='text' name='fecha1' id='fecha1' size=10
+  style='text-align: center;' value='<?php echo date("d/m/Y")?>'>
+  <img src='iconos/date_magnify.png' id='fecha1_boton'></td></tr>
+  <tr><td style='text-align: right;'>Fecha Final:</td>
+  <td><input type='text' name='fecha2' id='fecha2' size=10
+  style='text-align: center;' value='<?php echo date("d/m/Y")?>'>
+  <img src='iconos/date_magnify.png' id='fecha2_boton'></td></tr>
+  
+  <tr><td style='text-align:right;'>Especialidad:</td>
+  <td>
+  <select id='esp_id' name='esp_id'>
+  <option value='-1' SELECTED>(Todas las Especialidades...)</option>
+  <?php echo $esp; ?>
+  </select>
+  </td></tr>
+
+<tr>
+<td style='text-align:right;'>Profesional Tratante:</td>
+<td>
+<input type='hidden' id='doc_id' name='doc_id' value='-1'>
+<input type='text' id='rut_medico' name='rut_medico' size=10
+style='text-align: center;' value='' disabled>
+<input type='text' id='nombre_medico' ondblclick='
+	$("doc_id").value="-1";
+	$("rut_medico").value="";
+	$("nombre_medico").value="";
+' value='' name='nombre_medico' size=35>
+</td>
+</tr>
+
+
+<tr><td style='text-align:right;'>
+Ordenar por:
+</td><td>
+<select id='orden' name='orden'>
+<option value='0'>Numero de Folio</option>
+<option value='1'>Fecha</option>
+<option value='2'>Especialidad</option>
+</select>
+</td></tr>
+
+<tr><td colspan=2 style='text-align:center;'>
+<center>
+<input type='button' id='actualiza' name='actualiza' 
+onClick='listar_nominas();'
+value='-- Actualizar Listado... --' />
+
+<input type='button' id='descarga' name='descarga' 
+onClick='descargar_nominas();'
+value='-- Descargar Informe en XLS... --' />
+
+</center>
+</td></tr>
+
+</table>
+
+</form>
+
+</div>
+
+<div class='sub-content2' id='listado' style='height:250px;overflow:auto;'>
+
+</div>
+
+</div>
+
+</center>
+
+  <script>
+  
+    Calendar.setup({
+        inputField     :    'fecha1',         // id of the input field
+        ifFormat       :    '%d/%m/%Y',       // format of the input field
+        showsTime      :    false,
+        button          :   'fecha1_boton'
+    });
+    Calendar.setup({
+        inputField     :    'fecha2',
+        ifFormat       :    '%d/%m/%Y',
+        showsTime      :    false,
+        button          :   'fecha2_boton'
+    });
+    
+      ingreso_rut=function(datos_medico) {
+      	$('doc_id').value=datos_medico[3];
+      	$('rut_medico').value=datos_medico[1];
+      }
+
+      autocompletar_medicos = new AutoComplete(
+      	'nombre_medico', 
+      	'autocompletar_sql.php',
+      function() {
+        if($('nombre_medico').value.length<3) return false;
+        
+        return {
+          method: 'get',
+          parameters: 'tipo=medicos&'+$('nombre_medico').serialize()
+        }
+      }, 'autocomplete', 350, 200, 250, 1, 2, ingreso_rut);
+  
+  </script>
+  

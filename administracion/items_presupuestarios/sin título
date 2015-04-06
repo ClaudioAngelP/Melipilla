@@ -1,0 +1,9 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$cert_id=$_GET['cert_id']*1;
+	
+	
+
+?>

@@ -1,0 +1,620 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$f=cargar_registros_obj("SELECT * FROM receta_formatos ORDER BY rf_id;", true);
+
+	$servicioshtml = desplegar_opciones("centro_costo", "centro_ruta, centro_nombre, length(regexp_replace(centro_ruta, '[^.]', '', 'g')) AS centro_nivel, centro_medica", '1', "centro_ruta ilike '.subdireccinmdica.%'",	'ORDER BY centro_ruta');
+	
+?>
+
+<script>
+
+var componentes=<?php echo json_encode($f); ?>;
+
+validacion_fecha2  =function(obj){
+	
+	if(obj.value!=''){
+		validacion_fecha(obj);	
+	}else{
+		obj.style.background='';	
+	}
+
+}
+
+validacion_fecha_emision  =function(obj){
+	
+	if(obj.value!=''){
+		validacion_fecha(obj);	
+	}else{
+		obj.style.background='';	
+	}
+
+}
+
+formato_datos=function(d) {
+	
+	if(isNaN(d) || d==Infinity) {
+		return '?';
+	} else {
+		return number_format(d,4,',','.');
+	}
+	
+}
+
+comprobar_datos=function() {
+
+	var total=0;
+
+	for(var i=0;i<(componentes.length-1);i++) {
+		total+=($('campo_'+componentes[i].rf_id).value*1);
+	}
+	
+	// $('campo_37').value=total; // ESTO QUEDA ASI HASTA QUE LOS MEDICOS LA DIGITEN!
+	
+	$('val_1').value=formato_datos((($('campo_23').value*1)*0.47)/($('campo_37').value*1));
+
+	$('val_2').value=formato_datos(((($('campo_18').value*1)+($('campo_19').value*1))*10)/($('campo_37').value*1));
+
+	$('val_3').value=formato_datos((($('campo_23').value*1)*223)/($('campo_37').value*1));
+
+	$('val_4').value=formato_datos((($('campo_22').value*1)*1102)/($('campo_37').value*1));
+
+	$('val_5').value=formato_datos(((($('campo_23').value*1)*0.47)/($('campo_37').value*1))+(0.1*($('campo_22').value*1)/($('campo_37').value*1)));
+	
+	if($('val_1').value!='?') {
+	
+		if(((($('campo_23').value*1)*0.47)/($('campo_37').value*1))>0.019) {
+			$('val_1').style.background='red';
+		} else {
+			$('val_1').style.background='yellowgreen';
+		}
+	
+	} else {
+		
+		$('val_1').style.background='';
+		
+	}
+
+	if($('val_5').value!='?') {
+	
+		if((((($('campo_23').value*1)*0.47)/($('campo_37').value*1))+(0.1*($('campo_22').value*1)/($('campo_37').value*1)))>0.042) {
+			$('val_5').style.background='red';
+		} else {
+			$('val_5').style.background='yellowgreen';
+		}
+
+	} else {
+		
+		$('val_5').style.background='';
+		
+	}
+	
+	var osmolaridad=0;
+	
+	for(var i=0;i<componentes.length;i++) {
+		osmolaridad+=($('campo_'+componentes[i].rf_id).value*(componentes[i].rf_osmolaridad*1));
+	}
+	
+	$('val_6').value=osmolaridad;
+	
+	if(osmolaridad>=800) {
+		$('val_6').style.background='yellow';
+	} else {
+		$('val_6').style.background='';		
+	}
+	
+	
+}
+
+
+
+	  ingreso_rut=function(datos_medico) {
+      
+		$('doc_id').value=datos_medico[3];
+		$('rut_medico').value=datos_medico[1];
+      
+      }
+      
+      autocompletar_medicos = new AutoComplete(
+      'nombre_medico', 
+      'autocompletar_sql.php',
+      function() {
+        if($('nombre_medico').value.length<2) return false;
+        
+        return {
+          method: 'get',
+          parameters: 'tipo=medicos&'+$('nombre_medico').serialize()
+        }
+      }, 'autocomplete', 450, 300, 250, 1, 2, ingreso_rut);
+      
+      
+      
+    seleccionar_paciente = function(d) {
+    
+		$('pac_rut').value=d[0];
+		$('pac_nombre').innerHTML=d[2];
+		$('pac_id').value=d[4];
+		$('pac_ficha').innerHTML=d[3];
+		$('pac_fc_nac').innerHTML=d[7];
+		$('pac_edad').innerHTML='Edad: <b>'+d[11]+'</b>';    
+    	
+    }
+
+    autocompletar_pacientes = new AutoComplete(
+      'pac_rut', 
+      'autocompletar_sql.php',
+      function() {
+        if($('pac_rut').value.length<2) return false;
+
+        return {
+          method: 'get',
+          parameters: 'tipo=pacientes&nompac='+encodeURIComponent($('pac_rut').value)
+        }
+      }, 'autocomplete', 500, 200, 150, 1, 3, seleccionar_paciente);
+
+		ingreso_diagnosticos=function(datos_diag) {
+      	
+      	var cie10=datos_diag[0].charAt(0)+datos_diag[0].charAt(1)+datos_diag[0].charAt(2);
+      	cie10+='.'+datos_diag[0].charAt(3);
+      	
+      	$('nomd_diag_cod').value=cie10;
+      	$('nomd_diagnostico').value=datos_diag[2].unescapeHTML();
+      	
+      }
+
+      autocompletar_diagnosticos = new AutoComplete(
+      	'nomd_diagnostico', 
+      	'autocompletar_sql.php',
+      function() {
+        if($('nomd_diagnostico').value.length<3) return false;
+        
+        return {
+          method: 'get',
+          parameters: 'tipo=diagnostico_tapsa&cadena='+encodeURIComponent($('nomd_diagnostico').value)
+        }
+      }, 'autocomplete', 350, 200, 250, 1, 2, ingreso_diagnosticos);
+
+      
+guardar_receta=function() {
+
+		if(!validacion_fecha($('rnpt_fecha'))) {
+			alert('Debe ingresar una fecha v&aacute;lida para la preparaci&oacute;n.'.unescapeHTML());
+			return;
+		}
+	
+		if($('pac_id').value*1==0) {
+			alert('Debe seleccionar paciente para la preparaci&oacute;n.'.unescapeHTML());
+			return;
+		}
+
+		if($('doc_id').value*1==0) {
+			alert('Debe seleccionar m&eeacute;dico para la preparaci&oacute;n.'.unescapeHTML());
+			return;
+		}
+
+	if(trim($('tipo_receta').value)=='') {
+
+		if($('centro_servicio').value*1==-1) {
+			alert('Debe seleccionar servicio de destino para la preparaci&oacute;n.'.unescapeHTML());
+			return;
+		}
+	
+		if(((($('campo_23').value*1)*0.47)/($('campo_37').value*1))>0.019) {
+			alert('Relaci&oacute;n Calcio L&iacute;pidos es mayor a 0,19, porfavor cambie las proporciones.'.unescapeHTML());
+			return;
+		} 
+	
+		if((((($('campo_23').value*1)*0.47)/($('campo_37').value*1))+(0.1*($('campo_22').value*1)/($('campo_37').value*1)))>0.042) {
+			alert('Relaci&oacute;n Calcio F&oacute;sforo es mayor a 0,42, porfavor cambie las proporciones.'.unescapeHTML());
+			return;
+		}
+		
+		if($('val_6').value*1>=800) {
+			if(!confirm('Receta con osmolaridad mayor a 800 mosm/L no podr&aacute; ser administrada v&iacute;a perif&eacute;rica. &iquest;Est&aacute; seguro que desea esta preparaci&oacute;n?'.unescapeHTML())) {
+				return;
+			}
+		}
+
+	}
+		
+		$('nomd_diag_cod').disabled=false;
+		
+		var myAjax=new Ajax.Request(
+			'recetas/receta_npt/sql.php',
+			{
+				method:'post',
+				parameters: $('receta').serialize(),
+				onComplete:function(r) {
+				
+					var rec=r.responseText.split(';');
+					var alerthtml='Receta(s):\n';
+					for(var u=0;u<rec.length;u++){
+						var receta=rec[u].split('|');
+						alerthtml+='N&deg; '+receta[0]+'&nbsp;['+receta[1]+']\n';
+					}
+					alert(alerthtml.unescapeHTML());
+					//alert(r.responseText);
+					cambiar_pagina('recetas/receta_npt/form.php');
+				}
+			}
+		); 
+}
+
+
+visualizar_rnpt=function(rnpt_id) {
+
+    receta = window.open('recetas/receta_npt/visualizar_rnpt.php?rnpt_id='+rnpt_id,
+    'receta_rnpt', 'left='+((screen.width/2)-225)+',top='+((screen.height/2)-200)+',width=450,height=450,status=0,scrollbars=1');
+			
+    receta.focus();
+
+}
+
+campos_receta=function() {
+	
+	if(trim($('tipo_receta').value)=='') {
+		$('receta_especial').show();
+		$('boton_magistral').hide();
+	} else {
+		$('receta_especial').hide();		
+		$('boton_magistral').show();
+	}
+	
+}
+
+validacion_fecha($('rnpt_fecha'));
+validacion_fecha2($('rnpt_fecha2'));
+
+buscar_npt=function() {
+	
+	var npt=prompt("Ingrese el Número de la Receta:");
+	
+	var myAjax=new Ajax.Request(
+		'recetas/receta_npt/buscar_npt.php',
+		{
+			method:'get',
+			parameters: 'npt_id='+npt,
+			onComplete:function(r) {
+			try {
+				reg=r.responseText.evalJSON(true);				
+				if(reg){
+					$('modificar').value=1; $('rnpt_id').value=reg.rnpt_id;
+			
+					$('fechas').style.display='none'; $('fecha_emision').style.display='';
+					$('rnpt_fecha_emision').value=reg.rnpt_fecha_emision;
+					$('rnpt_fecha2').value=reg.rnpt_fecha_emision;
+					$('pac_id').value=reg.pac_id; $('doc_id').value=reg.doc_id;
+					$('pac_rut').value=reg.pac_rut; $('pac_ficha').innerHTML=reg.pac_ficha;
+					$('pac_nombre').innerHTML=(reg.pac_nombres+' '+reg.pac_appat+' '+reg.pac_apmat).unescapeHTML();
+					$('pac_fc_nac').innerHTML=reg.pac_fc_nac;
+					$('rut_medico').value=reg.doc_rut;
+					$('nombre_medico').value=(reg.doc_nombres+' '+reg.doc_paterno+' '+reg.doc_materno).unescapeHTML();
+					$('centro_servicio').value=reg.centro_ruta; $('tipo_bajada').value=reg.rnpt_tipo_bajada;
+					$('peso').value=reg.rnpt_peso_gr; $('nomd_diag_cod').value=reg.rnpt_diag_cod;
+					$('nomd_diagnostico').value=reg.rnpt_diagnostico.unescapeHTML();
+					
+					var tipo_rnpt=reg.rnpt_detalle.split('|');
+					
+					if(tipo_rnpt[0]=='SOLUCION NPT MAGISTRAL TIPO 1'){
+						$('tipo_receta').value='SOLUCION NPT MAGISTRAL TIPO 1|250';
+					}else if(tipo_rnpt[0]=='SOLUCION NPT MAGISTRAL TIPO 2'){
+						$('tipo_receta').value='SOLUCION NPT MAGISTRAL TIPO 2|500';
+					}else if(tipo_rnpt[0]=='SOLUCION NPT MAGISTRAL TIPO 3'){
+						$('tipo_receta').value='SOLUCION NPT MAGISTRAL TIPO 3|1000';
+					}else if(tipo_rnpt[0]=='SOLUCION NPT MAGISTRAL TIPO 4'){
+						$('tipo_receta').value='SOLUCION NPT MAGISTRAL TIPO 4|1500';
+					}else if(tipo_rnpt[0]=='SOLUCION NPT MAGISTRAL TIPO 5'){
+						$('tipo_receta').value='SOLUCION NPT MAGISTRAL TIPO 5|1800';
+					}else{
+						var formato=<?php echo json_encode($f); ?>;
+					
+						for(i=0;i<formato.length;i++) {
+			
+							var det=reg.rnpt_detalle.split('\n');
+					
+							for(var n=0;n<det.length;n++) {	
+								var e=det[n].split('|');
+
+								if(e[0]==formato[i].rf_compuesto)
+									$('campo_'+formato[i].rf_id).value=e[1];
+							}
+						}
+						comprobar_datos();
+						
+					}
+				validacion_fecha_emision($('rnpt_fecha_emision'));
+				campos_receta();
+				} else {
+				
+					//$('desc_cama_'+id).innerHTML='<table><tr><td><img src="iconos/error.png"></td><td> <i>N&uacute;mero de cama no es v&aacute;lido.</i></td></tr></table>';
+				
+				}
+				
+				} catch(err) {
+					alert(err);
+				}
+			}
+		}
+	);
+	
+}
+
+
+</script>
+
+<center>
+<div class='sub-content' style='width:750px;'>
+<div class='sub-content'>
+<img src='iconos/database_go.png'>
+<b>Recetario de Nutrici&oacute;n Parenteral</b>&nbsp;
+<?php if(_cax(21)){ ?><input type='button' value='Modificar NPT' onClick='buscar_npt();' /><?php }?>
+</div>
+
+<form id='receta' name='receta' onSubmit='return false;'>
+
+<input type='hidden' id='pac_id' name='pac_id' value='' />
+<input type='hidden' id='doc_id' name='doc_id' value='' />
+<input type='hidden' id='modificar' name='modificar' value='0' />
+<input type='hidden' id='rnpt_id' name='rnpt_id' value='-1' />
+
+<div class='sub-content'>
+
+<center>
+
+<table style='width:100%';>
+
+	
+	<tr>
+		<td class='tabla_fila2' style='text-align:right;'>Fecha:</td>
+		<td colspan=3 name='fechas' id='fechas'>
+	
+		<input type='text' size=10 id='rnpt_fecha' name='rnpt_fecha' 
+		style='text-align:center;'
+		value='<?php echo date("d/m/Y"); ?>' onKeyUp='validacion_fecha(this);'
+		 /><img src='iconos/date_magnify.png' id='fecha1_boton'>
+		&nbsp;Hasta: <input type='text' size=10 id='rnpt_fecha2' name='rnpt_fecha2' 
+		style='text-align:center;'
+		value='<?php echo date("d/m/Y"); ?>' onKeyUp='validacion_fecha2(this);' />
+		<img src='iconos/date_magnify.png' id='fecha2_boton'>
+		</td>
+		<td colspan=3 name='fecha_emision' id='fecha_emision' style='display:none;'>
+		<input type='text' size=10 id='rnpt_fecha_emision' name='rnpt_fecha_emision' 
+		style='text-align:center;' value='' onKeyUp='validacion_fecha_emision(this);' />
+		</td>
+	</tr>
+
+
+
+	<tr>
+		<td class='tabla_fila2' style='text-align:right;'>Paciente:</td>
+		<td colspan=3>
+	
+		<input type='text' size=45 id='pac_rut' name='pac_rut' value='' />
+	
+		
+		</td>
+	</tr>
+	
+	<tr>
+	<td class='tabla_fila2'  style='text-align:right;'>Ficha Cl&iacute;nica:</td>
+	<td class='tabla_fila' style='text-align:left;font-weight:bold;' id='pac_ficha' colspan=3>
+	</td>
+	</tr>
+	
+	<tr>
+	<td class='tabla_fila2'  style='text-align:right;'>Nombre:</td>
+	<td class='tabla_fila' colspan=3 style='font-weight:bold;' id='pac_nombre'>
+	</td>
+	</tr>
+
+	<tr>
+	<td class='tabla_fila2'  style='text-align:right;'>Fecha de Nac.:</td>
+	<td class='tabla_fila' id='pac_fc_nac'>
+	</td>
+	<td class='tabla_fila2' colspan=2 style='text-align:center;width:40%;' id='pac_edad'>
+	Edad:<b>?</b>
+	</td>
+	</tr>
+
+	
+	<tr>
+		<td class='tabla_fila2' style='text-align:right;'>M&eacute;dico:</td>
+		<td colspan=3>
+		
+		<input type='text' id='rut_medico' name='rut_medico' size=10
+		style='text-align: center;' disabled>
+		<input type='text' id='nombre_medico' name='nombre_medico' size=35 onKeyUp=''>
+	   
+		
+		</td>
+	</tr>
+	<tr>
+		<td class='tabla_fila2' style='text-align:right;'>Servicio:</td>
+		<td colspan=3>
+
+		<select id='centro_servicio' name='centro_servicio'>
+		<option value=-1>(Seleccionar...)</option>
+		<?php echo $servicioshtml?>
+		</select>
+		
+		
+		</td>
+	</tr>
+
+	<tr>
+		<td class='tabla_fila2' style='text-align:right;'>Tipo Bajada:</td>
+		<td colspan=3>
+
+		<select id='tipo_bajada' name='tipo_bajada'>
+		<option value='Sin Bajada...' SELECTED>(Sin Bajada...)</option>
+		<option value='Alaris'>Alaris</option>
+		<option value='Terumo'>Terumo</option>
+		<option value='Optima'>Optima</option>
+		<option value='Fresenius'>Fresenius</option>
+		<option value='Fresenius Ambar'>Fresenius Ambar</option>
+		</select>
+		
+		</td>
+	</tr>
+	<tr>
+		<td class='tabla_fila2' style='text-align:right;'>Peso (gr):</td>
+		<td colspan=3>
+
+		<input type='text' id='peso' name='peso' value=''size=10>
+		
+		</td>
+	</tr>
+      <tr>
+      	<td class='tabla_fila2' style='text-align:right;'>Diag. CIE10:</td>
+			<td colspan=3>
+			<input type='text' id='nomd_diag_cod' name='nomd_diag_cod' 
+			value='' DISABLED size=5 style='font-weight:bold;text-align:center;' />
+			<input type='text' id='nomd_diagnostico' 
+			value='' name='nomd_diagnostico' size=30
+			onDblClick='$("nomd_diag_cod").value=""; $("nomd_diagnostico").value="";'/>
+		</td>
+		</tr>
+
+	<tr>
+		<td class='tabla_fila2' style='text-align:right;'>Tipo Receta:</td>
+		<td colspan=3>
+
+		<select id='tipo_receta' name='tipo_receta' onChange='campos_receta();'>
+		<option value='' SELECTED>(Especial...)</option>
+		<option value='SOLUCION NPT MAGISTRAL TIPO 1|1250'>SOLUCION NPT MAGISTRAL TIPO 1</option>
+		<option value='SOLUCION NPT MAGISTRAL TIPO 2|1380'>SOLUCION NPT MAGISTRAL TIPO 2</option>
+		<option value='SOLUCION NPT MAGISTRAL TIPO 3|1554'>SOLUCION NPT MAGISTRAL TIPO 3</option>
+		<option value='SOLUCION NPT MAGISTRAL TIPO 4|1500'>SOLUCION NPT MAGISTRAL TIPO 4</option>
+		<option value='SOLUCION NPT MAGISTRAL TIPO 5|2000'>SOLUCION NPT MAGISTRAL TIPO 5</option>
+		</select>
+		
+		</td>
+	</tr>
+
+</table>
+
+<table style='width:100%;' id='receta_especial'>
+	<tr>
+	<td style='width:60%;' valign='top'> 
+
+	<table style='width:100%' cellpadding=0 cellspacing=0>
+	<tr class='tabla_header'>
+		<td>Compuesto</td>
+		<td>Cantidad</td>
+		<td>Unidad</td>
+	</tr>
+
+<?php 
+	
+	for($i=0;$i<sizeof($f);$i++) {
+		
+		$clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+		
+		//if($i==sizeof($f)-1) $ronly=' READONLY '; else $ronly='';
+		
+		if($f[$i]['rf_visible']!='t') {
+			$display='display:none;';
+		} else {
+			$display='';
+		}
+		
+		print("
+			<tr class='$clase' style='$display'>
+			<td style='text-align:right;font-weight:bold;'>".$f[$i]['rf_compuesto']."&nbsp;:&nbsp;</td>
+			<td><input size=10 type='text' style='text-align:right;' id='campo_".$f[$i]['rf_id']."' name='campo_".$f[$i]['rf_id']."' onKeyUp='comprobar_datos();'  /></td>
+			<td>".$f[$i]['rf_unidad']."</td>
+			</tr>
+		");
+		
+	}
+
+?>
+<!--<tr>
+<td style='text-align:right;' class='tabla_fila'><b>C&oacute;digo del Compuesto:&nbsp;</b></td>
+<td class='tabla_fila'>
+<input type='text' name='cod' id='cod'>
+<input type='hidden' name='cod_id' id='cod_id' >
+</td>
+</tr>-->
+</table>
+
+</div>
+</center>
+
+</td><td valign='top'>
+
+<center>
+
+<div class='sub-content'>
+
+<table style='font-size:9px;'>
+	<tr>
+		<td style='text-align:right;'>Relaci&oacute;n Ca/L&iacute;pidos:</td>
+		<td><input type='text' id='val_1' name='val_1' value='' size=7 style='text-align:right;' READONLY><span style='font-size:10px;'>(< 0,019)</span></td>
+	</tr>
+	
+	<tr>
+		<td style='text-align:right;'>Concentraci&oacute;n AA:</td>
+		<td><input type='text' id='val_2' name='val_2' value='' size=7 style='text-align:right;' READONLY></td>
+	</tr>
+	
+	<tr>
+		<td style='text-align:right;'>Calcio</td>
+		<td><input type='text' id='val_3' name='val_3' value='' size=7 style='text-align:right;' READONLY></td>
+	</tr>
+	
+	<tr>
+		<td style='text-align:right;'>Fosfato:</td>
+		<td><input type='text' id='val_4' name='val_4' value='' size=7 style='text-align:right;' READONLY></td>
+	</tr>
+	
+	<tr>
+		<td style='text-align:right;'>Relaci&oacute;n Ca/F&oacute;sforo:</td>
+		<td><input type='text' id='val_5' name='val_5' value='' size=7 style='text-align:right;' READONLY><span style='font-size:10px;'>(< 0,042)</span></td>
+	</tr>
+
+	<tr>
+		<td style='text-align:right;'>Osmolaridad (mosm/L):</td>
+		<td><input type='text' id='val_6' name='val_6' value='' size=7 style='text-align:right;' READONLY></td>
+	</tr>
+
+
+</table>
+</div>
+<br /><br />
+
+<input type='button' id='' name='' value='-- Guardar Receta... --' onClick='guardar_receta();' >
+
+</center>
+
+</td>
+	</tr>
+</table>
+
+<input type='button' id='boton_magistral' name='boton_magistral' 
+style='display:none;'
+value='-- Guardar Receta Magistral... --' onClick='guardar_receta();' >
+
+</form>
+
+</div>
+</center>
+
+<script>
+
+	Calendar.setup({
+        inputField     :    'rnpt_fecha',         // id of the input field
+        ifFormat       :    '%d/%m/%Y',       // format of the input field
+        showsTime      :    false,
+        button          :   'fecha1_boton'
+    });
+    
+    Calendar.setup({
+        inputField     :    'rnpt_fecha2',
+        ifFormat       :    '%d/%m/%Y',
+        showsTime      :    false,
+        button          :   'fecha2_boton'
+    });
+    
+</script>

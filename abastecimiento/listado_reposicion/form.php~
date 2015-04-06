@@ -1,0 +1,155 @@
+<?php
+
+  require_once("../../conectar_db.php");
+  
+  $bodegashtml = desplegar_opciones("bodega", "bod_id, bod_glosa",'1','bod_id IN ('._cav(27),')', 'ORDER BY bod_glosa'); 
+  
+  $controlhtml = desplegar_opciones("receta_tipo_talonario", 
+	"tipotalonario_id, tipotalonario_medicamento_clase",'-1','true',
+  'ORDER BY tipotalonario_id'); 
+
+
+?>	
+  
+  <script>
+  
+  consulta_enviada=false;
+  
+  buscar_reposicion = function() {
+  
+  $('cargandoimg').style.display='';
+  
+   params=$('bodega').serialize();
+   
+   if($('critico'))
+   	params+='&'+$("critico").serialize();
+   
+	var myAjax=new Ajax.Updater(
+	'lista_productos',
+	'abastecimiento/listado_reposicion/listado_reposicion.php',
+	{
+			method:'get',
+			parameters: params,
+			onComplete: function(){
+				$('cargandoimg').style.display='none';
+			}
+	}
+	);
+			
+  }
+  
+  verifica_tabla = function() {
+
+   params=$('pedido').serialize();
+   
+   if($('critico'))
+   	params+='&'+$("critico").serialize();
+  
+	var myAjax=new Ajax.Request(
+		'abastecimiento/listado_reposicion/generar_reposicion.php',
+		{
+				method:'post',
+				parameters:params,
+				onComplete:function(r) {
+					var arr=r.responseText.evalJSON(true);
+					var alerthtml='Pedidos Generados: \n';
+					for(var i=0;i<arr.length;i++){
+						if(!arr[i].convenio_licitacion)arr[i].convenio_licitacion='Sin proveedor Asociado.';
+						
+						alerthtml+=arr[i].pedido_nro+' '+arr[i].convenio_licitacion+'\n';
+					}
+					alert(alerthtml);
+					
+				}
+		});
+	  
+	}
+	
+	 xls_busqueda = function() {
+
+    var __ventana = window.open('abastecimiento/listado_reposicion/listado_reposicion.php?xls&'+$("bodega").serialize(), '_self');
+  
+  }
+  
+  actualizar_datos=function(art_id) {
+	  
+	  var stock=$('art_stock_'+art_id).value*1;
+	  var pedido=$('art_'+art_id).value*1;
+	  var consumo=$('consumo_'+art_id).value*1;
+	  
+	  if(consumo==0) consumo=0.01;
+	  
+	  if(consumo!=0) {
+		$('dias_stock_'+art_id).innerHTML=number_format((stock/consumo)*30,2,',','.');
+		$('dias_repo_'+art_id).innerHTML=number_format((pedido/consumo)*30,2,',','.');
+	  }
+	  
+  }
+			
+	</script>
+  
+  
+  <center>
+  <table><tr><td style='width:850px;'>
+  
+  <div class='sub-content'>
+  <div class='sub-content'><img src='iconos/page_refresh.png'> <b>Listado de Reposici&oacute;n de Art&iacute;culos</b></div>
+  
+  <form name='pedido' id='pedido'>
+  
+  <table>
+  <tr><td style='text-align: right;'>Ubicaci&oacute;n:</td>
+  <td>
+  <select name='bodega' id='bodega' onChange='buscar_reposicion();'>
+  <?php echo $bodegashtml; ?>
+  </select>
+  </td></tr>
+  </table>
+  
+  <div class='sub-content' id='listado_detalle'>
+  <div class='sub-content'>
+  <img src='iconos/script.png'> <b>Listado de Art&iacute;culos a Reponer</b>&nbsp;
+  		<select id='critico' name='critico' onClick='buscar_reposicion();'>
+  		<option value='2'>Saldos en Punto de Pedido</option>
+  		<option value='1'>S&oacute;lo Saldos Cr&iacute;ticos</option>
+  		<option value='0'>(Todos los Art&iacute;culos...)</option>
+  		</select>
+  			<img id='cargandoimg' src='imagenes/ajax-loader1.gif' style='display: none;'>
+  	</div>
+  <div class='sub-content2' id='lista_productos' style='height: 250px; overflow:auto;'>
+  (No ha seleccionado art&iacute;culos...)
+  </div>
+  
+  </div>
+  
+  <center>
+  <table><tr><td>
+		<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/script_go.png'>
+		</td><td>
+		<a href='#' onClick='verifica_tabla();'> Generar Reposici&oacute;n...</a>
+		</td></tr></table>
+		</div>
+		</td><td>
+		<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/page_excel.png'>
+		</td><td>
+		<a href='#' onClick='xls_busqueda();'> Descargar XLS (MS Excel)...</a>
+		</td></tr></table>
+		</div>
+		</td></tr></table>
+  </center>
+  
+  </form>
+  </div>
+  
+  </td></tr></table>
+  
+  <script>
+  
+	buscar_reposicion();
+
+  </script>
+  

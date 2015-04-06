@@ -1,0 +1,211 @@
+<?php
+    require_once('../../conectar_db.php');
+
+    $origen   = pg_escape_string($_GET['bodega_origen']);
+    $destino  = ($_GET['bodega_destino']*1);
+    $estado   = ($_GET['estado']*1);
+    $orden    = ($_GET['orden']*1);
+    $fecha1   = pg_escape_string($_GET['fecha1']);
+    $fecha2   = pg_escape_string($_GET['fecha2']);
+
+   if($estado!=-1)
+    {
+        $conector1='AND';
+        if($estado<=3)
+        {
+            $estado_q = 'pedido_estado='.$estado;
+        }
+        else
+        {
+            $estado_q = 'NOT pedido_autorizado';
+        }
+    }
+    else
+    {
+        $conector1='';
+        $estado_q = '';
+    }
+
+    if(strstr($origen,'.'))
+        $origen_cond="origen_centro_ruta='$origen'";
+    else
+        $origen_cond="origen_bod_id=$origen";
+
+	 if($destino==-1) {
+	     	
+    	if(!strstr($origen,'.'))
+	 		$destino_q = '('.$origen_cond." OR destino_bod_id=$origen)";
+	 	else
+	 		$destino_q = '('.$origen_cond.')'; 	
+
+	 } else {
+
+	 	$destino_cond='destino_bod_id='.$destino;
+  		$destino_q = '('.$origen_cond.' AND '.$destino_cond.')';
+
+	}
+
+  if($orden==0) {
+    $orden_campo='pedido_fecha';
+  } else {
+    $orden_campo='pedido_nro';
+  }
+
+  if(isset($_GET['orientacion'])) {
+    $orden_orienta='';
+  } else {
+    $orden_orienta='DESC';
+  }
+  if(isset($_GET['pds_propios']))
+  {
+    $funcionario_q=" AND pedido_func_id=".($_SESSION['sgh_usuario_id']*1);
+  }
+  else
+  {
+    $funcionario_q='';
+  }
+
+    $pedidos=cargar_registros_obj(
+    "SELECT DISTINCT pedido_id, pedido_nro, date_trunc('second', pedido_fecha) AS pedido_fecha, 
+  COALESCE(b1.bod_glosa, c2.centro_nombre, c1.centro_nombre) as ubicacion_origen,
+  COALESCE(b2.bod_glosa, 'Abastecimiento') as ubicacion_destino, pedido_estado,
+  origen_bod_id,
+  destino_bod_id, pedido_autorizado
+  FROM pedido
+  LEFT JOIN bodega AS b1 ON b1.bod_id=origen_bod_id
+  LEFT JOIN logs ON log_id_pedido=pedido_id
+  LEFT JOIN cargo_centro_costo ON logs.log_id=cargo_centro_costo.log_id
+  LEFT JOIN centro_costo AS c1 ON
+        cargo_centro_costo.centro_ruta=c1.centro_ruta
+  LEFT JOIN centro_costo AS c2 ON
+        pedido.origen_centro_ruta=c2.centro_ruta
+  LEFT JOIN bodega AS b2 ON b2.bod_id=destino_bod_id
+  JOIN funcionario AS f1 ON f1.func_id=pedido_func_id
+  WHERE
+  (date_trunc('day', pedido_fecha)>='$fecha1' AND date_trunc('day', pedido_fecha)<='$fecha2')
+  AND
+  $destino_q
+  $conector1
+  $estado_q
+  $funcionario_q
+  ORDER BY $orden_campo $orden_orienta
+    ",true);
+    
+    if(isset($_GET['xls'])) {
+	    header("Content-type: application/vnd.ms-excel");
+      	header("Content-Disposition: filename=\"HistorialRecepciones_BodegaCentral---".date('d-m-Y').".XLS\";");
+    	$strip_html=true;
+  	} else {}
+
+    if($pedidos)
+    {
+       print('
+            <table width=100%>
+            <tr class="tabla_header" style="font-weight: bold;">
+                <td>Nro. Pedido</td>
+                <td>Fecha/Hora</td>
+                <td>Ubicaci&oacute;n Or&iacute;gen</td>
+                <td>&nbsp;</td>
+                <td>Ubicaci&oacute;n Destino</td>
+            ');
+  
+            //print("
+            //<td>Ubicaci&oacute;n Or&iacute;gen</td>
+            // <td>&nbsp;</td>
+            // <td>Ubicaci&oacute;n Destino</td>");
+  
+        if($estado_q=='')
+        {
+            print('<td>Estado</td><td>&nbsp;</td>');
+        }
+  
+        print('</tr>');
+        
+        for($i=0;$i<count($pedidos);$i++)
+        {
+            ($i%2==0)     ?   $clase='tabla_fila'   :  $clase='tabla_fila2';
+
+            print(
+                    '<tr class="'.$clase.'" onMouseOver="this.className=\'mouse_over\';" onMouseOut="this.className=\''.$clase.'\';">
+                        <td style="text-align: center; font-weight: bold;">'.$pedidos[$i]['pedido_nro'].'</td>
+                        <td style="text-align: center; font-weight: bold; font-size: 10px;">'.$pedidos[$i]['pedido_fecha'].'</td>'
+                 );
+
+            if($pedidos[$i]['origen_bod_id']!=0)
+            {
+                print('<td style="font-size: 10px;">'.$pedidos[$i]['ubicacion_origen'].'</td>');
+            }
+            else
+            {
+                print('<td style="font-size: 10px; color: green;">'.$pedidos[$i]['ubicacion_origen'].'</td>');
+            }
+            print('<td><center><b>&rarr;</b></center></td>');
+
+            if($pedidos[$i]['destino_bod_id']!=0)
+            {
+                print('<td style="font-size: 10px;">'.$pedidos[$i]['ubicacion_destino'].'</td>');
+            }
+            else
+            {
+                print('<td style="font-size: 10px; color: blue;">'.$pedidos[$i]['ubicacion_destino'].'</td>');
+            }
+            if($estado_q=='')
+            {
+                if($pedidos[$i]['pedido_autorizado']=='t')
+                {
+                    switch($pedidos[$i]['pedido_estado'])
+                    {
+                        case 0: $pedidos[$i]['pedido_estado']='Enviado'; break;
+                        case 1: $pedidos[$i]['pedido_estado']='Retornado'; break;
+                        case 2: $pedidos[$i]['pedido_estado']='Terminado'; break;
+                        case 3: $pedidos[$i]['pedido_estado']='Anulado'; break;
+                    }
+                }
+                else
+                {
+                    $pedidos[$i]['pedido_estado']='Sin Autorizaci&oacute;n';
+                }
+                print('<td style="text-align: center;">'.$pedidos[$i]['pedido_estado'].'</td>');
+            }
+                    $pedido_id=$pedidos[$i]['pedido_nro'];
+                    
+                    print('<td style="text-align: center;" class="no_printer">
+                    <img src="iconos/magnifier.png" style="cursor: pointer;"
+                    onClick="abrir_pedido1('.$pedido_id.');"
+                    alt="Ver Detalle..."
+                    title="Ver Detalle...">
+                    </td>');
+
+
+                 
+                
+
+
+
+            print('</tr>');
+
+
+    }
+        print("</table>");
+    }
+else
+{
+    print('<div class=sub-content style="text-align:center;">NO HAY PEDIDOS EMITIDOS SEG&Uacute;N CRITERIO DE B&Uacute;SQUEDA.</div>');
+}
+
+
+?>
+
+<script>
+
+$("total_pds").value=<?php 
+                        if($pedidos)
+                        {
+                            echo count($pedidos);
+                        }
+                        else
+                        {
+                            echo 0;
+                        }
+                        ?>;
+</script>

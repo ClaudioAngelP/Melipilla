@@ -1,0 +1,102 @@
+<?php
+
+  require_once('../../conectar_db.php');
+  
+  $pedido_id=($_GET['id_pedido']*1);
+  $log_id=($_GET['id_log']*1);
+  $cantidad=($_GET['cantidad']*1);
+  
+  if($_GET['accion']!='aceptar') {
+    
+    pg_query($conn, "START TRANSACTION;");
+    
+    pg_query($conn, "
+      UPDATE pedido SET pedido_estado=0 WHERE pedido_id=".$pedido_id.";
+    ");
+    
+    for($i=0;$i<$cantidad;$i++) {
+  
+      $id_art = $_GET['id_art_'.$i];
+      
+      pg_query($conn, "
+      SELECT rechazar_stock_pedido(".$pedido_id.", ".$log_id.", ".$id_art.");
+      ");
+  
+    }
+    
+    pg_query($conn, "
+      INSERT INTO pedido_log_rev VALUES (
+      DEFAULT,
+      $pedido_id, 
+      $log_id, 
+      current_timestamp, 
+      ".($_SESSION['sgh_usuario_id']*1).",
+      '');
+    ");
+    
+    pg_query($conn, "COMMIT;");
+    
+    die('OK');
+  }
+  
+  pg_query($conn, "START TRANSACTION;");
+  
+  // Si no hay articulos sin aceptar se marcará el pedido
+  // como aceptado por completo.
+  
+  $estado=2;
+  
+  for($i=0;$i<$cantidad;$i++) {
+  
+    $id_art = $_GET['id_art_'.$i];
+    
+    if(isset($_GET['acepta_art_'.$i])) {
+      $estado_art = true;
+    } else {
+      $estado_art = false;
+    }
+    
+    if($estado_art) {
+      pg_query($conn, "
+      UPDATE pedido_detalle SET pedidod_estado=true 
+      WHERE 
+      pedido_id=".$pedido_id."
+      AND
+      art_id=".$id_art."
+      ");
+    
+    } else {
+    
+      // En caso de no haber marcado algo de la lista
+      // el pedido será devuelto con el o los articulos 
+      // con problemas.
+      
+      pg_query($conn, "
+      SELECT rechazar_stock_pedido(".$pedido_id.", ".$log_id.", ".$id_art.");
+      ");
+      
+      $estado=0;
+    
+    }
+  
+  }
+  
+  pg_query($conn, "
+    UPDATE pedido SET pedido_estado=".$estado." WHERE pedido_id=".$pedido_id.";
+  ");
+  
+  pg_query($conn, "
+    INSERT INTO pedido_log_rev VALUES (
+    DEFAULT,
+    $pedido_id, 
+    $log_id, 
+    current_timestamp, 
+    ".($_SESSION['sgh_usuario_id']*1).",
+    '');
+  ");
+  
+  pg_query($conn, "COMMIT;");
+  
+  die('OK');
+
+?>

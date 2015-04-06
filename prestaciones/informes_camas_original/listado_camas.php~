@@ -1,0 +1,241 @@
+<?php 
+	
+	require_once('../../conectar_db.php');
+	$fecha1=pg_escape_string($_POST['fecha1']);
+	$fecha2=pg_escape_string($_POST['fecha2']);
+	$tipo_informe=pg_escape_string($_POST['tipo_informe']*1);
+		
+		
+		if(isset($_POST['xls']) AND $_POST['xls']=='1') {
+	
+  	   header("Content-type: application/vnd.ms-excel");
+    	header("Content-Disposition: filename=\"Informe_CAMAS.xls\";");			
+		
+	}		
+	
+	if($tipo_informe==1){
+			$serv_w="(hosp_fecha_egr IS NULL AND hosp_numero_cama=0)  AND hosp_solicitud AND hosp_fecha_ing::date BETWEEN '$fecha1' AND '$fecha2'";	
+	} else if ($tipo_informe==2){
+			$serv_w="(hosp_fecha_egr IS NULL AND NOT hosp_numero_cama=0) AND hosp_solicitud AND NOT hosp_numero_cama = 0 AND tcama_id=1 AND hosp_fecha_ing::date BETWEEN '$fecha1' AND '$fecha2'";
+	} else  if($tipo_informe==3){
+			$serv_w="hosp_folio=-1 and (hosp_numero_cama >=1 OR hosp_numero_cama=-1) AND NOT hosp_fecha_egr IS NULL  
+		AND hosp_fecha_ing::date BETWEEN '$fecha1' AND '$fecha2'";
+	}else{
+		$serv_w="(hosp_fecha_egr IS NULL AND NOT hosp_numero_cama=0) AND hosp_solicitud AND NOT hosp_numero_cama = 0 AND tcama_id=1 AND hosp_fecha_ing::date BETWEEN '$fecha1' AND '$fecha2'";
+	}
+	
+		$t=cargar_registros_obj("SELECT 
+		hosp_id,hosp_numero_cama,hosp_criticidad,doc_rut,doc_materno,doc_materno,pac_nombres,pac_appat,pac_apmat,
+		pac_rut,hosp_diag_cod,hosp_diagnostico,centro_nombre,sex_id,pac_ficha,centro_ruta, centro_nombre,hosp_numero_cama,
+		hosp_fecha_ing::date AS hosp_fecha_ing, hosp_fecha_ing::time AS hosp_hora_ing, hosp_fecha_egr::date as hosp_fecha_egr,
+		(select hospn_observacion FROM hospitalizacion_necesidades AS h1 where h1.hosp_id=h2.hosp_id ORDER BY hospn_fecha DESC LIMIT 1) AS necesidades 
+		FROM hospitalizacion AS h2 
+		JOIN pacientes ON hosp_pac_id=pac_id
+		LEFT JOIN doctores on hosp_doc_id=doc_id
+		LEFT JOIN centro_costo ON hosp_centro_ruta=centro_ruta
+		LEFT JOIN tipo_camas ON cama_num_ini<=hosp_numero_cama AND cama_num_fin>=hosp_numero_cama 
+		LEFT JOIN clasifica_camas ON tcama_num_ini<=hosp_numero_cama AND tcama_num_fin>=hosp_numero_cama 
+		WHERE $serv_w
+		ORDER BY h2.hosp_fecha_ing; 
+	");
+	
+	
+	if(sizeof($t)!=0)
+	{		
+		print("
+			   
+			<table style='width:100%;'>
+			<tr class='tabla_header'>
+			");
+
+			print("<td>Estado</td><td>R.U.T.</td>");
+			
+	switch($tipo_informe) {
+					case '1': case '2': case '4':
+						print("<td>HC</td>"); break;
+								
+	}
+						print("<td>Nombre del Pac.</td>");
+						print("<td>Necesidad</td>"); 
+	switch($tipo_informe) {					
+					case '2': case '3': case '4': 	
+						print("<td>Medico Tratante</td>"); break;
+	}
+			print("<td>Fec. Ingreso</td>");
+	switch($tipo_informe) {				
+					case '3':  
+						print("<td>Fec. Egreso</td>"); break;			
+	}
+	switch($tipo_informe) {				
+					case '2': case '4':  
+						print("<td>Estado</td>"); break;		
+	}
+	
+	switch($tipo_informe) {					
+					case '2':  
+						print("<td>Servicio / Sala</td>"); break;
+				}	
+	
+	switch($tipo_informe) {				
+					case '2': case '3': case '4': 
+						print("<td>N&deg; de Cama</td>"); break;	
+	}
+	switch($tipo_informe) {				
+					case '2': case '3': 	
+						print("<td>Diagnostico</td>"); break;	
+   }
+	switch($tipo_informe) {					
+					case '1': case '3':  
+						print("<td>Destino</td>"); break;
+				}
+				
+   switch($tipo_informe) {					
+					case '2':  
+						print("<td>Dias Hosp.</td>"); break;
+				}
+				
+			print("</tr>");	
+		
+		if($t)		
+		for($i=0;$i<sizeof($t);$i++) {
+				            
+				$clase=($i%2==0)?'tabla_fila':'tabla_fila2';		
+		
+				if(trim($t[$i]['pac_rut'])!='')
+					$rut=$t[$i]['pac_rut'];
+				else
+					$rut='F:'.$t[$i]['pac_ficha'];		
+								
+					
+				if ($t[$i]['hosp_numero_cama']==0)
+				   $n_cama='(S. Asignar.)';
+			    else if($t[$i]['hosp_numero_cama']==-1)
+				   $n_cama='Traslado';
+				else 
+				   $n_cama=$t[$i]['hosp_numero_cama'];
+				  
+				  
+					
+				if($t[$i]['sex_id']*1==0)
+					$icono='icono_m_';
+				else
+					$icono='icono_h_';
+				
+				switch($t[$i]['hosp_criticidad']) {
+					case 'A1': case 'A2': case 'A3': 
+					case 'B1': case 'B2':
+						$estado='GRAVE';
+						$icono.='a.png'; break;	
+					case 'B3': case 'C1': case 'C2': case 'D1': 
+						$estado='REGULAR';
+						$icono.='b.png'; break;	
+					case 'C3': 
+						$estado='ESTABLE';				
+						$icono.='c.png'; break;	
+					case 'D2': case 'D3': 
+						$estado='MEJOR';				
+						$icono.='c.png'; break;	
+					default: $icono.='c.png'; break;	
+				}
+
+				if($t[$i]['desc_cama']!='')
+					$centro=$t[$i]['hosp_id'];
+				else
+					$centro="No Asignado";
+					
+		
+				print("<tr class='$clase' style='height:35px;'
+					onMouseOver='this.className=\"mouse_over\";'
+					onMouseOut='this.className=\"$clase\";'>
+					<td style='text-align:center;' alt='Cuadrado Hombre / Circulo Mujer'><img class='estado' id='".$icono."' src='prestaciones/informes_camas/".$icono."' /></td>		
+					<td style='text-align:right;font-weight:bold;'>".$rut."</td>");
+					
+				
+			switch($tipo_informe) {
+					case '1': case '2': case '4':	
+			    	print("<td style='text-align:center;font-weight:bold;'>".$t[$i]['pac_ficha']."</td>");break;
+					
+			
+			}
+					print("<td style='text-align:left;'>
+					".htmlentities($t[$i]['pac_nombres']).' '.htmlentities($t[$i]['pac_appat']).' '.htmlentities($t[$i]['pac_apmat'])."</td>");
+					print("<td style='text-align:left;'>
+					".htmlentities($t[$i]['necesidades'])."</td>");	
+								
+			switch($tipo_informe) {					
+					case '2': case '3': case '4':		
+					print("<td style='text-align:left;'>
+					".htmlentities($t[$i]['doc_nombres']).' '.htmlentities($t[$i]['doc_paterno']).' '.htmlentities($t[$i]['doc_materno'])."</td>");break;
+			}
+					print("<td style='text-align:center;'>".$t[$i]['hosp_fecha_ing']."</td>	");		
+					
+			switch($tipo_informe) {				
+					case '3':	
+					print("<td style='text-align:center;'>".$t[$i]['hosp_fecha_egr']."</td>");	break;			
+			}
+			switch($tipo_informe) {				
+					case '2': 
+					print("<td style='text-align:center;font-weight:bold;'>".$t[$i]['hosp_criticidad']."</td>"); break;	
+			}
+				switch($tipo_informe) {				
+					case '4':  
+					print("<td style='text-align:center;font-weight:bold;'>".$t[$i]['hosp_criticidad']." / ".$estado."</td>"); break;
+					
+			}
+			
+			switch($tipo_informe) {				
+					case '2': 	
+					print("<td style='text-align:center;'>".$t[$i]['desc_cama']."</td>"); break;	
+			}
+			
+			switch($tipo_informe) {				
+					case '2': case '3': case '4':		
+					print("<td style='text-align:center;'>".$n_cama."</td>"); break;	
+			}
+			switch($tipo_informe) {				
+					case '2': case '3': 
+				print("<td style='text-align:center;'>".$t[$i]['hosp_diag_cod']."</td>");  break;
+			}
+			switch($tipo_informe) {					
+					case '1': case '3':  		
+					print("<td style='text-align:center;'>".htmlentities($centro)."</td>");  break;
+			}
+			
+			switch($tipo_informe) {					
+					case '2': case '4':  		
+					print("<td style='text-align:center;'></td>");  break;
+			}
+			
+				switch($tipo_informe) {					
+					case '2':  		
+					print("<td style='text-align:center;'></td>");  break;
+			}	
+					
+			print("</tr>");		
+		}
+					
+		
+			print("<tr class='tabla_header' style='font-weight:bold;'>");
+			
+			if($tipo_informe==1){			
+			print("<td colspan=5 style='text-align:right;'>Total de Registros:</td>");
+			}else if(($tipo_informe==2) OR ($tipo_informe==3)){
+			print("<td colspan=9 style='text-align:right;'>Total de Registros:</td>");
+			}else{
+			print("<td colspan=7 style='text-align:right;'>Total de Registros:</td>");
+			}
+			
+			if($t)
+				print("<td style='text-align:center;'>".count($t)."</td>");				
+			else
+				print("<td style='text-align:center;'>0</td>");				
+			
+			print("</tr>");		
+		
+			print("</table>");	
+		}
+		else
+		{
+			print('<div class=sub-content style="text-align:center;">"NO HAY REGISTROS PARA ESTE CRITERIO DE BUSQUEDA"</div>');		
+		}
+?>

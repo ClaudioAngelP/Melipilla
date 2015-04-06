@@ -1,0 +1,373 @@
+<?php 
+
+	require_once("../../conectar_db.php");
+	
+	$fecha1=pg_escape_string($_POST['fecha1']);
+	$fecha2=pg_escape_string($_POST['fecha2']);
+	$funcs=$_POST['funcionarios']*1;
+	
+	if(isset($_POST['xls'])) {
+    	header("Content-type: application/vnd.ms-excel");
+    	header("Content-Disposition: filename=\"informe_caja.xls\";");
+		$xls=1; 
+	} else 
+		$xls=0;
+	
+	function dinero($num) {
+		GLOBAL $xls;
+		if(!$xls) return ('$ '.number_format($num,0,',','.').'.-');
+		else			return floor($num*1);
+	}	
+	
+	function numero($num) {
+		GLOBAL $xls;
+		if(!$xls) return (number_format($num,0,',','.'));
+		else			return floor($num*1);
+	}	
+	
+	
+	if($funcs!=-1) {
+		$func_w='func_id='.$funcs;
+	} else {
+		$func_w='true';
+	}	
+	
+	$l=cargar_registros_obj("
+		SELECT *, bolfec::date AS bolfec, (
+			SELECT SUM(monto) FROM cheques
+			WHERE cheques.bolnum=boletines.bolnum		
+		) AS cheques, 
+		array(
+			SELECT (
+			SELECT COALESCE(SUM(monto),0) AS monto FROM forma_pago
+			WHERE forma_pago.bolnum=boletines.bolnum
+			AND forma_pago.tipo=fpago_id
+			) FROM tipo_formas_pago ORDER BY fpago_id
+		) AS formas_pago 
+		FROM boletines 
+		WHERE bolfec::date >= '$fecha1' AND 
+		bolfec::date <= '$fecha2' AND $func_w	
+	");
+	
+?>
+
+<table style='width:100%;'>
+<tr class='tabla_header'><td><b><u>Totales Generales</u></b></td></tr>
+</table>
+
+<table style='width:100%;font-size:12px;'>
+<tr class="tabla_header" style='font-weight:bold;'>
+<td>Fecha</td>
+<td>Nro. Bolet&iacute;n</td>
+<td>Efectivo</td>
+<td>Cheques</td>
+
+<?php 
+	$fp=cargar_registros_obj("SELECT * FROM tipo_formas_pago ORDER BY fpago_id");
+
+	$tpag=array();
+	
+	for($i=0;$i<sizeof($fp);$i++) {
+		echo '<td>'.htmlentities($fp[$i]['fpago_nombre']).'</td>';
+		$tpag[$i]=0;
+	}
+?>
+
+<td>Sub Total</td>
+</tr>
+
+<?php 
+
+	$efectivo=0;$cheques=0;$total=0;
+
+	if($l)
+	for($i=0;$i<sizeof($l);$i++) {
+
+		$fpag=explode( ',', substr($l[$i]['formas_pago'],1,-1) );
+
+		$ofp=0;
+		for($k=0;$k<sizeof($fp);$k++) $ofp+=$fpag[$k]*1;
+			
+		$befectivo=$l[$i]['bolmon']-$l[$i]['cheques']-$ofp;	
+		
+		$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+	
+		print("
+			<tr class='$clase'>
+			<td style='text-align:center;'>".$l[$i]['bolfec']."</td>
+			<td style='text-align:center;'>".vboletin($l[$i]['bolnum'], $xls)."</td>
+			<td style='text-align:right;'>".dinero($befectivo,0,',','.')."</td>
+			<td style='text-align:right;'>".dinero($l[$i]['cheques'])."</td>
+		");
+
+		for($k=0;$k<sizeof($fp);$k++) {
+			print("<td style='text-align:right;'>".dinero($fpag[$k])."</td>");
+			$tpag[$k]+=$fpag[$k]*1;
+		}
+		
+		print("
+			<td style='text-align:right;font-weight:bold;'>".dinero($l[$i]['bolmon'])."</td>
+			</tr>		
+		");
+	
+		$efectivo+=$befectivo;
+		$cheques+=$l[$i]['cheques']*1;
+		$total+=$l[$i]['bolmon']*1;
+		
+	
+	}
+
+	print("
+	<tr class='tabla_header' style='font-weight:bold;'>
+	<td style='text-align:right;' colspan=2>Totales:</td>
+	<td style='text-align:right;'>".dinero($efectivo)."</td>	
+	<td style='text-align:right;'>".dinero($cheques)."</td>	
+	");
+
+	for($i=0;$i<sizeof($fp);$i++)
+		print("<td style='text-align:right;'>".dinero($tpag[$i])."</td>");
+
+
+	print("
+	<td style='text-align:right;'>".dinero($total)."</td>	
+	</tr>	
+	
+	");
+
+?>
+
+</table>
+
+<table style='width:100%;'>
+<tr class='tabla_header'><td><b><u>Desglose por Item</u></b></td></tr>
+</table>
+
+
+<table style='width:100%;'>
+<tr class="tabla_header">
+<td>Item</td>
+<td colspan=4>Cuenta</td>
+<td>Total</td>
+</tr>
+
+<?php 
+
+/*	$cnt=cargar_registros_obj("
+		SELECT *,
+		(
+			SELECT SUM(bdet_valor) FROM boletin_detalle
+			JOIN productos ON bdet_prod_id=prod_id
+			JOIN boletines USING (bolnum)
+			WHERE 
+				(bolfec::date >= '$fecha1' AND bolfec::date <= '$fecha2')
+			AND
+				(prod_item::text like (cnt_item::text || '\.%')
+				OR prod_item::text = cnt_item::text)	
+		) AS cnt_total FROM cuentas_cierre
+		ORDER BY cnt_item	
+	");*/
+	
+	$cnt=cargar_registros_obj("
+		SELECT *, (		
+		SELECT SUM((bdet_valor*boletines.bolmon)/COALESCE(proval,boletines.bolmon)) 
+		FROM boletines
+		LEFT JOIN creditos USING (crecod)
+		JOIN boletin_detalle ON
+			( boletin_detalle.bolnum=boletines.bolnum OR
+			boletin_detalle.bolnum=(SELECT MIN(bolnum) FROM boletines 
+			WHERE boletines.crecod=creditos.crecod ) )
+		JOIN funcionario USING (func_id) 
+		WHERE 	
+			(bolfec::date >= '$fecha1' AND bolfec::date <= '$fecha2')
+			AND $func_w
+			AND
+				((bdet_prod_item::text like (cnt_item::text || '\.%')
+				OR bdet_prod_item::text = cnt_item::text))	
+		) AS cnt_total 
+		FROM cuentas_cierre
+		ORDER BY cnt_item
+	");
+
+	if($cnt)
+	for($i=0;$i<sizeof($cnt);$i++) {
+
+		$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+	
+		echo "
+			<tr class='$clase'>
+			<td style='text-align:right;'>".$cnt[$i]['cnt_item']."</td>
+			<td colspan=4>".$cnt[$i]['cnt_nombre']."</td>
+			<td style='text-align:right;font-weight:bold;'>".dinero($cnt[$i]['cnt_total']*1)."</td>
+			</tr>		
+		";
+	
+	}
+
+?>
+
+</table>
+
+<table style='width:100%;'>
+<tr class='tabla_header'><td><b><u>Cr&eacute;ditos Nuevos</u></b></td></tr>
+</table>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td>Bolet&iacute;n</td>
+<td>RUT Cliente</td>
+<td>Nombre Cliente</td>
+<td>Monto Pi&eacute;</td>
+<td>Monto Cr&eacute;dito</td>
+</tr>
+
+<?php 
+
+	$cn=cargar_registros_obj("
+		SELECT * FROM boletines
+		JOIN creditos USING (crecod)
+		JOIN clientes ON creditos.clirut=clientes.clirut 
+		WHERE bolfec::date >= '$fecha1' AND 
+		bolfec::date <= '$fecha2' AND $func_w AND
+		bolnum=(SELECT bolnum FROM cuotas 
+		WHERE cuotas.crecod=creditos.crecod AND cuonum=0)
+	");
+
+	$total=0;
+
+	if($cn)
+		for($i=0;$i<sizeof($cn);$i++) {
+		
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+	
+			print("
+				<tr class='$clase'>
+				<td style='text-align:center;' align='center'>".vboletin($cn[$i]['bolnum'])."</td>
+				<td style='text-align:right;' align='right'>".$cn[$i]['clirut'].'-'.$cn[$i]['clidv']."</td>
+				<td style='text-align:left;' align='left'>".htmlentities(($cn[$i]['clipat'].' '.$cn[$i]['climat'].' '.$cn[$i]['clinom']))."</td>
+				<td style='text-align:right;' align='right'>".dinero($cn[$i]['crepie'])."</td>
+				<td style='text-align:right;' align='right'>".dinero($cn[$i]['cretot'])."</td>
+				</tr>
+			");
+			
+			$total+=$cn[$i]['cretot'];			
+			
+		}
+		
+	echo "<tr class='tabla_header'><td colspan=4 align='right'>Total:</td><td align='right'>".dinero($total)."</td></tr>";
+
+?>
+
+</table>
+
+<table style='width:100%;'>
+<tr class='tabla_header'><td><b><u>Recuperaci&oacute;n de Cr&eacute;ditos</u></b></td></tr>
+</table>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td>Bolet&iacute;n</td>
+<td>RUT Cliente</td>
+<td>Nombre Cliente</td>
+<td>Total Cr&eacute;dito</td>
+<td>Monto Pag. Cr&eacute;dito</td>
+<td>%</td>
+<td>Monto Pagado</td>
+</tr>
+
+<?php 
+
+	$cn=cargar_registros_obj("
+		SELECT *,
+		(SELECT SUM(bolmon) FROM boletines 
+		WHERE boletines.crecod=b1.crecod AND boletines.bolfec<=b1.bolfec) AS pagado
+		FROM boletines AS b1
+		JOIN creditos USING (crecod)
+		JOIN clientes ON creditos.clirut=clientes.clirut 
+		WHERE bolfec::date >= '$fecha1' AND 
+		bolfec::date <= '$fecha2' AND $func_w AND
+		NOT bolnum=(SELECT bolnum FROM cuotas 
+		WHERE cuotas.crecod=creditos.crecod AND cuonum=0)
+	");
+
+	$total=0;
+
+	if($cn)
+		for($i=0;$i<sizeof($cn);$i++) {
+		
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+	
+			print("
+			<tr class='$clase'>
+				<td style='text-align:center;' align='center'>".vboletin($cn[$i]['bolnum'])."</td>
+				<td style='text-align:right;' align='right'>".$cn[$i]['clirut'].'-'.$cn[$i]['clidv']."</td>
+				<td style='text-align:left;' align='left'>".htmlentities(($cn[$i]['clipat'].' '.$cn[$i]['climat'].' '.$cn[$i]['clinom']))."</td>
+				<td style='text-align:right;' align='right'>".dinero($cn[$i]['cretot'])."</td>
+				<td style='text-align:right;' align='right'>".dinero($cn[$i]['pagado']-$cn[$i]['crepie'])."</td>
+				<td style='text-align:center;' align='center'>".number_format(($cn[$i]['pagado']-$cn[$i]['crepie'])*100/$cn[$i]['cretot'],0,',','.')." %</td>
+				<td style='text-align:right;' align='right'>".dinero($cn[$i]['bolmon'])."</td>
+			</tr>
+			");
+			
+			$total+=$cn[$i]['bolmon'];			
+			
+		}
+		
+	echo "<tr class='tabla_header'><td colspan=6 align='right'>Total:</td><td align='right'>".dinero($total)."</td></tr>";
+
+?>
+
+
+</table>
+
+
+
+<?php 
+
+	if($fecha1==$fecha2 AND $funcs!=-1) { 
+
+	$m=cargar_registros_obj("
+		SELECT * FROM caja_detalle WHERE cd_fecha='$fecha1'	
+	");
+
+	if($m) {
+
+?>
+
+
+<table style='width:100%;'>
+<tr class='tabla_header'><td><b><u>Desglose de Monto Efectivo</u></b></td></tr>
+</table>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td>Tipo de Moneda</td>
+<td>Monto ($)</td>
+</tr>
+
+<?php 
+
+		for($i=0;$i<sizeof($m);$i++) {
+			
+			$clase=($i%2==0)?'tabla_fila':'tabla_fila2';		
+		
+			print("
+				<tr class='$clase'>
+				<td style='text-align:right;'>".dinero($m[$i]['cd_tipo'])."</td>
+				<td style='text-align:right;font-weight:bold;'>".dinero($m[$i]['cd_monto'])."</td>
+				</tr>			
+			");	
+			
+		}
+	
+?>
+
+</table>
+
+
+<?php 
+
+	}
+	
+	} 
+	
+?>

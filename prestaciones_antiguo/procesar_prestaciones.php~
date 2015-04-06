@@ -1,0 +1,133 @@
+<?php 
+
+	require_once('../conectar_db.php');
+
+	$inst_id=$sgh_inst_id;
+
+	echo '<html><title>Actualizando Prestaciones ('.$inst_id.'/'.$sgh_inst_id.')...</title>
+				<body><center><br><br><br><br>
+				<img src="../imagenes/ajax-loader3.gif" />
+				<h2>Espere un momento...</h2>';	
+	
+	flush();
+	
+	$fecha=$_GET['fecha'];
+	
+	echo '<h1>Fecha: '.$fecha.'</h1>';
+	
+	flush();
+
+	// PROCEDIMIENTOS, EXAMENES Y CONSULTAS
+	
+	$presta=cargar_registros_obj("
+		SELECT * FROM nomina_detalle_prestaciones
+		JOIN nomina_detalle USING (nomd_id)
+		JOIN nomina USING (nom_id)
+		LEFT JOIN codigos_prestacion ON nomdp_codigo=codigo
+		WHERE nom_fecha::date='$fecha'	
+	");
+	
+	if($presta)
+	for($i=0;$i<sizeof($presta);$i++) {
+		$chk=cargar_registros_obj("SELECT * FROM prestacion WHERE porigen_id IN (1,2) AND porigen_num=".$presta[$i]['nomdp_id']);
+		if(!$chk) {
+			
+			$id=$presta[$i]['nomdp_id']*1;
+			
+			$fecha=$presta[$i]['nom_fecha'];
+			$pac_id=$presta[$i]['pac_id']*1;
+			$codigo=$presta[$i]['nomdp_codigo'];
+			$cantidad=$presta[$i]['nomdp_cantidad'];
+			$extra='false';
+			$esp_id=$presta[$i]['nom_esp_id']*1;
+		
+			$proc=cargar_registro("SELECT * FROM procedimiento WHERE esp_id=$esp_id");
+			if($proc) $tipo=2; else $tipo=1;
+
+			$desc=pg_escape_string($presta[$i]['glosa']);
+			
+			pg_query("INSERT INTO prestacion VALUES (
+				DEFAULT, '$fecha', $pac_id, -1, 
+				$tipo, $id, 
+				'$codigo', '$codigo', $cantidad,
+				$extra, $inst_id, $esp_id, '', '$desc', 0, 0, 0, -1, -1, 0, 
+				0, 0		
+			);");
+						
+		}
+	}		
+	
+	// FAP DE PABELLON	
+	
+	$presta=cargar_registros_obj("
+		SELECT * FROM fap_prestacion
+		JOIN fap_pabellon USING (fap_id)
+		LEFT JOIN codigos_prestacion ON fappr_codigo=codigo
+		WHERE fap_fecha::date='$fecha'	
+	");
+
+	if($presta)
+	for($i=0;$i<sizeof($presta);$i++) {
+		$chk=cargar_registros_obj("SELECT * FROM prestacion WHERE porigen_id=3 AND porigen_num=".$presta[$i]['fap_id']);
+		if(!$chk) {
+			
+			$id=$presta[$i]['fap_id']*1;
+			
+			$fecha=$presta[$i]['fap_fecha'];
+			$pac_id=$presta[$i]['pac_id']*1;
+			$codigo=$presta[$i]['fappr_codigo'];
+			$cantidad=$presta[$i]['fappr_cantidad'];
+			$extra='false';
+			$esp_id=-1;
+			$desc=pg_escape_string($presta[$i]['glosa']);
+			
+			pg_query("INSERT INTO prestacion VALUES (
+				DEFAULT, '$fecha', $pac_id, -1, 
+				3, $id, 
+				'$codigo', '$codigo', $cantidad,
+				$extra, $inst_id, $esp_id, '', '$desc', 0, 0, 0, -1, -1, 0, 
+				0, 0		
+			);");
+						
+		}
+	}		
+
+	// FAP DE URGENCIAS	
+	
+	$presta=cargar_registros_obj("
+		SELECT * FROM fap_prestacion
+		JOIN fap USING (fap_id)
+		LEFT JOIN codigos_prestacion ON fappr_codigo=codigo
+		WHERE fap_fecha::date='$fecha'	
+	");
+
+	if($presta)
+	for($i=0;$i<sizeof($presta);$i++) {
+		$chk=cargar_registros_obj("SELECT * FROM prestacion WHERE porigen_id=4 AND porigen_num=".$presta[$i]['fap_id']);
+		if(!$chk) {
+			
+			$id=$presta[$i]['fap_id']*1;
+			
+			$fecha=$presta[$i]['fap_fecha'];
+			$pac_id=$presta[$i]['pac_id']*1;
+			$codigo=$presta[$i]['fappr_codigo'];
+			$cantidad=$presta[$i]['fappr_cantidad'];
+			$extra='false';
+			$esp_id=-1;
+			$desc=pg_escape_string($presta[$i]['glosa']);
+			
+			pg_query("INSERT INTO prestacion VALUES (
+				DEFAULT, '$fecha', $pac_id, -1, 
+				4, $id, 
+				'$codigo', '$codigo', $cantidad,
+				$extra, $inst_id, $esp_id, '', '$desc', 0, 0, 0, -1, -1, 0, 
+				0, 0		
+			);");
+						
+		}
+	}		
+
+
+?>
+
+<script> window.opener.listar_pacientes(); //window.close(); </script>

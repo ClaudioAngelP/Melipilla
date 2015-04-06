@@ -1,0 +1,318 @@
+<?php
+
+  require_once('../../conectar_db.php');
+
+?>
+
+<script>
+
+	meses_arr = ['Enero','Febrero','Marzo','Abril','Mayo',
+		'Junio','Julio','Agosto','Septiembre','Octubre',
+		'Noviembre','Diciembre'];
+    
+    gasto = new Object();
+    gasto.detalle=new Array();
+    gasto.totaldet=0;
+
+
+//******************************************
+    listar_gastos = function()
+    {
+        $('listado').innerHTML='<center><table><tr><td style="width:530px;height:160px;"><center><img src="imagenes/ajax-loader2.gif"></center></td></tr></table></center>';
+        var myAjax = new Ajax.Updater(
+        'listado',
+        'administracion/items_presupuestarios/listado_gastos.php',
+    {
+        method: 'get'
+    }
+    );
+
+}
+
+//******************************************
+cargar_gasto = function(id_gasto)
+{
+    $('listado_cc').innerHTML='<center><table><tr><td style="width:530px;height:160px;"><center><img src="imagenes/ajax-loader2.gif"></center></td></tr></table></center>';
+    
+    var myAjax = new Ajax.Request(
+    'administracion/items_presupuestarios/cargar_gasto.php',
+    {
+        method: 'get',
+        parameters: 'gasto_id='+id_gasto,
+        onComplete: function(resultado) {
+      
+        gasto=resultado.responseText.evalJSON(true);
+      
+        mostrar_gasto(id_gasto);
+      
+        if(id_gasto==0) {
+            $('gasto_id').value=0;
+            $('gasto_nombre').value='';
+            $('gasto_unidad').value='';
+            $('gasto_valmax').value=0;
+            $('item_serv').value='';
+            $('gasto_nombre').focus();
+            $('botones_gasto').style.display='';
+        }
+      
+        $('botones_gasto').style.display='';
+      
+        }
+    }
+    );
+}
+
+//******************************************
+mostrar_gasto = function(id_gasto) {
+  
+  dibujar_tabla_cc();
+  
+  //calcular_tabla_cc();
+        
+}
+
+graficar_item=function(datos) {
+
+	var t=datos[0]*1;
+	var v=Math.floor(datos[1]*100/t);
+	var a=Math.floor(datos[2]*100/t);
+	var r=100-(v+a);
+	
+
+	var html='<table style="width:200px;border:1px solid black;">';
+	html+='<tr>';
+	html+='<td style="width:'+v+'%;"><td>';
+	html+='<td style="width:'+a+'%;"><td>';
+	html+='<td style="width:'+r+'%;"><td>';
+	html+='</table>';
+	
+}
+
+//******************************************
+dibujar_tabla_cc = function() {
+
+  genhtml='<table style="width:100%;">';
+  genhtml+='<tr class="tabla_header">';
+  genhtml+='<td style="width:400px;">Centro de Costo</td>';
+
+	for(var i=0;i<meses_arr.length;i++) {
+		genhtml+='<td>'+meses_arr[i]+'</td>';
+	}  
+  
+  genhtml+='</tr>';
+  
+	var it=0;  
+  
+  for(i=0;i<gasto.detalle.length;i++) {
+    gasd = gasto.detalle[i];
+    
+    if((it%2)==0) clase='tabla_fila'; else clase='tabla_fila2';
+    
+    var espacios='<img src="iconos/blank.gif">'.repeat((gasd[4]-1));
+
+	 if(gasd[4]!=1) continue;
+    
+	 it++;    
+    
+    genhtml+='<tr class="'+clase+'" style="font-size: 10px;">';
+    genhtml+='<td style="width:500px;">';
+    genhtml+='<table><tr><td>'+espacios+'</td><td style="font-size:10px;">';
+    genhtml+=gasd[0]+'</td></tr></table></td>';
+    
+    if(gasd[4]==1 || gasd[4]==2) {
+
+   	for(var j=0;j<meses_arr.length;j++) {
+
+	      genhtml+='<td><center>';
+	      genhtml+='<input type="text" style="text-align:right;font-size:10px;" ';
+	      genhtml+='size=10 onFocus="this.select();"';
+	      genhtml+='value="'+gasd[1]+'" id="gextd_'+i+'_'+j+'" ';
+	      genhtml+='onKeyUp="gasto.detalle['+i+'][1]=this.value; ';
+	      genhtml+='calcular_tabla_cc();" ';
+	      genhtml+='name="gextd_'+i+'_'+j+'"></center></td>';
+      
+		}
+		      
+    } else {
+    	
+      genhtml+='<td colspan=13>&nbsp;</td>'
+          
+    }
+    
+    genhtml+='</tr>';
+    
+  }
+  
+  genhtml+='</table>';
+  
+  $('listado_cc').innerHTML=genhtml;
+
+}
+
+//******************************************
+calcular_tabla_cc = function() {
+  
+  gasto.totaldet=0;
+  
+  for(i=0;i<gasto.detalle.length;i++) {
+
+    gasd = gasto.detalle[i];
+
+    if(gasd[4]<=1) continue;
+
+    gasto.totaldet+=gasd[1]*1;
+    
+    if((gasto.gastoext_valortotal*1)!=0) {
+      $('gextdp_'+i).innerHTML=number_format(Math.round(((gasd[1]*100/gasto.gastoext_valortotal)*100))/100, 2)+'%';
+      if($('gextdp_'+i).innerHTML=='NaN,00%') 
+        $('gextdp_'+i).innerHTML='?%';
+    } else {
+      $('gextdp_'+i).innerHTML='?%';
+    }
+  
+  }
+  
+  gasto.gastoext_valortotal=$('gasto_valmax').value;
+  
+  if((gasto.gastoext_valortotal*1)!=0) {
+    porcentaje = Math.round(gasto.totaldet*100/gasto.gastoext_valortotal,2);
+  } else {
+    porcentaje = 0;
+  }
+  
+  if (porcentaje!=100) {
+    pcol='<span style="color: red;">';
+    pcole='</span>';
+  } else {
+    pcol='<span style="color: green;">';
+    pcole='</span>';
+  }
+  
+  $('gasto_valact').innerHTML=number_format(gasto.totaldet,2)+' '+
+                              $('gasto_unidad').value+
+                              ' ('+pcol+number_format(porcentaje,2)+'%'+pcole+')';
+  
+}
+
+//******************************************
+desactivar_gasto = function(opcion) {
+
+  $('gasto_nombre').disabled=opcion;
+  $('gasto_unidad').disabled=opcion;
+  $('gasto_valmax').disabled=opcion;
+  
+}
+
+guardar_gasto = function()
+{
+    var myAjax = new Ajax.Request(
+    'administracion/gastos_ext/sql.php',
+    {
+        method: 'post',
+        parameters: $('gasto_frm').serialize(),
+        onComplete: function (resp)
+        {
+            respuesta=resp.responseText.evalJSON(true);
+        
+            if(respuesta)
+            {
+                alert('Modificaci&oacute;n de Gasto guardada exitosamente.'.unescapeHTML());
+                listar_gastos();
+            }
+            else
+            {
+                alert(resp.responseText);
+            }
+        }
+    }
+    );
+}
+
+//******************************************
+nuevo_gasto = function() {
+
+  gasto = new Object();
+
+  gasto.detalle=new Array();
+  gasto.totaldet=0;
+  
+  cargar_gasto(0);
+  
+}
+
+//******************************************
+seleccionar_item = function (item)
+{
+
+}
+
+	importar = function() {
+	
+      top=Math.round(screen.height/2)-165;      
+      left=Math.round(screen.width/2)-340;
+      new_win =       window.open('', 'cargar_csv', 'toolbar=no, location=no, directories=no, status=no, '+      'menubar=no, scrollbars=yes, resizable=no, width=300, height=200, '+      'top='+top+', left='+left);	
+		new_win.focus();
+		
+		$('planilla_csv').target='cargar_csv';
+		$('planilla_csv').submit();
+		
+	}
+
+
+</script>
+
+<center>
+
+ <div class='sub-content' style='height:500px;width:950px;'>
+  <form id='gasto_frm' name='gasto_frm' style='overflow:auto;' autocomplete="off">
+         <div class='sub-content'>
+             <img src='iconos/money_dollar.png'>
+             <b>Items Presupuestarios Definidos</b>
+         </div>
+         <div class='sub-content2' style='height:350px;overflow:auto;' id='listado'>
+
+         </div>
+
+         <div class='sub-content'>
+             <img src='iconos/page_white_magnify.png'>
+                 Detalle del Item Parcializado
+         </div>
+         <div class='sub-content2' 
+         style='height:400px;overflow:auto;' id='listado_cc'>
+
+         </div>
+  </form>
+ </div>
+
+
+
+<form id='planilla_csv' name='planilla_csv' enctype="multipart/form-data" 
+action='administracion/items_presupuestarios/carga_csv.php' method='post' onSubmit='return false;'>
+<div class='sub-content' style='width:750px;'>
+<table style='width:100%;'>
+<tr>
+<td>Carga SIGFE:</td>
+<td><input type='file' id='planilla' name='planilla' /></td>
+<td><input type='button' onClick='importar();' 
+id='' name='' value='-- Importar CSV... --'></td>
+</tr>
+</table>
+</div>
+</form>
+</center>
+
+<script>
+    listar_gastos();
+
+    autocompletar_items = new AutoComplete(
+      'item_serv',
+      'autocompletar_sql.php',
+      function() {
+        if($('item_serv').value.length<3) return false;
+
+        return {
+          method: 'get',
+          parameters: 'tipo=buscar_items&cadena='+encodeURIComponent($('item_serv').value)
+        }
+      }, 'autocomplete',350,150,150,1,3, seleccionar_item);
+</script>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<dyntable>
+
+<list>
+  <action>administracion/especialidades/sql.php</action>
+  <parameters></parameters>
+  <method>post</method>
+</list>
+
+<submit>
+  <action>administracion/especialidades/sql.php</action>
+  <parameters>submit=1</parameters>
+  <method>post</method>
+</submit>
+
+<table_class>
+  <class></class>
+  <rowh>tabla_header</rowh>
+  <row1>tabla_fila</row1>
+  <row2>tabla_fila2</row2>
+  <row_mouse_over>mouse_over</row_mouse_over>
+</table_class>
+
+<field_list>
+  <field type="text" name="Nombre" id="esp_desc" align="left" style="width:60%;" />
+  <field type="text" name="Codigo IFL" id="esp_codigo_ifl" align="center" style="width:10%;text-align:center;" />
+  <field type="text" name="Esp. Padre" id="esp_padre_id" align="right" style="width:10%;text-align:center;" />
+  <field type="text" name="Codigo IFL Usuario" id="esp_codigo_ifl_usuario" align="center" style="width:20%;text-align:center;" />
+</field_list>
+
+</dyntable>

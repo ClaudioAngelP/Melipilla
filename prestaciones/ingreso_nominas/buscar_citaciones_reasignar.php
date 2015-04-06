@@ -1,0 +1,73 @@
+<?php 
+	require_once('../../conectar_db.php');
+	$esp_id=$_POST['esp_id'];
+	$doc_id=$_POST['doc_id'];
+	$pac_id=$_POST['pac_id'];
+
+	
+	if($pac_id!="0") $pac_string="and pac_id=".$pac_id."";
+	else $pac_string="";
+
+
+	if($esp_id!="-1") $esp_string="and nom_esp_id=".$esp_id."";
+	else $esp_string="";
+
+	if($doc_id!="0") $doc_string="and doc_id=".$doc_id."";
+	else $doc_string="";
+	
+	$consulta="SELECT *, to_char(nom_fecha, 'D') AS dow  FROM nomina_detalle
+                JOIN nomina USING (nom_id)
+                JOIN especialidades ON nom_esp_id=esp_id
+                JOIN doctores ON nom_doc_id=doc_id
+                JOIN pacientes USING (pac_id)
+                LEFT JOIN nomina_codigo_cancela ON nomd_codigo_cancela=cancela_id
+                WHERE nomd_diag_cod = 'X' AND (nomd_estado IS NULL OR nomd_estado!='1')
+		  $esp_string
+		  $doc_string
+		  $pac_string
+                ORDER BY nom_fecha, nomd_hora";
+                
+                
+	$c=cargar_registros_obj($consulta, true);
+
+
+	if(!$c)
+	{
+		print("<table><tr><td>NO SE ENCONTRARON REGISTROS PARA ESTA BUSQUEDA");
+	}
+	else
+	{
+		print("<table style='width:100%;font-size:10px;'>");
+			print("<tr class='tabla_header'>");
+				print("<td>&nbsp;</td>");	
+		              print("<td>Fecha</td>");
+                		print("<td>Especialidad</td>");
+                		print("<td>Profesional</td>");
+                		print("<td>R.U.N.</td>");
+                		print("<td>Ficha</td>");
+                		print("<td>Paciente</td>");
+                		print("<td>Motivo</td>");
+                		print("<td>Gestionar</td>");
+			print("</tr>");
+			for($i=0;$i<sizeof($c);$i++)
+			{
+				$clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+				print("<tr class='$clase' onMouseOver='this.className=\"mouse_over\";' onMouseOut='this.className=\"$clase\";'>
+		              <td style='text-align:right;font-size:18px;'><i>".($i+1)."</td>
+                		<td style='text-align:center;font-size:14px;'>".substr($c[$i]['nom_fecha'],0,10)."<br />".substr($c[$i]['nomd_hora'],0,5)."</td>
+                		");
+                		print("<td style='text-align:left;'>".$c[$i]['esp_desc']."</td>");
+                		print("<td style='text-align:left;'>".$c[$i]['doc_paterno']." ".$c[$i]['doc_materno']." ".$c[$i]['doc_nombres']."</td>");
+                		print("<td style='text-align:right;'>".$c[$i]['pac_rut']."</td>");
+                		print("<td style='text-align:center;'>".$c[$i]['pac_ficha']."</td>");
+               		print("<td style='text-align:left;'>".$c[$i]['pac_nombres']." ".$c[$i]['pac_appat']." ".$c[$i]['pac_apmat']."</td>");
+                		print("<td style='text-align:left;'>".$c[$i]['cancela_desc']."</td>");
+                		print("<td><center>
+				<img src='iconos/date_magnify.png'  style='cursor:pointer;' alt='Citaciones Similares' title='Citaciones Similares' onClick='buscar_citacion(".$c[$i]['nomd_id'].");' />
+                		<img src='iconos/phone.png'  style='cursor:pointer;' alt='Gestiones Citaci&oacute;n' title='Gestiones Citaci&oacute;n' onClick='gestiones_citacion(".$c[$i]['nomd_id'].");' />
+				</center></td>");
+				print("</tr>");
+			}
+	}
+	print("</table>");
+?>

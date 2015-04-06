@@ -1,0 +1,297 @@
+<?php
+
+  require_once('../../conectar_db.php');
+  require_once('../../ficha_clinica/minibuscador_pacientes.php');
+  
+  $pataugehtml = desplegar_opciones("patologias_auge", "pat_id, pat_glosa",'0',
+  '1=1', 'ORDER BY pat_glosa'); 
+
+?>
+
+<html>
+<title>Ingreso de Prestaci&oacute;n</title>
+
+<?php
+
+  cabecera_popup('../..');
+  
+?>
+
+
+<script>
+
+    casos_auge = function() {
+    
+    var myAjax2=new Ajax.Request(
+      '../casos_vigentes.php',
+      {
+        method:'post',
+        parameters: 'pac_id='+$('pac_id_0').value,
+        onComplete: function(dat) {
+        
+          d=dat.responseText.evalJSON(true);
+          
+          if(d) {
+            
+            var html='<table style="width:100%;">';
+            
+            for(var n=0;n<d.length;n++) {
+            
+              if(n==0) var chk='CHECKED'; else var chk='';
+            
+              html+='<tr><td style="width:20px;">';
+              html+='<input type="radio" name="pat_id" ';
+              html+=' onClick="limpiar_pat();" '
+              html+='value="'+d[n].pat_id+'" DISABLED '+chk+'>';
+              html+='</td><td>'+d[n].pat_glosa+'</td></tr></table>';
+            
+            }
+            
+            html+='</table>';
+            
+            $('select_pat').innerHTML=html;
+
+            $('auge').disabled=false;
+
+          } else {
+          
+            $('select_pat').innerHTML='<i>Paciente no registra Casos AUGE vigentes.</i>';
+          
+            $('auge').disabled=true;
+          
+          }
+
+          $('auge').checked=false; 
+          $('pat_id').value=0; 
+          $('pat_id').disabled=true;
+          
+          $('cod_presta').value='';
+          $('codigo_prestacion').value='';
+        
+            $('codigo_prestacion').focus();
+        
+        }
+      });
+
+    
+    }
+    
+    agregar_prestacion = function() {
+    
+      if($('codigo_prestacion').value=='') {
+        alert('Debe seleccionar c&oacute;digo de prestaci&oacute;n.'.unescapeHTML());
+        return;
+      }
+      
+      var myAjax=new Ajax.Request(
+      'sql.php',
+      {
+        method: 'post',
+        parameters: window.opener.$('info_prestacion').serialize()+'&'+
+                    $('info_prestacion').serialize(),
+        onComplete: function(resp) {
+          
+          try {
+            
+            var datos = resp.responseText.evalJSON(true);
+            
+            $('pac_id_0').value='';
+            $('paciente_rut_0').value='';
+            $('nom_pac_0').innerHTML='';
+            $('cod_presta').value='';
+            $('codigo_prestacion').value='';
+            $('desc_presta').innerHTML='';
+            
+            $('paciente_rut_0').focus();
+            
+            var func = window.opener.listar_prestaciones.bind(window.opener);
+            
+            func();
+            
+            window.close();
+            
+          } catch(err) {
+            
+            alert(err);
+            
+          }
+          
+        }
+      }
+      );
+    }
+
+    seleccionar_prestacion = function(presta) {
+    
+      $('codigo_prestacion').value=presta[0];
+      $('desc_presta').innerHTML='<center><b><u>Descripci&oacute;n de la Prestaci&oacute;n</u></b></center>'+presta[2];
+      
+      $('cantidad').select();
+      $('cantidad').focus();
+      
+    }
+    
+    limpiar_pat=function() {
+      $('cod_presta').value='';
+      $('desc_presta').innerHTML='&nbsp;';
+    }
+    
+</script>
+
+<body class='fuente_por_defecto popup_background'>
+
+<form id='info_prestacion' name='info_prestacion' onSubmit='return false;'>
+
+<div class='sub-content'>
+<table style='width:100%;'>
+<tr>
+<td style='text-align:right;width:120px;'>Paciente:</td>
+<td colspan=2>
+
+<?php desplegar_buscador_pacientes('../../','casos_auge();'); ?>
+
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>
+&iquest;Prestaci&oacute;n AUGE?:
+</td>
+<td>
+<input type='checkbox' id='auge' name='auge'
+onClick='
+  var objs=$("select_pat").getElementsByTagName("input");
+  for(var i=0;i<objs.length;i++) objs[i].disabled=!this.checked;
+  limpiar_pat();
+'>
+</td>
+</tr>
+
+
+<tr>
+<td style='text-align:right;'>
+Patolog&iacute;a AUGE:
+</td>
+<td colspan=2 id='select_pat'>
+<i>(Debe seleccionar Paciente...)</i>
+</td>
+</tr>
+
+
+<tr>
+<td style='text-align:right;'>
+C&oacute;digo Prestaci&oacute;n:
+</td>
+<td>
+<input type='text' id='cod_presta' name='cod_presta'>
+<input type='hidden' id='codigo_prestacion' name='codigo_prestacion'
+value=''>
+</td>
+<td rowspan=5 id='desc_presta' style='width:200px;text-align:justify;' valign='top'>
+&nbsp;
+</td>
+</tr>
+
+
+<tr>
+<td style='text-align:right;'>
+Cantidad:
+</td>
+<td>
+<input type='text' id='cantidad' name='cantidad' 
+size=5 style='text-align:right;' value=1>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>
+Compra Servicios:
+</td>
+<td>
+<input type='checkbox' id='compra' name='compra'>
+</td>
+</tr>
+
+      <tr><td style='text-align: right;'>C&oacute;digo Diag&oacute;stico:</td>
+      
+      <td colspan=2>
+      <input type='text' id='diag_cod' name='diag_cod' 
+      style='text-align:center;' size=10>
+      </td></tr>
+            <tr>
+      <td style='text-align: right;'>Diagn&oacute;stico:</td>
+      <td width=70% style='text-align:left;' colspan=2>
+      <span id='diagnostico' style='font-weight: bold;'>
+      (No Asociado...)
+      </span>
+      </td></tr>
+
+
+<tr>
+<td colspan=3>
+<center>
+<input type='button' id='agrega_presta' 
+onClick='agregar_prestacion();'
+value='Agregar Prestaci&oacute;n...'>
+</center>
+</td>
+</tr>
+
+</table>
+
+</div>
+
+</form>
+
+</body>
+
+<script>
+
+    lista_prestaciones=function() {
+        
+        if($('cod_presta').value.length<3) return false;
+      
+        var params='tipo=prestacion&'+$('cod_presta').serialize();
+        
+        if($('auge').checked) {
+          params='tipo=prestacion_patologia&pat_id=';
+          params+=getRadioVal('info_prestacion','pat_id')+'&'+$('cod_presta').serialize();;
+        }
+      
+        return {
+          method: 'get',
+          parameters: params
+        }
+        
+    }
+
+    autocompletar_prestaciones = new AutoComplete(
+      'cod_presta', 
+      '../../autocompletar_sql.php',
+      lista_prestaciones, 'autocomplete', 350, 100, 150, 1, 3, seleccionar_prestacion);
+      
+      $('paciente_rut_0').focus();
+
+    seleccionar_diagnostico = function(d) {
+    
+      $('diag_cod').value=d[0];
+      $('diagnostico').innerHTML='['+d[0]+'] '+d[2];
+    
+    }
+    autocompletar_diagnostico = new AutoComplete(
+      'diag_cod', 
+      '../../autocompletar_sql.php',
+      function() {
+        if($('diag_cod').value.length<2) return false;
+      
+        return {
+          method: 'get',
+          parameters: 'tipo=diagnostico&cadena='+encodeURIComponent($('diag_cod').value)
+        }
+      }, 'autocomplete', 350, 200, 150, 1, 3, seleccionar_diagnostico);
+
+
+
+</script>
+
+</html>

@@ -1,0 +1,325 @@
+<?php
+
+  require_once('../../conectar_db.php');
+  set_time_limit(0);
+    ini_set("memory_limit","250M");
+  $cadena = pg_escape_string($_GET['buscar']);
+	$bodega = $_GET['bodega']*1;
+  $item = pg_escape_string($_GET['item']);
+  $convenio = pg_escape_string($_GET['convenio']);
+
+	$cadena=str_replace('*', '%', $cadena);
+	
+  if($cadena!='') {
+    $codigo_w="AND (
+			art_codigo || ' ' || art_glosa || ' ' || art_nombre ILIKE '$cadena'
+			)
+			";
+  } else {
+    $codigo_w="";
+  }
+  
+  if($item!=-1) {
+    $item_w="AND art_item='".$item."'";
+  } else {
+    $item_w='';
+  }
+  
+  if($convenio!=-1 and $convenio!=-2) {
+    $convenio_j='
+    JOIN convenio_detalle 
+    ON convenio_detalle.art_id=articulo.art_id AND
+    convenio_detalle.convenio_id='.$convenio;
+    $conv_w='';
+  } else if($convenio==-2) {
+    $convenio_j='';
+    $conv_w='';
+  } else {
+    $convenio_j='
+    LEFT JOIN convenio_detalle 
+    ON convenio_detalle.art_id=articulo.art_id';
+    $conv_w='AND convenio_id IS NULL';
+  }
+  
+    
+  $query="
+      SELECT 
+      foo.*, 
+      0, 
+      0, 
+      now(),
+      0 AS stock_espera,
+      0 AS stock_llegada,
+     art_prioridad_glosa, convenio_id, convenio_nombre
+      FROM 
+      (
+        SELECT 
+        articulo.art_id, 
+        art_codigo, 
+        art_glosa,
+        forma_nombre, 
+        critico_pedido, 
+        critico_critico, 
+        COALESCE(SUM(stock_precalculado.stock_cant),0) AS stock, 
+        critico_gasto,
+        art_val_ult,
+        ( 
+          SELECT SUM(pedidod_cant) 
+          FROM pedido_detalle
+          JOIN pedido ON pedido.pedido_id=pedido_detalle.pedido_id 
+          WHERE pedido_detalle.art_id=articulo.art_id
+          AND pedido.origen_bod_id=$bodega AND pedido.pedido_estado<2
+          AND NOT pedidod_estado
+        ) AS stock_tramite,
+        array(
+          SELECT pedido.pedido_nro
+          FROM pedido 
+          JOIN pedido_detalle ON pedido_detalle.pedido_id=pedido.pedido_id
+          WHERE pedido_detalle.art_id=articulo.art_id
+          AND pedido.origen_bod_id=$bodega AND pedido.pedido_estado<3
+          AND NOT pedidod_estado
+          ORDER BY pedido.pedido_id DESC
+        ) AS ultimo_pedido
+        FROM articulo 
+        LEFT JOIN bodega_forma ON art_forma=forma_id
+        JOIN stock_critico ON 
+          articulo.art_id=critico_art_id AND 
+          critico_bod_id=$bodega
+        LEFT JOIN stock_precalculado ON 
+          stock_precalculado.stock_art_id=articulo.art_id AND 
+          stock_precalculado.stock_bod_id=$bodega
+        $convenio_j
+        WHERE art_activado $codigo_w $item_w $conv_w
+        GROUP BY articulo.art_id, art_codigo, art_glosa, forma_nombre, 
+        critico_pedido, critico_critico, critico_gasto, art_val_ult
+      ) AS foo
+
+      LEFT JOIN articulo ON 
+          articulo.art_id=foo.art_id
+
+      LEFT JOIN art_prioridad ON 
+          art_prioridad.art_prioridad_id=articulo.art_prioridad_id
+      
+      LEFT JOIN convenio_detalle ON
+          convenio_detalle.art_id=foo.art_id
+          
+      LEFT JOIN convenio USING (convenio_id)
+
+      WHERE 
+      (stock <= critico_pedido AND stock > critico_critico)
+      ORDER BY convenio_nombre, articulo.art_prioridad_id DESC, art_codigo
+    ";
+
+   
+  $arts = pg_query($conn, $query);
+    
+    print('
+    <form id="pedido_pedido_form" name="pedido_pedido_form" 
+    onSubmit="return false;"
+    action="abastecimiento/stock_articulos/generar_pedidos.php" method="post">
+    <input type="hidden" id="pedido_bodega" name="pedido_bodega" 
+    value="'.$bodega.'"> 
+    <input type="hidden" id="pedido_nro_arts" name="pedido_nro_arts"
+    value="'.pg_num_rows($arts).'">
+    ');
+    
+    for($i=0;$i<pg_num_rows($arts);$i++) {
+    
+          if($i>0)
+      $comp=(pg_result($arts,$i,'convenio_id')!=
+          pg_result($arts,$i-1,'convenio_id'));
+    else
+      $comp=false;
+    
+    if( $i==0 OR $comp) {
+      if(pg_result($arts,$i,'convenio_nombre')!='')
+        $desc_convenio=htmlentities(pg_result($arts,$i,'convenio_nombre'));
+      else
+        $desc_convenio='<i>Art&iacute;culos sin Convenio Asociado.</i>';
+      
+      if($i>0) print('</tbody></table><br>');
+          
+      print('
+      <!--- '.$query.'--->
+      <table style="width:100%;">
+      <tbody style="font-size:10px;">
+      <tr class="tabla_header"><td colspan=10 
+      style="font-weight:bold;">
+      <br>
+      Convenio:<br>
+      <u>'.$desc_convenio.'</u>
+      <br><br>
+      </td></tr>
+      <tr class="tabla_header" style="font-weight: bold;">
+      <td>C&oacute;digo Int.</td>
+      <td width=40%>Glosa</td>
+      <td>Forma</td>
+      <td>Prioridad</td>
+      <td>Stock</td>
+      <td>Stock Tr&aacute;mite</td>
+      <td>Gasto Mns.</td>
+      <td>Nivel Cr&iacute;tico</td>
+      <td>Pedido Sugerido</td>
+      <td>Subtotal ($)</td>
+      </tr>
+      ');
+    }
+    
+      $art = pg_fetch_row($arts, $i);
+
+      ($i%2==0) ? 	$clase='tabla_fila' : $clase='tabla_fila2';
+			
+			if($art[7]>0) {
+			   $cantidad = (($art[7]+$art[4])-$art[9])-$art[6]; 
+			} else {
+         $cantidad = (($art[4]-$art[6])-$art[9])-$art[14]+$art[15];  
+      }
+      
+      if($cantidad<0) $cantidad=0;
+      
+     // if($art[10]!='') {
+
+         //$pedidos=pg_array_parse($art[10]);
+         
+         //$ultpedido='<span style="font-size:10px; color: blue;">';
+         
+         //for($j=0;$j<count($pedidos);$j++)
+        // {
+        //   $resultado=pg_query("Select pedido_fecha from pedido where pedido_nro='$pedidos[$j]'");
+        //   if(pg_num_rows($resultado)!=0)
+        //    {
+         //       $var = pg_fetch_row($resultado);
+         //       $fecha=$var[0];
+         //       //$dias=$dias*1;
+         //       $fecha_actual=date("m-d-Y");
+          //      $fecha_actual=explode("-", $fecha_actual);
+         //       $timestamp1 = mktime(0,0,0,$fecha_actual[0],$fecha_actual[1],$fecha_actual[2]);
+         //       $fecha=explode(" ",$fecha);
+        //        $fecha=explode("/",$fecha[0]);
+       //         $timestamp2 = mktime(0,0,0,$fecha[1],$fecha[0],$fecha[2]);
+       //         $diferencia=$timestamp1 - $timestamp2;
+       //         $dias=$diferencia / (60 * 60 * 24);
+       //         $dias=abs($dias);
+       //         $dias= floor($dias);
+                
+      //      }
+     //       if($dias>15)
+     //       {
+     //           $ultpedido='<span style="cursor:pointer; color: red;"
+     //           onClick="abrir_pedido('.$pedidos[$j].');">
+    //            ['.$pedidos[$j].']</span>';
+                
+
+      //      }
+      //      else
+      //      {
+      //          $ultpedido='<span style="cursor:pointer; color: blue;"
+      //          onClick="abrir_pedido('.$pedidos[$j].');">
+      ///          ['.$pedidos[$j].']</span>';
+       //     }
+     //    }
+         
+         //$ultpedido.='</span>';
+
+      //} //else {
+      
+        //$ultpedido='';
+      
+      //}
+      
+      print(
+      '<tr class="'.$clase.'">
+      <input type="hidden" id="art_'.$i.'" name="art_'.$i.'" 
+      value="'.$art[0].'">
+      <input type="hidden" id="cod_'.$i.'" name="cod_'.$i.'" 
+      value="'.htmlentities($art[1]).'">
+      <input type="hidden" id="nom_'.$i.'" name="nom_'.$i.'" 
+      value="'.htmlentities($art[2]).'">
+      <input type="hidden" id="ult_'.$i.'" name="ult_'.$i.'" 
+      value="'.htmlentities($art[8]).'">
+      <input type="hidden" id="for_'.$i.'" name="for_'.$i.'" 
+      value="'.htmlentities($art[3]).'">
+      <td style="text-align: right;font-size:10px;">'.$art[1].'</td>');
+      if($art[10]!='')
+      {
+        //print('<td style="font-weight: bold;font-size:10px;">'.htmlentities($art[2]).'<br>'.$ultpedido.'</td>');
+        print('<td style="font-weight: bold;font-size:10px;">'.htmlentities($art[2]).'<br>');
+        $pedidos=pg_array_parse($art[10]);
+
+        for($j=0;$j<count($pedidos);$j++)
+        {
+            $resultado=pg_query("Select pedido_fecha from pedido where pedido_nro='$pedidos[$j]'");
+            if(pg_num_rows($resultado)!=0)
+            {
+                $var = pg_fetch_row($resultado);
+                $fecha=$var[0];
+                //$dias=$dias*1;
+                $fecha_actual=date("m-d-Y");
+                $fecha_actual=explode("-", $fecha_actual);
+                $timestamp1 = mktime(0,0,0,$fecha_actual[0],$fecha_actual[1],$fecha_actual[2]);
+                $fecha=explode(" ",$fecha);
+                $fecha=explode("/",$fecha[0]);
+                $timestamp2 = mktime(0,0,0,$fecha[1],$fecha[0],$fecha[2]);
+                $diferencia=$timestamp1 - $timestamp2;
+                $dias=$diferencia / (60 * 60 * 24);
+                $dias=abs($dias);
+                $dias= floor($dias);
+
+            }
+            if($dias>15)
+            {
+                //$ultpedido='<span style="cursor:pointer; color: red;"
+                //onClick="abrir_pedido('.$pedidos[$j].');">
+                //['.$pedidos[$j].']</span></td>';
+
+                print('<span style="cursor:pointer; color: red;"
+                onClick="abrir_pedido('.$pedidos[$j].');">
+                ['.$pedidos[$j].']</span>');
+
+            }
+            else
+            {
+                //$ultpedido='<span style="cursor:pointer; color: blue;"
+                ///onClick="abrir_pedido('.$pedidos[$j].');">
+                //['.$pedidos[$j].']</span></td>';
+
+                print('<span style="cursor:pointer; color: blue;"
+                onClick="abrir_pedido('.$pedidos[$j].');">
+                ['.$pedidos[$j].']</span>');
+
+
+            }
+         }
+      
+      print('</td>');
+      }
+      else
+      {
+        print('<td style="font-weight: bold;font-size:10px;">'.htmlentities($art[2]).'</td>');
+      }
+      //'<td style="font-weight: bold;font-size:10px;">'.htmlentities($art[2]).'<br>'.$ultpedido.'</td>
+      print('<td style="text-align: left;font-size:10px;">'.htmlentities($art[3]).'</td>
+      <td style="text-align: left;font-size:10px;">'.htmlentities($art[16]).'</td>
+      <td style="text-align: right;">'.number_formats($art[6]).'</td>
+      <td style="text-align: right; color:green;"
+      >'.number_formats($art[9]-$art[15]).'</td>
+      <td style="text-align: right;">'.number_formats($art[7]).'</td>
+      <td style="text-align: right;">'.number_formats($art[5]).'</td>
+      <td style="text-align: center;">
+      <input type="text" id="sug_'.$i.'" name="sug_'.$i.'" 
+      value="'.$cantidad.'" size=8 onFocus="this.select();"
+      style="font-size:11px;text-align:right;"
+      onKeyUp="$(\'val_'.$i.'\').innerHTML=this.value;actualiza_subt('.$i.');">
+      <span id="val_'.$i.'" 
+      style="display:none;font-weight:bold;text-align:right;"
+      >'.$cantidad.'</span>
+      </td>
+      <td style="text-align:right;" id="subt_'.$i.'">$'.number_formats($art[8]*$cantidad).'.-</td>
+      </tr>'
+      );
+    
+      if(($i+1)==pg_num_rows($arts)) print('</tbody></table><br>');
+
+    }
+    
+?>

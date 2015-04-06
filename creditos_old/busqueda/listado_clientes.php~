@@ -1,0 +1,67 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$nombre=pg_escape_string(trim($_POST['nombre']));
+
+
+	while(strstr($nombre, '  ')) {
+		$nombre=str_replace('  ',' ', $nombre);
+	}
+	
+	$query=str_replace(' ', ' & ', $nombre);
+
+	$lista=cargar_registros_obj("
+	
+		SELECT 
+		*,
+		(SELECT COUNT(*) FROM creditos WHERE clirut=clientes.clirut) AS creditos,
+		(SELECT SUM(cretot) FROM creditos WHERE clirut=clientes.clirut) AS total_creditos		 
+		FROM clientes 
+		WHERE 
+		to_tsvector(clipat || ' ' || climat || ' ' || clinom) @@ to_tsquery('$query')
+		OR
+		(clirut || '-' || clidv) ILIKE '%$nombre%'
+		OR '%$nombre%' ILIKE crecod
+		ORDER BY clipat, climat, clinom
+			
+	");
+
+?>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td>R.U.T.</td>
+<td>Paterno</td>
+<td>Materno</td>
+<td>Nombres</td>
+<td>Cr&eacute;ditos</td>
+<td>Total Cr&eacute;ditos</td>
+</tr>
+
+<?php 
+
+	if($lista)
+	for($i=0;$i<sizeof($lista);$i++) {
+	
+		($i%2==0)?$clase='tabla_fila':$clase='tabla_fila2';	
+	
+		echo "<tr class='$clase' style='height:30px;cursor:pointer;'
+			onMouseOver='this.className=\"mouse_over\";'
+			onMouseOut='this.className=\"$clase\";'
+			onClick='abrir_cliente(".$lista[$i]['clirut'].");'>
+			<td style='text-align:right;font-weight:bold;'>
+			".$lista[$i]['clirut']."-".$lista[$i]['clidv']."</td>		
+			<td style='font-weight:bold;'>".htmlentities($lista[$i]['clipat'])."</td>		
+			<td>".htmlentities($lista[$i]['climat'])."</td>		
+			<td style='font-weight:bold;'>".htmlentities($lista[$i]['clinom'])."</td>		
+			<td style='text-align:right;'>".$lista[$i]['creditos']."</td>		
+			<td style='text-align:right;'>
+			$".number_format($lista[$i]['total_creditos'],0,',','.').".-</td>		
+		</tr>";	
+	
+	}
+
+?>
+
+</table>

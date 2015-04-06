@@ -1,0 +1,19 @@
+<?php 
+
+	require_once('../conectar_db.php');
+	
+	$sep=explode('|',utf8_decode($_POST['sepultura']));
+
+	$clase=pg_escape_string($sep[0]);
+	$codigo=pg_escape_string($sep[1]);
+	$numero=$sep[2]*1;	
+	
+	$s=cargar_registros_obj("SELECT * FROM propiedad_sepultura
+		WHERE ps_clase='$clase' AND 
+				ps_codigo='$codigo' AND 
+				ps_numero=$numero	AND 
+				ps_vigente");
+
+	print(json_encode($s));
+
+?>

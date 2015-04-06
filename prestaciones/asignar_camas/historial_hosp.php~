@@ -1,0 +1,252 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	$hosp_id=$_GET['hosp_id']*1;
+	
+	$r=cargar_registros_obj("SELECT * FROM hospitalizacion 
+											JOIN pacientes ON pac_id=hosp_pac_id
+											LEFT JOIN doctores ON doc_id=hosp_doc_id
+											LEFT JOIN comunas USING (ciud_id)
+											WHERE hosp_id=".$hosp_id);
+											
+	$r5=cargar_registros_obj("SELECT * FROM hospitalizacion 
+											JOIN pacientes ON pac_id=hosp_pac_id
+											LEFT JOIN doctores ON doc_id=hosp_doc_id
+											LEFT JOIN comunas USING (ciud_id)
+											WHERE hosp_id=".$hosp_id);										
+												
+											
+	$uval=pg_query("SELECT *, hreg_fecha::date  AS fecha, hreg_fecha::time AS hora FROM hospitalizacion_registro 
+	JOIN hospitalizacion_estado USING (hest_id)
+	JOIN hospitalizacion_condicion USING (hcon_id)	
+	WHERE hosp_id = $hosp_id ORDER BY hreg_fecha DESC;");
+	
+	$r2=pg_query("
+	
+	SELECT *,
+	t1.cama_tipo AS origen_tipo,
+	c1.tcama_tipo AS origen_clase,
+	c1.tcama_num_ini AS origen_ini, 
+	t2.cama_tipo AS destino_tipo,
+	c2.tcama_tipo AS destino_clase, 
+	c2.tcama_num_ini AS destino_ini,
+	
+	(p1.ptras_fecha::date - COALESCE(
+		(SELECT ptras_fecha 
+		FROM paciente_traslado AS p2 
+		WHERE hosp_id=$hosp_id AND 
+		p2.ptras_fecha<=p1.ptras_fecha AND 
+		p2.ptras_id<p1.ptras_id
+		ORDER BY ptras_fecha DESC LIMIT 1),
+		
+		(SELECT hosp_fecha_ing FROM hospitalizacion WHERE hosp_id=$hosp_id)
+	)::date) AS dias_hosp
+	
+	FROM paciente_traslado AS p1
+					LEFT JOIN tipo_camas AS t1 ON
+					t1.cama_num_ini<=ptras_cama_origen AND t1.cama_num_fin>=ptras_cama_origen
+					LEFT JOIN clasifica_camas AS c1 ON 
+				   c1.tcama_num_ini<=ptras_cama_origen AND c1.tcama_num_fin>=ptras_cama_origen					
+					LEFT JOIN tipo_camas AS t2 ON
+					t2.cama_num_ini<=ptras_cama_destino AND t2.cama_num_fin>=ptras_cama_destino
+					LEFT JOIN clasifica_camas AS c2 ON 
+				   c2.tcama_num_ini<=ptras_cama_destino AND c2.tcama_num_fin>=ptras_cama_destino					
+					WHERE hosp_id = $hosp_id			
+	");
+	
+	$r3=pg_query(" 
+	
+			SELECT * 
+			FROM hospitalizacion_observaciones
+			JOIN funcionario ON hospo_func_id=func_id
+			WHERE hosp_id = $hosp_id ORDER BY hospo_fecha DESC;
+	
+	
+	");
+	
+	$r4=pg_query(" 
+	
+			SELECT * 
+			FROM hospitalizacion_necesidades
+			JOIN funcionario ON hospn_func_id=func_id
+			WHERE hosp_id = $hosp_id ORDER BY hospn_fecha DESC;
+	");
+	
+	
+	$l=cargar_registros_obj("
+			SELECT *, 
+			hosp_fecha_ing::date AS hosp_fecha_ing,
+			hosp_fecha_ing::time AS hosp_hora_ing,
+			hosp_fecha_egr::date 
+			FROM hospitalizacion
+			WHERE hosp_solicitud	
+			");					
+?>
+
+<html>
+<title>Completar Informaci&oacute;n de Solicitud</title>
+
+<?php cabecera_popup('../..'); ?>
+
+<body class='fuente_por_defecto popup_background'>
+
+<div class='sub-content'>
+<img src='../../iconos/script_edit.png' />
+<b>Historial de Hospitalizaci&oacute;n</b>
+</div>
+
+<div class='sub-content'>
+
+<table width="956">
+<tr>
+<td width="100" style='text-align:left;width:100px;'><b>R.U.T.:</b></td>
+<td width="165" style='text-align:left;width:300px;'><?php echo $r[0]['pac_rut']; ?></span></td>
+<td style='text-aling:left;'><b>Fecha Ingreso:</b></td><td><?php echo $l[0]['hosp_fecha_ing'];?></td>
+<td width="357">&nbsp;</td>
+</tr>
+<tr>
+  <td style='text-align:left;'><b>Nombre:</b></td>
+<td style='text-align:left;'><?php echo $r[0]['pac_nombres'].' '.$r[0]['pac_appat'].' '.$r[0]['pac_apmat']; ?></span></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+  <td style='text-align:left;'><b>R.U.T. M&eacute;dico:</b>  
+  <td style='text-align:left;'><?php echo $r[0]['doc_rut']; ?>
+  <td>&nbsp;</td>
+  <td>&nbsp;</td>
+</tr>
+<tr>
+<td style='text-align:left;'><b>M&eacute;dico</b></td>
+<td style='text-align:left;'><?php echo trim($r[0]['doc_paterno'].' '.$r[0]['doc_materno'].' '.$r[0]['doc_nombres']); ?></td>
+<td style='text-aling:left;'><b>Fecha Egreso:</b><td>
+</tr>
+</table>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td style='width:25%;'>Fecha</td>
+<td>Estado</td>
+<td>Condici&oacute;n</td>
+</tr>
+
+<?php
+
+	$c=0;
+
+	while($r=pg_fetch_assoc($uval)){
+	
+	$class=($c%2==0)?'tabla_fila':'tabla_fila2';
+	
+   print('<tr class="'.$class.'">
+			<td style="text-align:center;">'.$r['fecha'].' '.substr($r['hora'],0,8).'</td>         
+         <td>'.htmlentities($r['hest_nombre']).'</td>
+         <td>'.htmlentities($r['hcon_nombre']).'</td>
+   		</tr>');	
+	
+	$c++;	
+	
+	}
+?>
+</table>
+
+	<table style='width:100%;'>
+	<tr class='tabla_header'>
+	<td style='width:25%;'>Fecha</td>
+	<td>Servicio / Sala</td>
+	<td>Cama</td>
+	<td>D&iacute;as Hospitalizado</td>  
+	</tr>
+	
+<?php
+		
+		$c=0;
+
+	
+	while($r=pg_fetch_assoc($r2)){
+		
+	$class=($c%2==0)?'tabla_fila':'tabla_fila2';
+		
+	print('<tr class="'.$class.'">
+			 <td style="text-align:center;">'.substr($r['ptras_fecha'],0,19).'</td>
+			 <td style="text-align:left;">'.$r['origen_clase'].' - '.$r['origen_tipo'].' </td>
+			 <td style="text-align:center;">'.(($r['ptras_cama_origen']*1-$r['origen_ini']*1)+1).'</td>	         
+			 <td style="text-align:center;">'.$r['dias_hosp'].'</td> 			 
+			 </tr>');
+			 
+			 
+			 $c++;
+	}
+
+?>
+
+<!-- 
+<td style="text-align:center;">'.$r['destino_tipo'].' - '.$r['destino_clase'].'</td>
+<td style="text-align:center;">'.(($r['ptras_cama_destino']*1-$r['destino_ini']*1)+1).'</td>	         
+  
+ Impresion de destino camas
+ -->
+
+</table>
+	<table style='width:100%;'>
+	<tr class='tabla_header'>
+	<td style='width:25%;'>Fecha</td>
+	<td style='width:80%;'>Observaciones</td>  
+	</tr>
+	
+<?php
+
+	$c=0;
+
+	while($r=pg_fetch_assoc($r3)){
+	
+	$class=($c%2==0)?'tabla_fila':'tabla_fila2';	
+	
+	print('<tr class="'.$class.'">
+			 <td style="text-align:center;">'.substr($r['hospo_fecha'],0,19).'</td>	         
+			 <td style="text-align:left;">'.htmlentities($r['hospo_observacion']).'<br/>(<i>'.htmlentities($r['func_nombre']).'</i>)</td> 			 
+			 </tr>');
+	
+	$c++;
+	
+	}
+
+
+?>
+
+<table style='width:100%;'>
+	<tr class='tabla_header'>
+	<td style='width:25%;'>Fecha</td>
+	<td style='width:80%;'>Necesidades:</td>  
+	</tr>
+	
+<?php
+
+	$c=0;
+
+	while($r=pg_fetch_assoc($r4)){
+	
+	$class=($c%2==0)?'tabla_fila':'tabla_fila2';	
+	
+	print('<tr class="'.$class.'">
+			 <td style="text-align:center;">'.substr($r['hospn_fecha'],0,19).'</td>	         
+			 <td style="text-align:left;">'.htmlentities($r['hospn_observacion']).'<br/>(<i>'.htmlentities($r['func_nombre']).'</i>)</td> 			 
+			 </tr>');
+	
+	$c++;
+	
+	}
+
+
+?>	
+	
+</table>	
+
+	
+</table>	
+
+</div>
+
+</body>
+</html>
+

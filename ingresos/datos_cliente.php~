@@ -1,0 +1,52 @@
+<?php 
+
+	require_once('../conectar_db.php');
+	
+	$clirut=$_POST['clirut']*1;
+	
+	$r=cargar_registro("SELECT * FROM clientes WHERE clirut='$clirut'");
+
+?>
+
+<table style='width:100%;'>
+
+<tr>
+<td style='text-align:right;width:30%;'>R.U.T.:</td>
+<td style='font-weight:bold;'><?php echo htmlentities($r['clirut'].'-'.$r['clidv']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align:right;width:30%;'>Paterno:</td>
+<td style='font-weight:bold;'><?php echo htmlentities($r['clipat']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Materno:</td>
+<td style='font-weight:bold;'><?php echo htmlentities($r['climat']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Nombres:</td>
+<td style='font-weight:bold;'><?php echo htmlentities($r['clinom']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Direcci&oacute;n:</td>
+<td><?php echo htmlentities($r['clidir']); ?></td>
+</tr>
+<tr>
+<td style='text-align:right;'>Tel&eacute;fono Fijo:</td>
+<td><?php echo htmlentities($r['clifon']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Tel&eacute;fono M&oacute;vil:</td>
+<td><?php echo htmlentities($r['clicel']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Observaciones:</td>
+<td><?php echo htmlentities($r['cliobs']); ?></td>
+</tr>
+
+</table>

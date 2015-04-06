@@ -1,0 +1,13 @@
+Perf�l Farmacol�gico por Servicios|perfil_farma_cc.php
+Pacientes con Patolog�a (Medicamentos Retirados)|farmacos_patologia.php
+Pacientes Infectolog�a (Medicamentos Retirados)|farmacos_patologia_infectologia.php
+Pacientes por Medicamento|pac_auge.php
+Pacientes por Ubicaci�n (medicamento)|pac_farmacias.php
+Consumo Valorizado Por Paciente|consumo_pac_valorizado.php
+Consumo Valorizado Por Medico|consumo_med_valorizado.php
+Consumo Valorizado Por Servicio|consumo_art_servicio.php
+Listado de Pacientes con recetas|listado_pac_recetas.php
+Listado de Recetas por Centro de Costo|listado_recetas_centro_costo.php
+Listado de Medicamentos entregados a Pacientes con Alta|listado_pac_recetas_alta.php
+Total de Recetas Digitadas por Funcionario|digitaciones_por_funcionario.php
+Pedidos / Enviados|pedidos_enviados.php

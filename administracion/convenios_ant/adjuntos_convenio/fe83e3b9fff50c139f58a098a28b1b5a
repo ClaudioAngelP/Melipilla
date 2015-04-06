@@ -1,0 +1,422 @@
+<?php
+
+  require_once('../../conectar_db.php');
+  require_once('../../fpdf/fpdf.php');
+
+  set_time_limit(0);
+  
+ 
+  $margin=125;
+  
+	class PDF extends FPDF {
+
+    //Columna actual
+    var $col=0;
+    //Ordenada de comienzo de la columna
+    var $y0;
+
+    function SetCol($col)
+    {
+		
+		GLOBAL $margin;
+		
+        //Establecer la posición de una columna dada
+        $this->col=$col;
+        $x=($margin+25)+$col*93;
+        $this->SetLeftMargin($x);
+        $this->SetX($x);
+    }
+    
+    function Header()
+    {
+
+		GLOBAL $receta, $mes, $dia, $anio, $fill, $margin;
+
+		$this->SetCol(0);
+		$this->SetY(15);
+		
+		$fecha=date('d/m/Y', mktime(0, 0, 0, $mes+($i-1), $dia, $anio));
+
+		$this->SetFont('Arial','B',16);
+
+		$this->SetFillColor(255,255,255);
+		$this->SetTextColor(0,0,0);
+		$this->SetDrawColor(128,0,0);
+		$this->SetLineWidth(0);
+		$this->SetFont('','B', 12);
+		
+		$this->SetX($margin+60);
+		
+		$this->Multicell( 93, 5, "Ministerio de Salud\nCentro de Referencia de Salud Peñalolén\nCordillera Oriente",0,'C', false);
+		
+		$this->Image('../../imagenes/Logo_CRS.png',($margin+25),15,30,15);
+		
+		$this->SetTextColor(0);
+		$this->SetFillColor(224,235,255);
+
+		$this->SetFont('', '', 10);
+		
+		$this->Cell( 123, 4, "Fecha de Impresión: ".date('d/m/Y H:i:s'),0,0,'R');    
+		$this->Ln();
+		
+		$this->SetFont('', 'BU', 18);
+		
+		$this->Cell( 123, 8, "Receta Médica",0,0,'C');    
+		$this->Ln();
+
+		$this->SetFont('', '', 9);
+		
+		if($receta['pac_ficha']!='' AND $receta['pac_ficha']!=$receta['pac_rut']) {
+			$receta['pac_rut']=$receta['pac_ficha'];
+		}
+
+		$this->Cell(25, 5, "RUT/Ficha:",1,0,'R', true);
+		$this->SetFont('', '', 11);
+		$this->Cell(38, 5, $receta['pac_rut'],1,0,'L');
+		$this->SetFont('', '', 9);
+		$this->Cell(25, 5, "Número:",1,0,'R', true);
+		$this->SetFont('', '', 11);
+		$this->Cell(35, 5, $receta['receta_id'],1,0,'C');
+		$this->Ln();
+		
+		$this->SetFont('', '', 9);
+		$this->Cell(25, 5, "Paciente:",1,0,'R', true);
+		$this->Cell(98, 5, strtoupper($receta['pac_nombre']),1,0,'L');
+		$this->Ln();
+
+		$this->Cell(25, 5, "Fecha:",1,0,'R',true);
+		$this->SetFont('', '', 11);
+		$this->Cell(38, 5, $receta['receta_emision'],1,0,'L');
+		$this->SetFont('', '', 9);
+		$this->Cell(25, 5, "Edad:",1,0,'R', true);
+		$this->Cell(35, 5, $receta['edad_anios'].' a '.$receta['edad_meses'].' m '.$receta['edad_dias'].' d ',1,0,'C');
+		$this->Ln();
+
+		
+		$this->Cell(25, 5, "Previsión:",1,0,'R', true);
+		$this->Cell(98, 5, $receta['prev_desc'],1,0,'L');
+		$this->Ln();
+
+		$this->Cell(25, 6, "Médico:",1,0,'R', true);
+		$this->Cell(98, 6, $receta['doc_nombre'],1,0,'L');
+		$this->Ln();        
+		
+		$diag=$receta['receta_diagnostico'];
+		
+		if(strlen($diag)>35) {
+			$diag=substr($diag,0,35).'...';
+		}
+		
+		$this->Cell(25, 5, "Diagnóstico:",1,0,'R', true);
+		$this->Cell(98, 5, "[".$receta['receta_diag_cod']."] ".$diag,1,0,'L');
+		$this->Ln();        
+		
+		
+		//$this->SetFillColor(50,50,50);
+		$this->SetTextColor(0,0,0);
+		$this->SetFont('','B', 12);
+
+		$this->Cell(123,7,'Detalle de Prescripciones',1,0,'C',1);
+		
+		$this->Ln();
+		
+		$this->SetFillColor(224,235,255);
+		$this->SetTextColor(0);
+		$this->SetFont('','',6);
+		//Datos
+		//$fill=false;
+
+		
+	}
+	
+	function Footer() {
+		// Muestra Número de Página
+		$this->SetY(-18.5);
+		$this->SetFont('', 'B', 10);
+		$this->Cell(123,5,'Página '.$this->PageNo().' de {nb}','T',1,'C');
+		$this->SetFont('', 'I', 8);
+		$this->Cell(123,5,'NOTA: Si la fecha de entrega corresponde a día no hábil; podrá retirar el día hábil anterior.',0,0,'C');
+		
+	}
+
+	}
+
+
+  $receta_id=$_GET['receta_id']*1;
+
+  $receta=cargar_registro("
+      
+      SELECT 
+        receta_id,
+        doc_rut,
+        doc_nombres || ' ' || doc_paterno || ' ' || doc_materno AS doc_nombre,
+        date_trunc('second', receta_fecha_emision) AS receta_emision,
+        receta_fecha_emision::date AS receta_fecha,
+        receta_comentarios,
+        receta_diag_cod,
+        diag_desc,
+        COALESCE(receta_cronica, false) AS receta_cronica,
+        tipotalonario_nombre,
+        receta_numero,
+        receta_tipotalonario_id,
+        extract(month from receta_fecha_emision) AS mes,
+        extract(year from receta_fecha_emision) AS anio,
+        extract(day from receta_fecha_emision) AS dia,
+        date_part('year',age(now()::date, pac_fc_nac)) as edad_anios,  
+		date_part('month',age(now()::date, pac_fc_nac)) as edad_meses,  
+		date_part('day',age(now()::date, pac_fc_nac)) as edad_dias,
+		pac_rut, pac_nombres || ' ' || pac_appat || ' ' || pac_apmat AS pac_nombre,
+		receta_diagnostico, prev_desc, prev_id
+      FROM receta
+      LEFT JOIN pacientes ON receta_paciente_id=pac_id
+      LEFT JOIN prevision USING (prev_id)
+      LEFT JOIN doctores ON receta_doc_id=doc_id
+      LEFT JOIN diagnosticos ON receta_diag_cod=diag_cod
+      LEFT JOIN receta_tipo_talonario  
+      ON receta_tipotalonario_id=tipotalonario_id
+      left join recetas_detalle on recetad_receta_id=receta_id
+      left join logs on log_recetad_id=recetad_id
+      
+      WHERE receta_id=$receta_id
+	
+      group by receta_id,doc_rut,doc_nombres,doc_paterno,doc_materno,receta_fecha_emision,receta_comentarios,receta_diag_cod,
+      diag_desc,receta_cronica,tipotalonario_nombre,receta_numero,receta_tipotalonario_id,pac_fc_nac,pac_rut,pac_nombres,paC_appat,
+      pac_apmat,receta_diagnostico,prev_desc,prev_id
+
+      
+  ");
+  
+  $detalle=cargar_registros_obj("
+      SELECT *,
+      upper( COALESCE(art_unidad_adm, forma_nombre) ) AS art_unidad_administracion,
+	  COALESCE( art_unidad_cantidad, 1 ) AS art_unidad_cantidad_adm,recetad_indicaciones
+	  FROM recetas_detalle 
+      JOIN articulo ON recetad_art_id=art_id
+      LEFT JOIN bodega_forma ON art_forma=forma_id
+      WHERE recetad_receta_id=$receta_id
+  ");
+
+    
+    $mes=$receta['mes'];
+    $anio=$receta['anio'];
+    $dia=$receta['dia'];
+    
+    $pdf = new PDF('L', 'mm', 'Letter');
+    $pdf->SetFont('Arial','B',16);
+    $pdf->SetAutoPageBreak(true, 20);
+    $pdf->AliasNbPages();
+    
+	$c=0; $i=0;
+    
+    if($c==0 or $c==3) {
+      if($c==3) $c=0;
+      $pdf->AddPage();
+    } 
+    
+    $fill=false;
+      
+    foreach($detalle as $art) {
+    
+$desp=cargar_registro("SELECT SUM(ABS(stock_cant)) AS total FROM recetas_detalle 
+			JOIN logs ON log_recetad_id=recetad_id
+			JOIN stock ON stock_log_id=log_id
+			WHERE recetad_id=".$art['recetad_id']);
+    
+        $pdf->SetFillColor(224,235,255);
+		$pdf->SetTextColor(0);
+		
+        $x=$pdf->GetX();
+		$y=$pdf->GetY();
+		          
+        $pdf->SetFont('','B',9);
+        $pdf->SetX($x);
+        $pdf->Multicell(123, 4, $art['art_glosa'], 1, 'LR', $fill);
+        $ysize=$pdf->GetY()-$y;
+
+        $pdf->SetFont('','',10);
+
+		/*if($art['art_tipo_adm']*1==0 AND $art['recetad_dias']*1<=30) {
+		// Aguda
+			$txt_horas='horas';
+			$txt_dias='días';
+		} else {
+		// Crónica
+			$txt_horas='días';
+			$txt_dias='meses';
+		}
+
+			
+		if($art['art_tipo_adm']*1==0 AND $art['recetad_dias']*1<=30)
+			$txt_dosis="".($art['recetad_cant']*1)." ".$art['art_unidad_administracion']." cada ".$art['recetad_horas']." ".$txt_horas." por ".$art['recetad_dias']." ".$txt_dias.".";
+		else
+			$txt_dosis="".($art['recetad_cant']*1)." ".$art['art_unidad_administracion']." cada ".($art['recetad_horas']/24)." ".$txt_horas." por ".($art['recetad_dias']/30)." ".$txt_dias.".";
+*/
+		if($art['recetad_horas']*1<=24) {
+        		$div_h=1;
+				$txt_horas='horas';
+      }else{
+        		if(($art['recetad_horas']%24)==0) {
+        			$div_h=24;
+					$txt_horas='día(s)';
+        		}else{
+        			$div_h=1;
+					$txt_horas='horas';
+				}
+		}
+		
+		if($art['recetad_dias']*1<=30) {
+        		$div_d=1;
+				$txt_dias='día(s).';
+      }else{
+        		if(($art['recetad_dias']%30)==0) {
+        			$div_d=30;
+					$txt_dias='mes(es).';
+        		}else{
+        			$div_d=1;
+					$txt_dias='día(s).';
+				}
+		}
+        
+      $txt_dosis="".($art['recetad_cant']*1)." ".$art['art_unidad_administracion']." cada ".($art['recetad_horas']/$div_h)." ".$txt_horas." por ".($art['recetad_dias']/$div_d)." ".$txt_dias.".";
+        
+        
+        $pdf->SetX($x);
+        
+        $cantidad=ceil(((($art['recetad_cant']*24)/$art['recetad_horas'])*$art['recetad_dias'])/$art['art_unidad_cantidad_adm']);
+
+		$pdf->SetFont('','B',10);
+        $pdf->Cell(25, 4, "Cantidad:",1,0,'R',$fill);
+		$pdf->SetFont('','',10);
+		
+		if($receta['receta_cronica']=='t' OR $art['recetad_dias']*1>30 OR $art['art_tipo_adm']*1==1) {
+		
+		
+			
+			$total_desp=$desp['total']*1;
+			
+			$meses=($art['recetad_dias']*1/30);
+			
+			$cant_mes=ceil($cantidad/$meses);
+			
+			$resto_desp=($cantidad-$total_desp);
+			
+			if($resto_desp<$cant_mes){$cant_mes=$resto_dep;}
+			
+			$pdf->Cell(38, 4, $cant_mes.' '.$art['forma_nombre'],1,0,'L',$fill);
+			
+		} else {
+			
+			$pdf->Cell(38, 4, $cantidad.' '.$art['forma_nombre'],1,0,'L',$fill);			
+			
+			$cant_mes=$cantidad;
+			
+		}
+		
+		$pdf->SetFont('','B',10);
+        $pdf->Cell(25, 4, "Precio:",1,0,'R', $fill);
+		$pdf->SetFont('','',10);
+		
+		$precio=(($art['art_val_ult']*$_global_iva)*$cant_mes)*1.2;
+		
+		/*if($receta['prev_id']*1==10 OR $receta['prev_id']*1==12) {
+			$precio=0;
+		} elseif($receta['prev_id']*1==11) {
+			$precio=ceil(($precio*1.2*$_global_iva)*0.1);
+		} elseif($receta['prev_id']*1==15) {
+			$precio=ceil(($precio*1.2*$_global_iva)*0.2);
+		} else {
+			$precio=ceil($precio*1.2*$_global_iva);			
+		}*/
+		
+        $pdf->Cell(35, 4, '$'.number_format($precio,0,',','.').'.-',1,0,'R',$fill);
+		$pdf->Ln();
+
+		if($receta['receta_cronica']=='t' OR $art['recetad_dias']*1>30) {
+			
+			/*$desp=cargar_registro("SELECT SUM(ABS(stock_cant)) AS total FROM recetas_detalle 
+			JOIN logs ON log_recetad_id=recetad_id
+			JOIN stock ON stock_log_id=log_id
+			WHERE recetad_id=".$art['recetad_id']);*/
+			
+			$total_desp=$desp['total']*1;
+			
+			$ff=explode('/',$receta['receta_fecha']);
+			
+			$dia=$ff[0]*1;
+			$mes_inicial=$ff[1]*1;
+			$anio=$ff[2]*1;
+			$meses=($art['recetad_dias']*1/30);
+			
+			$cant_mes=ceil($cantidad/$meses);
+
+			$resto_desp=($cantidad-$total_desp);
+			
+			if($resto_desp<$cant_mes){$cant_mes=$resto_desp;}
+			
+			$txt_fechas='';
+			
+			for($ii=0;$ii<$meses;$ii++) {
+			
+				
+				$mes=($mes_inicial+$ii);
+				if($mes>12) { $mes-=12; $_anio=$anio+1;} else {$_anio=$anio;}
+				
+				if(!($total_desp<(($ii+1)*$cant_mes))) {
+					continue; //$d='X'; 
+				} else { 
+					$txt_fechas.='[ ] '.$dia.'/'.$mes.'/'.$_anio.' ';
+					break; //$d='_'; 					
+				}
+
+				//$txt_fechas.='['.$d.'] '.$dia.'/'.$mes.'/'.$_anio.' ';
+				
+			}
+			
+			$pdf->SetFont('','B',8);
+			$pdf->Cell(25,4,'Prox. Entrega:','LRB',0,'R',$fill);
+			$pdf->SetFont('','',10);
+			$pdf->Cell(98,4,$txt_fechas,'LRB',1,'L',$fill);	
+			$pdf->SetFont('','',10);
+			
+		}
+
+        $pdf->SetFont('','B',10);
+        $pdf->Cell(25,4,'Indicaciones:','LR',0,'R',$fill);
+        $pdf->SetFont('','',10);
+        $pdf->Cell(98,4,$txt_dosis,'LR',1,'L',$fill);
+
+        
+        
+        $indica=html_entity_decode(strip_tags($art['recetad_indicaciones']));
+      
+        if($indica!='') {
+			$starty=$pdf->GetY();
+			$pdf->SetX($x+25);
+			$pdf->SetFont('','',10);
+        	$pdf->MultiCell(98,4,$indica, 1, 'J');
+        	
+        	$size=$pdf->GetY()-$starty;
+        	
+        	$pdf->SetX($x);
+        	$pdf->SetY($starty);
+			$pdf->SetFont('','B',10);
+			$pdf->Cell(25,$size,'Otras Ind.:','LR',0,'R',$fill);
+			$pdf->Ln($size);
+			
+        }
+			
+        //$pdf->SetFont('','',6);
+        $fill=!$fill;
+          
+    }
+    
+    $pdf->Cell(123,0,'','T');
+    
+    //$pdf->SetY(180);
+    //$pdf->SetFont('','',12);
+    
+    //$pdf->MultiCell(123, 7, "_____________________________\nPaciente Recepciona Conforme",1,'C',true);  
+  
+  $pdf->Output();
+  
+?>

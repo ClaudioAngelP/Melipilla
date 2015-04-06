@@ -1,0 +1,21 @@
+Q480,019
+q831
+rN
+S1
+D7
+ZT
+JB
+OD
+R175,0
+N
+B152,303,0,1,2,6,80,N,"{$codigo}"
+A21,429,0,3,1,1,N,"Hospital Puerto Montt {$fecha}"
+A199,394,0,3,1,1,N,"{$ficha}"
+A21,228,0,1,2,2,N,"RECETA {$receta_id}"
+A21,264,0,1,2,2,N,"TOTAL {$total}"
+A21,171,0,3,1,1,N,"2-2"
+A21,71,0,1,2,2,N,"{$nombre1}"
+A21,95,0,1,2,2,N,"{$nombre2}"
+A21,119,0,1,2,2,N,"{$nombre3}"
+A21,12,0,3,1,1,N,"{$paciente}"
+P1

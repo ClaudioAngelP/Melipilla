@@ -1,0 +1,74 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	if(isset($_POST['hospam_id'])) {
+		
+		$hospam_id=$_POST['hospam_id']*1;
+		
+		pg_query("DELETE FROM hospitalizacion_autorizacion_meds WHERE hospam_id=$hospam_id;");
+		
+		exit();
+		
+	}
+	
+	
+	$hosp_id=$_POST['hosp_id']*1;
+
+	$doc_id=pg_escape_string(utf8_decode($_POST['doc_id2']));
+	$art_id=pg_escape_string(utf8_decode($_POST['art_id2']));
+	$cantidad=$_POST['art_cantidad2']*1;
+	$horas=$_POST['art_horas']*1;
+	$dias=$_POST['art_dias']*1;
+	$forma=$_POST['art_forma2'];
+	
+	$func_id=$_SESSION['sgh_usuario_id']*1;
+	
+	$motivo=pg_escape_string(utf8_decode($_POST['art_motivo']));
+	$observa=pg_escape_string(utf8_decode($_POST['art_observa']));
+	$terapia=pg_escape_string(utf8_decode($_POST['art_terapia']));
+	
+	if(isset($_POST['art_cultivo']))
+		$cultivo=pg_escape_string(utf8_decode(trim($_POST['art_cultivo'])));
+	else
+		$cultivo='';
+	
+	if(isset($_POST['art_diagnostico']))
+		$diag1=pg_escape_string(utf8_decode(trim($_POST['art_diagnostico'])));
+	else
+		$diag1='';
+		
+	if(isset($_POST['otro_diag']))
+		$diag2=pg_escape_string(utf8_decode(trim($_POST['otro_diag'])));
+	else
+		$diag2='';
+	
+	if($diag1!='') {
+		$diag=$diag1;
+	} else {
+		$diag=$diag2;
+	}
+	
+	if($cultivo=='') $diag='';
+	
+	$chk=cargar_registro("SELECT * FROM ( SELECT hospam_fecha_digitacion::date AS fecha_ini,(hospam_fecha_digitacion+(hospam_dias||' days')::interval)::date AS fecha_fin,* from hospitalizacion_autorizacion_meds
+					WHERE hosp_id=$hosp_id AND art_id=$art_id)AS foo
+					WHERE fecha_fin>=now()");
+	
+	if(!$chk){
+		pg_query("INSERT INTO hospitalizacion_autorizacion_meds
+		VALUES (DEFAULT, $hosp_id, CURRENT_TIMESTAMP, $func_id, $doc_id, $art_id, $cantidad, $horas, $dias, '$motivo', '$terapia', '$observa', null, null, 0, '$cultivo', '$diag', '$forma');");
+		/*print("INSERT INTO hospitalizacion_autorizacion_meds
+		VALUES (DEFAULT, $hosp_id, CURRENT_TIMESTAMP, $func_id, $doc_id, $art_id, $cantidad, $horas, $dias, '$motivo', '$terapia', '$observa', null, null, 0, '$cultivo', '$diag', '$forma');");*/
+		
+		$id=cargar_registro("SELECT CURRVAL('hospitalizacion_autorizacion_meds_hospam_id_seq')AS id;");
+		
+		//print($id['id'].' '.$art_forma2);
+		print(json_encode('OK'));
+
+	}else{
+		print(json_encode('Medicamento Actualmente Vigente'));
+	}
+	
+	
+?>

@@ -1,0 +1,55 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$fecha=pg_escape_string(utf8_decode($_POST['fecha']));
+	$tcama=pg_escape_string(utf8_decode($_POST['tcamas']));
+	
+		$l=cargar_registros_obj("
+			SELECT *, hosp_fecha_ing::date AS hosp_fecha_ing, 
+			hospitalizacion.hosp_id AS id 
+			FROM hospitalizacion
+			JOIN pacientes ON hosp_pac_id=pac_id
+			LEFT JOIN censo_diario ON 
+				censo_diario.hosp_id=hospitalizacion.hosp_id AND
+				censo_diario.censo_fecha='$fecha'
+			LEFT JOIN tipo_camas ON
+				cama_num_ini>=hosp_numero_cama AND cama_num_fin<=hosp_numero_cama
+			LEFT JOIN clasifica_camas ON 
+				tcama_num_ini<=hosp_numero_cama AND tcama_num_fin>=hosp_numero_cama
+			WHERE (hosp_fecha_egr::date>='$fecha' OR hosp_fecha_egr IS NULL) AND hosp_fecha_ing::date<='$fecha'
+			AND NOT hosp_numero_cama = 0 AND tcama_id=$tcama
+			ORDER BY hosp_numero_cama, hospitalizacion.hosp_fecha_ing		
+	", true);
+
+	if($l)
+	for($i=0;$i<sizeof($l);$i++) {
+
+		$valor=pg_escape_string($_POST['clase_'.$l[$i]['id']]);
+		
+		pg_query("DELETE FROM censo_diario WHERE hosp_id=".$l[$i]['id']." AND censo_fecha='".$fecha."'");
+
+		if($valor!='')
+			pg_query("INSERT INTO censo_diario VALUES (
+			DEFAULT,
+			".$l[$i]['id'].",
+			'".$valor."',
+			'".$fecha."'		
+			);");
+		
+
+		pg_query("UPDATE hospitalizacion SET
+					
+					hosp_criticidad=(
+						SELECT censo_diario FROM censo_diario 
+						WHERE censo_fecha=(
+							SELECT MAX(censo_fecha) FROM censo_diario 
+							WHERE hosp_id=".$l[$i]['id']."
+						)
+					)
+					WHERE hosp_id=".$l[$i]['id']);
+
+	}
+
+
+?>

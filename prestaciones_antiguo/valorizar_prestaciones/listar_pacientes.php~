@@ -1,0 +1,53 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$fecha=$_POST['fecha1'];
+	
+	$pacs=cargar_registros_obj("
+	   SELECT *,
+	   (SELECT COUNT(*) FROM prestacion 
+	   WHERE prestacion.pac_id=foo.pac_id AND presta_fecha::date='$fecha') AS cant 
+	   FROM (
+			SELECT DISTINCT pac_id FROM prestacion WHERE presta_fecha::date='$fecha'
+		) AS foo 
+		JOIN pacientes USING (pac_id)	
+	", true);
+	
+?>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td>R.U.T.</td>
+<td>Ficha</td>
+<td style='width:50%;'>Nombre</td>
+<td>Cant. Presta.</td>
+<td style='width:40px;'>Validar</td>
+</tr>
+
+<?php 
+
+	for($i=0;$i<sizeof($pacs);$i++) {
+		
+		$clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+		
+		print("
+			<tr class='$clase'
+			onMouseOver='this.className=\"mouse_over\";' 
+			onMouseOut='this.className=\"".$clase."\";'>
+			<td style='text-align:right;font-weight:bold;'>".$pacs[$i]['pac_rut']."</td>			
+			<td style='text-align:center;font-weight:bold;'>".$pacs[$i]['pac_ficha']."</td>			
+			<td>".trim($pacs[$i]['pac_nombres'].' '.$pacs[$i]['pac_appat'].' '.$pacs[$i]['pac_apmat'])."</td>			
+			<td style='text-align:center;'>".$pacs[$i]['cant']."</td>			
+			<td style='text-align:center;'>
+			<img src='iconos/coins.png' style='cursor:pointer;' 
+			onClick='abrir_pac(".$pacs[$i]['pac_id'].");' /></td>			
+			</tr>		
+		");		
+		
+	}
+
+?>
+
+</table>
+

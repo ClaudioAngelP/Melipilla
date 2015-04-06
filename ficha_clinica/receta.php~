@@ -1,0 +1,956 @@
+<?php
+
+    require_once('../conectar_db.php');
+  
+      if(isset($_GET['cheque'])) {
+        $cheque = 1; 
+        $med_mostrar='med_control_corto';
+        $funcion_meds='buscar_medicamentos_controlados';
+      } else {
+        $cheque = 0;
+        $med_mostrar='med_corto';
+        $funcion_meds='buscar_medicamentos';
+      }
+      
+      if(isset($_GET['directo'])) {
+        $directo=true;
+      }
+      
+      $tipos_recetas = pg_query($conn, "
+      SELECT tipotalonario_id, COALESCE(tipotalonario_adquiriente, false), COALESCE(tipotalonario_funcionario, 0), art_id FROM receta_tipo_talonario;
+      ");
+      
+      $_tipo='';
+      
+      for($a=0;$a<pg_num_rows($tipos_recetas);$a++) {
+      
+        $_tiporec = pg_fetch_row($tipos_recetas);
+        
+        $_tipo .= '<input type="hidden" id="tiporeceta_'.$_tiporec[0].'" name="tiporeceta_'.$_tiporec[0].'" value="'.$_tiporec[1].''.$_tiporec[2].'">';
+        $_tipo .= '<input type="hidden" id="art_receta_'.$_tiporec[0].'" name="art_receta_'.$_tiporec[0].'" value="'.$_tiporec[3].'">';
+      
+      }
+      
+      
+      $paciente = ($_GET['paciente']*1);
+      
+      $centroshtml = desplegar_opciones("centro_costo", "centro_ruta, centro_nombre, length(regexp_replace(centro_ruta, '[^.]', '', 'g')) AS centro_nivel, centro_medica", '1', 'centro_medica AND centro_nivel=2',	'ORDER BY centro_ruta');
+      
+      $servicioshtml = desplegar_opciones("centro_costo", "centro_ruta, centro_nombre, length(regexp_replace(centro_ruta, '[^.]', '', 'g')) AS centro_nivel, centro_medica", '1', 'centro_medica AND centro_nivel=3',	'ORDER BY centro_ruta');
+      
+      $talonarioshtml = desplegar_opciones("receta_tipo_talonario", "tipotalonario_id, tipotalonario_nombre", '1', '1=1', 'ORDER BY tipotalonario_id');
+      
+ ?>
+      
+  		<script>
+      
+      var medicamentos=new Array();
+      var conta_med=0;
+      bloquear_ingreso=false;
+      receta_control=<?php echo $cheque; ?>;
+      
+      mostrar_opciones_receta = function() {
+      
+        if(receta_control==1) {
+        
+          var tipo_receta = $('tipo_talonario').value;
+          
+          var opciones_talonario = $('tiporeceta_'+tipo_receta).value;
+          var art_talonario = $('art_receta_'+tipo_receta).value;
+          
+          if(opciones_talonario.charAt(0)=='t') {
+            $('adquiriente').style.display='';
+          } else {
+            $('adquiriente').style.display='none';
+          }
+          
+          if(art_talonario==-1) {
+            $('nro_receta').disabled=true;
+            $('nro_receta').value='';
+          } else {
+            $('nro_receta').disabled=false;
+            //$('nro_receta').value='';
+          }
+          
+        } else {
+        
+          $('adquiriente').style.display='none';
+        
+        }
+        
+        for(var n=0;n<medicamentos.length;n++)
+          if(medicamentos[n]!=null)
+            if(tipo_receta!=medicamentos[n][7]) 
+              medicamentos[n]=null;
+        
+        redibujar_tabla();
+              
+      }
+      
+      comprobar_rut_adquiriente = function () {
+      
+        adq_rut_obj = $('adq_rut');
+        
+        adq_rut_obj.value=trim(adq_rut_obj.value);
+      
+        if(comprobar_rut(adq_rut_obj.value)) {
+          
+          adq_rut_obj.style.background='';
+          $('adq_rut_correcto').value=1;
+        
+        } else {
+        
+          adq_rut_obj.style.background='yellow';
+          $('adq_rut_correcto').value=0;
+        
+        }
+      
+      }
+      
+      setear_adquiriente = function() {
+      
+        retira = $('adq_retira').value;
+        
+        if(retira==0) {
+        
+          $('adq_rut').value=$('paciente_rut').value;
+          $('adq_appat').value=$('paciente_paterno').value;
+          $('adq_apmat').value=$('paciente_materno').value;
+          $('adq_nombres').value=$('paciente_nombre').value;
+          $('adq_direccion').value=$('paciente_dire').value;
+          $('adq_rut_correcto').value=1;
+          
+          $('adq_rut').disabled=true;
+          $('adq_appat').disabled=true;
+          $('adq_apmat').disabled=true;
+          $('adq_nombres').disabled=true;
+          $('adq_direccion').disabled=true;
+        
+        } else {
+        
+          $('adq_rut').value='';
+          $('adq_appat').value='';
+          $('adq_apmat').value='';
+          $('adq_nombres').value='';
+          $('adq_direccion').value='';
+          $('adq_rut_correcto').value=0;
+          
+          $('adq_rut').disabled=false;
+          $('adq_appat').disabled=false;
+          $('adq_apmat').disabled=false;
+          $('adq_nombres').disabled=false;
+          $('adq_direccion').disabled=false;
+        
+        }
+      
+      }
+      
+      
+      abrir_diag = function () {
+        
+      var myAjax = new Ajax.Updater(
+			'diagnostico', 
+			'mostrar.php', 
+			{ method: 'get', evalScripts: true, parameters: 'tipo=diagnostico&codigo='+$('diag_cod').value	}  );
+      
+      return;  
+        
+      }
+      
+      abrir_articulo = function() {
+      
+      if($('codigo').value=='') return;
+      
+      for(i=0;i<=conta_med;i++) {
+      
+              if(medicamentos[i]==null) continue;
+              
+              if(medicamentos[i][4]==$('codigo').value) {
+                $('cant').value=medicamentos[i][1];
+                $('horas').value=medicamentos[i][2];
+                $('dias').value=medicamentos[i][3];
+                
+                calcular_cant();
+                medicamentos[i]=null;
+                redibujar_tabla();
+                break;
+              }
+              
+      }
+      
+      if($('articulo_id')) $('articulo_id').value='';
+      
+      $('detalle_prod').innerHTML='<img src="imagenes/ajax-loader1.gif">';
+      
+      var myAjax = new Ajax.Updater(
+			'detalle_prod', 
+			'mostrar.php', 
+			{
+				method: 'get', 
+				evalScripts: true,
+				parameters: 'tipo=<?php echo $med_mostrar?>&'+$('codigo').serialize()+'&'+$('bodega_id').serialize(),
+				onComplete: function(respuesta) {
+            
+				    $('cant').select();
+				    
+        }
+        
+			}
+			
+			);
+      
+      }
+      
+      calcular_cant = function() {
+      
+          if($('horas').value<1) {
+            $('horas').value="";
+          }
+          
+          if(receta_control==0 && $('cronica').checked) 
+            valor = Math.floor((($('dias').value*30))/$('horas').value*($('cant').value));
+          else
+            valor=1*(($('dias').value*24))/($('horas').value)*($('cant').value);
+    
+          if(!isNaN(valor) || ($('horas').value*1)>0) {
+            $('total').innerHTML=valor;
+          } else {
+            $('total').innerHTML='0';
+          }
+          
+      
+      }
+      
+      agregar_art = function() {
+      
+          if(!$('articulo_id')) {
+            
+            alert('Seleccione Medicamento y Dosis.');
+            $('codigo').select();
+            return;
+      
+          }
+      
+          if($('articulo_id').value=='' || ($('total').innerHTML*1)==0) {
+            
+            alert('Seleccione Medicamento y Dosis.');
+            $('codigo').select();
+            return;
+      
+          }
+          
+          codigo = $('codigo').value;
+          nombre = $('tooltip_sel').innerHTML;
+          
+          medicamentos[conta_med]=new Array();
+          medicamentos[conta_med][0]=$('articulo_id').value;
+          medicamentos[conta_med][1]=$('cant').value;
+          medicamentos[conta_med][2]=$('horas').value;
+          medicamentos[conta_med][3]=$('dias').value;
+          medicamentos[conta_med][4]=codigo;
+          medicamentos[conta_med][5]=nombre;
+          medicamentos[conta_med][6]=($('articulo_stock').value*1);
+          medicamentos[conta_med][7]=($('articulo_control').value*1);
+          
+          if(receta_control) {
+              $('tipo_talonario').value=$('articulo_control').value;
+              mostrar_opciones_receta();
+          }
+
+          redibujar_tabla();
+          
+          $('lista_medicamentos').scrollTop=
+                                  $('lista_medicamentos').scrollHeight;
+          
+          conta_med++;
+          
+          $('articulo_id').value='';
+          $('cant').value='';
+          $('horas').value='';
+          $('dias').value='';
+          
+          $('detalle_prod').innerHTML='';
+          
+          calcular_cant();
+          
+          $('codigo').value='';
+          $('codigo').focus();
+          
+      }
+      
+      redibujar_tabla= function() {
+    
+      tabla_html='<table width=100% id=\"seleccion\"><tr class=\"tabla_header\" style=\"font-weight: bold;\"> <td>C&oacute;digo Int.</td><td>Nombre</td><td>Cant.</td><td>Acci&oacute;n</td></tr>';    
+    
+      for(i=0;i<=conta_med;i++) {
+      
+          if(medicamentos[i]==null) continue;
+          
+          codigo=medicamentos[i][4];
+          nombre=medicamentos[i][5];
+          art_stock=medicamentos[i][6];
+          
+          if(receta_control==1 || !$('cronica').checked) { 
+              rangofec='d&iacute;as';
+              rangofec2='horas'; 
+              cantfec=medicamentos[i][3];
+          } else { 
+              rangofec='meses';
+              rangofec2='d&iacute;as';
+              cantfec=(medicamentos[i][3]);
+          }
+          
+          dosis = medicamentos[i][1] + ' <i>cada</i> ' + medicamentos[i][2] + '<i> ' + rangofec2 + ',  durante</i> ' + cantfec + ' <i>' + rangofec + '.</i>';
+          
+          if(receta_control==0 && $('cronica').checked) {
+            totalua = Math.floor(((medicamentos[i][3]*30))/(medicamentos[i][2])*(medicamentos[i][1]));
+          } else {
+            totalua = 1*((medicamentos[i][3]*24))/(medicamentos[i][2])*(medicamentos[i][1]);
+          }
+          
+          if(receta_control==1 || !$('cronica').checked) {
+            
+            if(totalua>art_stock) texto_color='color: red;'
+            else                  texto_color='color: blue';
+            
+            tabla_html+='<tr class=\"tabla_fila\"><td style=\"text-align: right;\"><b>'+codigo+'</b></td><td>'+nombre+'</td><td style="text-align:right;">'+number_format(totalua,2)+'.-</td><td rowspan=2><center><img src=\"iconos/delete.png\" onClick=\"quitar_art('+i+');\" alt=\"Quitar Medicamento...\" title=\"Quitar Medicamento\" style="cursor: pointer;"></center></td></tr><tr class=\"tabla_fila2\"><td style="text-align:right;"><b>Dosis/Stock:</b></td><td>'+dosis+'</td><td style=\"text-align: right; '+texto_color+'\">'+number_format(art_stock,2)+'.-</td></tr>';
+          
+          } else {
+          
+            totaldesp=Math.floor(totalua/medicamentos[i][3]);
+          
+            if(totaldesp>art_stock) texto_color='color: red;'
+            else                    texto_color='color: blue';
+          
+            tabla_html+='<tr class=\"tabla_fila\"><td style=\"text-align: right;\"><b>'+codigo+'</b></td><td>'+nombre+'</td><td style="text-align:right;">'+number_format(totaldesp,2)+'.- / ('+number_format(totalua,2)+'.-)</td><td rowspan=2><center><img src=\"iconos/delete.png\" onClick=\"quitar_art('+i+');\" alt=\"Quitar Medicamento...\" title=\"Quitar Medicamento\" style="cursor: pointer;"></center></td></tr><tr class=\"tabla_fila2\"><td style="text-align:right;"><b>Dosis/Stock:</b></td><td>'+dosis+'</td><td style=\"text-align: right; '+texto_color+'\">'+number_format(art_stock,2)+'.-</td></tr>';
+          }
+      
+      }
+          
+      tabla_html+="</table>";
+      
+      $('lista_medicamentos').innerHTML=tabla_html;
+      
+      }
+      
+      limpiar_art = function() {
+        if(confirm('Est&aacute; seguro que desea limpiar la lista de medicamentos seleccionados?'.unescapeHTML())) {
+            conta_med=0;
+            medicamentos = new Array();
+            $('lista_medicamentos').innerHTML='';
+            $('observaciones').value='';
+            $('detalle_prod').innerHTML='';
+        }
+      }
+      
+      quitar_art = function(numero) {
+      
+        medicamentos[numero]=null;
+        
+        redibujar_tabla();
+      
+      } 
+      
+      
+      verifica_receta_tabla = function () {
+      
+        cadena='';
+        
+        
+        if (directo) {
+          if($('rut_medico').value=='') {
+            alert('No ha seleccionado M&eacute;dico emisor de la receta.'.unescapeHTML());
+            return;
+          }
+          
+          if($('centro_costo').value==-1) {
+            alert('Debe seleccionar Centro de Costo/Servicio.');
+            return;
+          }
+        }
+        
+        if($('adquiriente').style.display=='') {
+        
+          if($('adq_rut_correcto').value!=1) {
+            alert('RUT de Adquiriente ingresado no es v&aacute;lido.'.unescapeHTML());
+            return;
+          } 
+          
+          if(trim($('adq_appat').value)=='' || trim($('adq_apmat').value)=='' || trim($('adq_nombres').value)=='' || trim($('adq_direccion').value)=='') {
+            alert('Falta llenar campos en la secci&oacute;n de Adquiriente.'.unescapeHTML());
+            return;
+          }
+          
+          if($('adq_retira').value==0) {
+            $('adq_rut').disabled=false;
+            $('adq_appat').disabled=false;
+            $('adq_apmat').disabled=false;
+            $('adq_nombres').disabled=false;
+            $('adq_direccion').disabled=false;
+          }
+          
+          campos_adquiriente='&'+$('adq_rut').serialize()+'&'+
+                                  $('adq_appat').serialize()+'&'+
+                                  $('adq_apmat').serialize()+'&'+
+                                  $('adq_nombres').serialize()+'&'+
+                                  $('adq_direccion').serialize();
+
+          if($('adq_retira').value==0) {
+            $('adq_rut').disabled=true;
+            $('adq_appat').disabled=true;
+            $('adq_apmat').disabled=true;
+            $('adq_nombres').disabled=true;
+            $('adq_direccion').disabled=true;
+          }
+                                  
+        } else {
+        
+          campos_adquiriente='';
+        
+        }
+        
+        for(i=0;i<medicamentos.length;i++) {
+        
+          if(medicamentos[i]==null) continue;
+        
+          ///if($('cronica').checked) {
+          //if(receta_control==1 || $('cronica').checked)
+          if(receta_control==0 && $('cronica').checked) 
+          {
+            cantidad_art=Math.floor(((medicamentos[i][3]*30))/(medicamentos[i][2])*(medicamentos[i][1]));
+            cantidad_art=Math.floor(cantidad_art/medicamentos[i][3]);
+          } else {
+            cantidad_art=1*(medicamentos[i][3]*24)/(medicamentos[i][2])*(medicamentos[i][1]);
+          }
+            
+          if(medicamentos[i][6]<cantidad_art && $('despachar').checked) {
+          
+            var msg='No hay stock disponible el siguiente medicamento:\n\n';
+            msg+='['+medicamentos[i][4]+'] '+medicamentos[i][5]+' -- (Saldo:'+medicamentos[i][6]+'/Despacho:'+cantidad_art+')';
+            
+            alert(msg);  
+            return;
+          }
+          
+          cadena+=medicamentos[i][0]+'/'+medicamentos[i][1]+'/'+medicamentos[i][2]+'/'+medicamentos[i][3]+'!';
+        
+        }
+        
+        $('medica').value=cadena;
+        
+        if (cadena=='') {
+            alert('No ha seleccionado ning&uacute;n medicamento a&uacute;n.'.unescapeHTML());
+            return;
+        }
+        
+        
+        if(directo) {
+          
+          $('rut_medico').disabled=false;
+          campos_adicionales='&'+$('bodega_id').serialize()+'&directo';
+        
+        } else {
+          
+          campos_adicionales='';
+          
+        }
+        
+        if(bloquear_ingreso) {
+        
+          alert("Su solicitud se est&aacute; procesando.".unescapeHTML());
+          return;
+        
+        }
+        
+        bloquear_ingreso=true;
+        
+        
+      var myAjax = new Ajax.Request(
+			'ficha_clinica/sql_receta.php', 
+			{
+				method: 'get', 
+				parameters: $('receta').serialize()+campos_adicionales+campos_adquiriente,
+				onComplete: function(pedido_datos) {
+				
+				    try {
+              datos = pedido_datos.responseText.evalJSON(true);
+				    } catch(err) { 
+              alert(err);
+              bloquear_ingreso=false;
+              return;
+            }
+            
+            if(datos[0]==true) {
+				      
+              try {
+                es_cronica = $('cronica').checked;
+              } catch(err) {
+                es_cronica = false;
+              }
+              
+              if(!directo || es_cronica) {
+                alert('Receta ingresada exitosamente.');
+              } 
+              
+              if(es_cronica) {
+                win = window.open('recetas/entregar_recetas/talonario.php?receta_id='+datos[1],
+                            'win_talonario');
+                win.focus();
+              }
+              
+              if (mostrar_recetario)  mostrar_recetas();
+              
+              $('win_receta').win_obj.close();
+              
+              if(directo) {
+                limpiar_ficha_basica();
+              }
+              
+				    } else {
+				    
+              alert(datos[1].unescapeHTML());
+              bloquear_ingreso=false;
+              
+            }
+					
+				}
+				
+			}
+			
+			);
+      
+      }
+      
+      cargar_servicios = function () {
+      
+        centros = $('centro_costo');
+        servs = $('centro_servicio');
+        
+        valor = centros.value;
+        
+        servicios = servs.options;
+        
+        seleccionado = false;
+        
+        for(i=0;i<servicios.length;i++) {
+          
+          valoropt = servicios[i].value.substring(0,valor.length);
+          
+          if(valoropt==valor || servicios[i].value==-1) {
+            servicios[i].style.display='';
+          } else {
+            servicios[i].style.display='none';
+          }
+          
+        }
+        
+        servs.value=-1;
+      
+      }
+      
+      ocultar_servicios = function() {
+      
+        servs = $('centro_servicio');
+        
+        servicios = servs.options;
+        
+        for(i=0;i<servicios.length;i++) {
+          if(servicios[i].value==-1) {
+            servicios[i].style.display='';
+          } else {
+             servicios[i].style.display='none';
+          }
+        }
+      }
+      
+      <?php 
+      
+            if($directo) {
+              print('directo=true;'); 
+            } else {
+              print('directo=false;');
+            }
+             
+       ?>
+      
+      if(directo) {
+      
+      ingreso_rut=function(datos_medico) {
+      
+      $('rut_medico').value=datos_medico[1];
+      
+      }
+      
+      autocompletar_medicos = new AutoComplete(
+      'nombre_medico', 
+      'autocompletar_sql.php',
+      function() {
+        if($('nombre_medico').value.length<3) return false;
+        
+        return {
+          method: 'get',
+          parameters: 'tipo=medicos&'+$('nombre_medico').serialize()
+        }
+      }, 'autocomplete', 350, 200, 250, 1, 2, ingreso_rut);
+      
+      }
+      
+      
+      </script>
+      
+      <form name='receta' id='receta'>
+ 
+ 
+<?php
+
+if(!$cheque) {
+
+?>      
+      <script>
+      
+      actualizar_cronica=function() {
+      
+        var val = $('cronica').checked;
+        
+        if(val) {
+          $('despaprimera').style.display='';
+          $('rangodosis').value=30;
+          $('rangodosis').disabled=true;
+          $('rangodosis2').value=24;
+          $('rangodosis2').disabled=true;
+        } else {
+          $('despaprimera').style.display='none';
+          $('rangodosis').value=1;
+          $('rangodosis').disabled=true;
+          $('rangodosis2').value=1;
+          $('rangodosis2').disabled=true;
+        }
+      
+      }
+      
+      
+      autocompletar_medicamentos = new AutoComplete(
+      'codigo', 
+      'autocompletar_sql.php',
+      function() {
+        if($('codigo').value.length<3) return false;
+      
+        return {
+          method: 'get',
+          parameters: 'tipo=buscar_meds&'+$('codigo').serialize()+'&'+$('bodega_id').serialize()
+        }
+      }, 'autocomplete', 350, 200, 250, 1, 3, abrir_articulo);
+      
+      </script>
+      
+      <div class='sub-content'>
+      
+      <input type='checkbox' value='1' id='cronica' name='cronica' onClick='actualizar_cronica();'> <b>Receta Cr&oacute;nica</b> (<i>Despacho Parcializado de Medicamentos</i>) 
+      
+      </div>
+      
+<?php
+
+} else {
+
+?>
+
+  <script>
+      
+      autocompletar_medicamentos = new AutoComplete(
+      'codigo', 
+      'autocompletar_sql.php',
+      function() {
+        if($('codigo').value.length<3) return false;
+      
+        return {
+          method: 'get',
+          parameters: 'tipo=buscar_meds_controlados&'+$('codigo').serialize()+
+                      '&'+$('bodega_id').serialize()+'&'+$('tipo_talonario').serialize()
+        }
+      }, 'autocomplete', 350, 200, 250, 1, 3, abrir_articulo);
+      
+    </script>
+      
+  
+  <div class='sub-content'>
+  
+  <input type='hidden' id='cheque' name='cheque' value=''>
+  <?php echo $_tipo;  // Cadenas con los parámetros para cada tipo de receta ?>
+
+  <table>
+  <tr>
+  <td style='text-align: right;'>Tipo de Talonario:</td>
+  <td>
+  <select id='tipo_talonario' name='tipo_talonario' onChange='mostrar_opciones_receta();'>
+  <?php echo $talonarioshtml?>
+  </select>
+  </td>
+  </tr>
+  <tr>
+  <td style='text-align: right;'>N&uacute;mero de Receta:</td>
+  <td>
+  <input type='text' id='nro_receta' name='nro_receta' 
+  style='text-align:right;'
+  value=''>
+  </td>
+  </tr>
+  </table>
+  
+  </div>
+
+<?php
+
+}
+
+if($directo) {
+
+?>
+
+    <div class='sub-content'>
+    
+    <table>
+    <tr>
+    <td style='text-align: right;'>M&eacute;dico:</td>
+    <td> 
+    <input type='text' id='rut_medico' name='rut_medico' size=10
+    style='text-align: center;' disabled>
+    <input type='text' id='nombre_medico' name='nombre_medico' size=35>
+    </td>
+    </tr>
+    
+    <tr>
+    <td style='text-align: right;'>Centro de Costo:</td>
+    <td>
+    <select id='centro_costo' name='centro_costo'
+    onClick='cargar_servicios();'>
+    <option value=-1>(Seleccionar...)</option>
+    <?php echo $centroshtml?>
+    </select>
+    </td>
+    </tr>
+    
+    <tr>
+    <td style='text-align: right;'>Servicio/Programa:</td>
+    <td>
+    <select id='centro_servicio' name='centro_servicio'>
+    <option value=-1>(Seleccionar...)</option>
+    <?php echo $servicioshtml?>
+    </select>
+    </td>
+    </tr>
+    
+    </table>
+    
+    <script> cargar_servicios(); </script>
+    
+    </div>
+    
+    <div class='sub-content' id='adquiriente' style='display: none;'>
+    
+      <table>
+      <tr>
+      <td style='text-align: right;'>Retira:</td>
+      <td>
+      <select id='adq_retira' onChange='setear_adquiriente();'>
+      <option value=0 SELECTED>Paciente</option>
+      <option value=1>Adquiriente</option>
+      </select>
+      </td>
+      </tr>
+      
+      <tr>
+      <td style='text-align: right;'>RUT:</td>
+      <td>
+      <input type='text' id='adq_rut' name='adq_rut' value='' size=10 onKeyUp='comprobar_rut_adquiriente();'>
+      <input type='hidden' id='adq_rut_correcto' name='adq_rut_correcto' 
+      value=0>
+      </td>
+      </tr>
+      
+      <tr>
+      <td style='text-align: right;'>Paterno/Materno:</td>
+      <td>
+      <input type='text' id='adq_appat' name='adq_appat' value=''>
+      <input type='text' id='adq_apmat' name='adq_apmat' value=''>
+      </td>
+      </tr>
+      
+      <tr>
+      <td style='text-align: right;'>Nombres:</td>
+      <td>
+      <input type='text' id='adq_nombres' name='adq_nombres' value='' size=30>
+      </td>
+      </tr>
+      
+      <tr>
+      <td style='text-align: right;'>Direcci&oacute;n:</td>
+      <td>
+      <input type='text' id='adq_direccion' name='adq_direccion' value='' size=30>
+      </td>
+      </tr>
+            
+      </table>
+        
+    </div>
+
+<?php
+
+}
+
+?>
+
+      <div class='sub-content'>
+      
+      <input type='hidden' id='paciente' name='paciente' 
+      value='<?php echo $paciente?>'>
+      
+      <input type='hidden' id='medica' name='medica' value=''>
+      <table width=100%>
+      <tr><td style='text-align: right;'>Codigo Int.:</td><td>
+      <input type='text' id='codigo' name='codigo'>
+      </td></tr>
+      <tr><td style='text-align: right;'>Dosis:</td><td>
+      <input type='text' id='cant' name='cant' size=3  style='text-align: right;'     onKeyUp='
+      calcular_cant();
+      if(event.which==8 && this.value.length==0) $("codigo").focus();
+      if(event.which==13) agregar_art();
+      '>
+      cada 
+      <input type='text' id='horas' name='horas' size=3  style='text-align: right;'
+      onKeyUp='
+      calcular_cant();
+      if(event.which==8 && this.value.length==0) $("cant").focus();
+      if(event.which==13) agregar_art();
+      '>
+      <select id='rangodosis2' DISABLED>
+      <option value=1 SELECTED>horas</option>
+      <option value=24>d&iacute;as</option>
+      </select>
+       por
+      <input type='text' id='dias' name='dias' size=3  style='text-align: right;'     onKeyUp='
+      calcular_cant();
+      if(event.which==8 && this.value.length==0) $("horas").focus();
+      if(event.which==13) agregar_art();
+      '>
+      
+      <select id='rangodosis' onChange='calcular_cant();' DISABLED>
+      <option value=1 SELECTED>d&iacute;as.</option>
+      <option value=30>meses.</option>
+      </select>
+      
+      </td></tr>
+      <tr><td style='text-align: right;'>Medicamento:</td>
+      
+      <td id='detalle_prod' style='width:350px;'></td></tr>
+      
+      
+      <tr><td style='text-align: right;'>Total:</td>
+      <td style='font-weight: bold;'>
+      <span id='total'>0</span> Unidades de Administraci&oacute;n
+      </td></tr>
+  
+      
+      <tr><td colspan=2>
+      <div class='sub-content2' id='lista_medicamentos' 
+      name='lista_medicamentos'
+      style='height: 120px; min-height: 120px; overflow: auto;'>
+      
+      
+      
+      
+      </div>
+      </td>
+      </tr>
+      <tr><td colspan=3>
+      
+      <table>
+      <tr><td style='text-align: right;'>C&oacute;digo Diag.:</td><td>
+      <input type='text' id='diag_cod' name='diag_cod' 
+      style='text-align:center;' size=3>
+      <img src='iconos/zoom_in.png' style='cursor: pointer;'
+      onClick='
+      buscar_diagnosticos("diag_cod", function() {abrir_diag();} );
+      '>
+      </td>
+      <td>
+      
+      <center>
+      <span id='despaprimera' style='display:none;'>
+      <input type='checkbox' id='despachar' name='despachar' CHECKED>
+      Despachar primera dosis.
+      </center>  
+      </span>
+      </center>
+      
+          
+      </td>
+      </tr>
+      <tr>
+      <td style='text-align: right;'>Diagn&oacute;stico:</td>
+      <td width=70% style='text-align:left;' colspan=2>
+      <span id='diagnostico' style='font-weight: bold;'>
+      <input type='hidden' name='diag_existe'  id='diag_existe' value=0>
+		  (No Asociado...)</span>
+      </td></tr>
+      <tr><td style='text-align: right;' valign='top'>Observaciones:</td>
+      <td colspan=2>
+      <input type='text' id='observaciones' 
+      name='observaciones' size=45>
+      </td></tr></table>
+      
+      </td>
+      </tr>
+      </table>
+      
+      
+    <center><table><tr><td>
+		<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/accept.png'>
+		</td><td>
+		<a href='#' onClick='verifica_receta_tabla();'>Ingresar Receta...</a>
+		</td></tr></table>
+		</div>
+		</td><td>
+		<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/delete.png'>
+		</td><td>
+		<a href='#' onClick='limpiar_art();'>
+		Limpiar Selecci&oacute;n...</a>
+		</td></tr></table>
+    
+      </div>
+      
+      </form>
+      
+		</td></tr></table>
+      
+    </div>
+    
+    <script> 
+    
+    setear_adquiriente();
+    
+    mostrar_opciones_receta();
+    
+    
+    if(receta_control==0) {
+    if(!directo)
+      $('codigo').focus();
+     else 
+      $('nombre_medico').focus();
+    } else {
+      $('nro_receta').focus();
+    } 
+
+		<?php if(_cax(1000)) { ?>
+		
+			$('cronica').checked=true;
+			actualizar_cronica();		
+		
+		<?php } ?>
+      
+    </script>
+    

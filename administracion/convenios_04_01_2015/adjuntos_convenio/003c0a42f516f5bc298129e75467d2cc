@@ -1,0 +1,8 @@
+Error Opening \\.\PhysicalDrive1. Error Code 2
+No of disks 1
+Scanning \\.\PhysicalDrive0
+index 0 ID 7 size 204800 
+index 1 ID 7 size 511793152 
+index 2 ID 5 size 464769026 
+index 4 ID 83 size 464769024 
+Block size 4096, inp 8192, inodesize 256

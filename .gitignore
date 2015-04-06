@@ -1,0 +1,16 @@
+conectores/mercadopublico/xml
+adjuntos_chat
+prestaciones/monitoreo_ges/tmp_logs
+*.log
+*.csv
+conectores/sigges/tmp/*
+abastecimiento/correo_stock_criticos.php
+conectores/registro_civil/registrocivil.php
+listas_dinamicas/correo_acta_ges.php
+*.xls
+*.pdf
+*_contenido_email.html
+ficha_clinica/adjuntos/*
+conectores/informe_controlados/nohup.out
+conectores/zebra/log/*
+*.dump

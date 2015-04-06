@@ -1,0 +1,123 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$servhtml = desplegar_opciones_sql('SELECT * FROM centro_costo
+	WHERE centro_hosp ORDER BY centro_nombre'); 
+
+?>
+
+<script>
+
+listar_hosp=function() {
+	  $('listado').style.display='';
+      $('listado').innerHTML='<br><img src="imagenes/ajax-loader2.gif"><br><br>';
+
+	var myAjax=new Ajax.Updater(
+		'listado',
+		'prestaciones/informes_camas/listado_camas.php',
+		{
+			method:'post',
+			parameters: $('filtro').serialize()
+		}	
+	);
+
+}
+
+
+listar_ccs=function() 
+{
+	$('filtro').submit();
+}
+
+	descargar_xls=function() {
+
+		$('xls').value=1;
+		
+		$('info').method='post';
+		$('info').action='prestaciones/informes_camas/listado_camas.php';
+		
+		$('info').submit();
+		
+	}	
+
+</script>
+
+<center>
+	<div class='sub-content' style='width:750px;'>
+		<div class='sub-content'>
+			<img src='iconos/table.png'>
+				<b>Informes de Gesti&oacute;n Centralizada de Camas</b>
+		</div>
+		<div class='sub-content'>
+			<form id='filtro' name='filtro' method="POST"
+			action="prestaciones/informe_hospitalizacion/listado_csv.php"			
+			onSubmit='return false;'>
+				<table style='width:100%;'>
+					<tr>
+						<td style='text-align: right;'>Fecha Inicio:</td>
+  						<td>
+  							<input type='text' name='fecha1' id='fecha1' size=10
+  							style='text-align: center;' value='<?php echo date("d/m/Y"); ?>' onBlur='validacion_fecha(this);'>
+  							<img src='iconos/date_magnify.png' id='fecha1_boton'>
+  						</td>
+  					</tr>
+  					<tr>
+  						<td style='text-align: right;'>Fecha Final:</td>
+  						<td><input type='text' name='fecha2' id='fecha2' size=10
+  						style='text-align: center;' value='<?php echo date("d/m/Y"); ?>' onBlur='validacion_fecha(this);'>
+  						<img src='iconos/date_magnify.png' id='fecha2_boton'>
+  						</td>
+  					</tr>
+					<tr>
+						<td style='text-align:right;'>Tipo de Informe:</td>
+						<td>
+							<select id='tipo_informe' name='tipo_informe' onchange="listar_hosp();">
+								<option value=1 SELECTED>En espera de Camas...</option>
+                                <option value=2 >Hospitalizados...</option>
+                                <option value=3 >Altas...</option>
+                                <option value=4 >Consulta O.I.R.S...</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td colspan=2>
+							<center>
+								<input type='button' onClick='listar_hosp();' 
+								  value='-- Actualizar Listado... --'>
+							</center>
+						</td>
+						<td>
+							<center>
+								<input type='button'  onClick='descargar_xls();' 
+								value='-- Obtener Archivo XLS... --'>
+							</center>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		<div class='sub-content2' style='height:400px;overflow:auto;' id='listado'>
+		</div>
+
+	</div>
+</center>
+
+  <script>
+  
+    Calendar.setup({
+        inputField     :    'fecha1',         // id of the input field
+        ifFormat       :    '%d/%m/%Y',       // format of the input field
+        showsTime      :    false,
+        button          :   'fecha1_boton'
+    });
+    Calendar.setup({
+        inputField     :    'fecha2',
+        ifFormat       :    '%d/%m/%Y',
+        showsTime      :    false,
+        button          :   'fecha2_boton'
+    });
+
+  
+  </script>
+  

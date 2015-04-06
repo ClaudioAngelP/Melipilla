@@ -1,0 +1,213 @@
+<?php 
+
+	require_once('../conectar_db.php');
+	
+	$proceso_id=$_GET['lista_id'];
+	
+	if($proceso_id!=-1){
+		
+		$wr="where ldp.codigo_bandeja='".$proceso_id."'";				
+		
+	}else{
+	
+		$wr='';
+	
+	}
+	
+	$w=pg_query("
+		select ldp.pid,
+		ldp.id_condicion, ldc1.nombre_condicion AS corigen, id_condicion_n, ldc2.nombre_condicion AS cdestino,
+		ldp.codigo_bandeja, ldb1.nombre_bandeja AS borigen, codigo_bandeja_n, ldb2.nombre_bandeja AS bdestino 
+		from lista_dinamica_proceso AS ldp
+		left join lista_dinamica_condiciones AS ldc1 on ldp.id_condicion=ldc1.id_condicion
+		left join lista_dinamica_condiciones AS ldc2 on ldp.id_condicion_n=ldc2.id_condicion
+		left join lista_dinamica_bandejas AS ldb1 on ldp.codigo_bandeja=ldb1.codigo_bandeja
+		left join lista_dinamica_bandejas AS ldb2 on ldp.codigo_bandeja_n=ldb2.codigo_bandeja
+		$wr
+		order by ldp.id_condicion;
+	");
+	
+	$condicion=desplegar_opciones("lista_dinamica_condiciones", 
+	"id_condicion, nombre_condicion",'','true','ORDER BY id_condicion');
+	
+	$bandeja=desplegar_opciones("lista_dinamica_bandejas", 
+	"codigo_bandeja, nombre_bandeja",'','true','ORDER BY codigo_bandeja');
+
+?>
+<script>
+
+	agregar_proceso = function(){
+	
+		if($('origen_condicion').value==-1 || $('destino_condicion').value==-1 || 
+			$('origen_bandeja').value==-1 || $('destino_bandeja').value==-1){
+		
+			var alerthtml='Debe seleccionar: \n\n';
+	
+			if($('origen_condicion').value==-1) alerthtml+='Condici&oacute;n de Origen.\n'.unescapeHTML();
+			if($('origen_bandeja').value==-1) alerthtml+='Bandeja de Origen.\n'.unescapeHTML();
+			if($('destino_condicion').value==-1) alerthtml+='Condici&oacute;n de Destino.\n'.unescapeHTML();
+			if($('destino_bandeja').value==-1) alerthtml+='Bandeja de Destino.\n'.unescapeHTML();
+			
+			alert(alerthtml);
+			return;		
+		}
+	
+		if($('origen_condicion').value==$('destino_condicion').value){
+			alert('Las condiciones no deben ser iguales.');	
+			return;	
+		}
+		
+		if(!confirm(('Est&aacute; seguro que desea ingresar el Proceso?').unescapeHTML())) return;
+		
+		var myAjax = new Ajax.Request(
+			'sql_procesos.php', 
+			{
+				method: 'post', 
+				parameters: 'accion=A&'+$('proceso_nuevo').serialize(),
+				onComplete: function (r) {
+				
+				if(r.responseText=='OK')
+					alert('Proceso de Trabajo ingresado con &eacute;xito.'.unescapeHTML());
+				
+				location.reload();
+				
+				}
+				
+			}
+		);
+	
+	}
+	
+	eliminar_proceso = function(id){
+	
+	if(!confirm('Est&aacute; seguro que desea eliminar el Proceso?'.unescapeHTML())) return;
+	
+	var myAjax = new Ajax.Request(
+			'sql_procesos.php', 
+			{
+				method: 'post', 
+				parameters: 'accion=Q&pid='+id,
+				onComplete: function (r) {
+				
+				if(r.responseText=='OK')
+					alert('Proceso de Trabajo eliminado con &eacute;xito.'.unescapeHTML());
+				
+				location.reload();
+				
+				}
+				
+			}
+		);
+	
+	}
+
+</script>
+
+<html>
+<title>Examinar Procesos de Trabajo</title>
+
+<?php cabecera_popup('..'); ?>
+
+<body class='fuente_por_defecto popup_background'>
+
+<h2><u>Examinar Procesos de Trabajo - G.I.S.</u></h2>
+<?php if(_cax(56)){?>
+<form id='proceso_nuevo' name='proceso_nuevo'>
+<table style='width:100%;font-size:12px;'>
+<tr class='tabla_header'>
+<td colspan=5>Ingreso de Procesos de Trabajo</td>
+</tr>
+<tr class='tabla_header'>
+<td>&nbsp;</td>
+<td>Origen</td>
+<td>Destino</td>
+</tr>
+<tr><td>Condici&oacute;n:</td><td>
+<center>
+<select id='origen_condicion' name='origen_condicion' style='width:300px;'>
+ <option value=-1 SELECTED>(Seleccionar...)</option>
+ <option value=0>(Cualquier Condici&oacute;n)</option>
+<?php echo $condicion; ?>
+</select>
+</center>
+</td><td>
+<center>
+<select id='destino_condicion' name='destino_condicion' style='width:300px;'>
+ <option value=-1 SELECTED>(Seleccionar...)</option>
+ <option value=0>(Sin Cambio)</option>
+<?php echo $condicion; ?>
+</select>
+</center>
+</td></tr>
+<tr><td>Bandeja:</td>
+<td>
+<center>
+<select id='origen_bandeja' name='origen_bandeja'>
+ <option value=-1 SELECTED>(Seleccionar...)</option>
+<?php echo $bandeja; ?>
+</select></center>
+</td><td>
+<center><select id='destino_bandeja' name='destino_bandeja'>
+ <option value=-1 SELECTED>(Seleccionar...)</option>
+ <option value=''>(Sin Cambio)</option>
+<?php echo $bandeja; ?>
+</select>
+</center>
+</td></tr>
+<tr>
+<td colspan=3><center><input type='button' value='-- [Agregar Proceso...] --' onClick='agregar_proceso();' /></center></td>
+</tr>
+</table>
+</form>
+<?php } ?>
+<table style='width:100%;font-size:12px;'>
+<tr class='tabla_header'><td colspan=10>Listado de Procesos de Trabajo</td></tr>
+	<tr class='tabla_header'>
+		<td rowspan=2>PID</td>
+		<td colspan=4>Origen</td>
+		<td colspan=4>Destino</td>
+		<td rowspan=2>Remover</td>
+	</tr>
+	<tr class='tabla_header'>
+		<td>Cod. Condici&oacute;n</td>
+		<td>Condici&oacute;n</td>
+		<td>Cod. Bandeja</td>
+		<td>Bandeja</td>
+		<td>Cod. Condici&oacute;n</td>
+		<td>Condici&oacute;n</td>
+		<td>Cod. Bandeja</td>
+		<td>Bandeja</td>		
+	</tr>
+	
+<?php 
+
+	while($p=pg_fetch_assoc($w)) {
+		
+		$clase=($i++%2==0)?'tabla_fila':'tabla_fila2';
+		
+		if($p['corigen']=='') $p['corigen']=utf8_decode('(Cualquier Condición)');
+		if($p['bdestino']=='') $p['bdestino']=$p['borigen'];
+		
+		print("
+		<tr class='$clase'>
+		<td style='text-align:right;font-size:16px;'>".$p['pid']."</td>
+		<td style='font-weight:bold;text-align:right;'>".$p['id_condicion']."</td>
+		<td>".htmlentities($p['corigen'])."</td>
+		<td style='font-weight:bold;text-align:right;'>".$p['codigo_bandeja']."</td>
+		<td>".htmlentities($p['borigen'])."</td>
+		<td style='font-weight:bold;text-align:right;'>".$p['id_condicion_n']."</td>
+		<td>".htmlentities($p['cdestino'])."</td>
+		<td style='font-weight:bold;text-align:right;'>".$p['codigo_bandeja_n']."</td>
+		<td>".htmlentities($p['bdestino'])."</td>
+		<td><center><img src='../iconos/delete.png' style='cursor:pointer;' onClick='eliminar_proceso(".$p['pid'].");' /></center></td>
+		</tr>
+		");
+		
+	}
+
+?>	
+</table>
+
+
+</body>
+</html>

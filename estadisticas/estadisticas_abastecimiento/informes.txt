@@ -1,0 +1,17 @@
+Consumo por Centros de Costo (Balance Score Card)|consumo_centro_costo.php
+Articulos Pedidos/Enviados por Bodega|pedidos_enviados.php 
+Productos Convenio|prod_convenio.php
+Consumo Recepciones(PROVEEDORES)|consumo_recepciones.php
+Precio Promedio Por Articulos|promedio_articulo.php
+Consumo Por Proveedor|consumo_por_provee.php
+Numeros de serie por Articulos|serie_articulo.php
+Pedidos Bodegas|historial_pedido.php
+Compras Por Item Presupuestario|compras_por_item(recep).php
+Proveedores|proveedores.php 
+Articulos Sin Movimiento|articulos_sin_movimiento.php
+Articulos en Punto de Pedido x Fecha|articulos_punto_pedido.php
+Pedidos / Enviados|pedidos_enviados.php
+Ordenes de Compra Atrasadas con Recep.|orden_compra_atraso.php 
+Ordenes de Compra Atrasadas sin Recep.|orden_compra_atraso2.php 
+Ordenes de Compra Documentos Recep.|orden_compra_documentos.php 
+Totales Ordenes de Compra|orden_compra_totales.php

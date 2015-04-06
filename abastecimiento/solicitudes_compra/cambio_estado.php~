@@ -1,0 +1,212 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$sol_id=$_GET['sol_id']*1;
+
+	  $solicitud=cargar_registro("
+		  SELECT *, 
+		  f1.func_nombre AS f1_func_nombre,
+		  f2.func_nombre AS f2_func_nombre,
+		  f3.func_nombre AS f3_func_nombre,
+		  COALESCE(bod_glosa, c1.centro_nombre) AS sol_ubica,
+		  solce_desc, 
+		  c2.centro_nombre AS unidad_responsable
+		  FROM solicitud_compra 
+		  LEFT JOIN funcionario AS f1 ON f1.func_id=sol_func_id
+		  LEFT JOIN funcionario AS f2 ON f2.func_id=sol_func_id1
+		  LEFT JOIN funcionario AS f3 ON f3.func_id=sol_func_id2
+		  LEFT JOIN bodega ON sol_bod_id=bod_id
+		  LEFT JOIN centro_costo AS c1 ON sol_centro_ruta=centro_ruta
+		  LEFT JOIN item_presupuestario ON sol_item_codigo=item_codigo
+		  LEFT JOIN centro_costo AS c2 ON item_centro_ruta=c2.centro_ruta
+		  LEFT JOIN solcompra_estado ON sol_estado=solce_id
+		  WHERE sol_id=$sol_id
+	  ", true);
+
+    switch($solicitud['sol_tipo']) {
+  
+      case 0:
+        $tipo='Reposici&oacute;n de Art&iacute;culos.'; break;
+      case 1:
+        $tipo='Art&iacute;culo nuevo.'; break;
+        
+    }
+    
+    if($solicitud['sol_urgente']=='t')
+      $tipo.=' <b>Urgente</b>';
+
+
+	if(_cax(62)) {
+
+		$estadoshtml=desplegar_opciones_sql("
+			SELECT solce_id, solce_desc FROM solcompra_estado 
+			WHERE solce_id NOT IN (6,9)
+			ORDER BY solce_id	
+		");
+		
+		$tipo_val=2;
+	
+	} else {
+		
+		$estadoshtml="
+			<option value='2'>Aceptado</option>		
+			<option value='3'>Rechazado</option>		
+		";
+		
+		$tipo_val=1;
+		
+	}
+
+?>
+
+<html>
+<title>Solicitud de Compra</title>
+
+<?php cabecera_popup('../..'); ?>
+
+<script>
+
+function guardar_estado() {
+
+	var myAjax=new Ajax.Request(
+		'../revision_solicitudes/sql.php',
+		{
+			method:'post',
+			parameters:$('estado').serialize(),
+			onComplete:function() {
+				alert('Cambio de estado OK.');	
+			}	
+		}	
+	);
+	
+}
+
+</script>
+
+<body class='fuente_por_defecto popup_background'>
+
+<form id='estado' name='estado' onSubmit='return false;'>
+
+<input type='hidden' id='sol_id' name='sol_id' 
+value='<?php echo $sol_id; ?>' />
+
+<input type='hidden' id='tipo_val' name='tipo_val' 
+value='<?php echo $tipo_val; ?>' />
+
+<div class='sub-content'>
+<img src='../../iconos/arrow_refresh.png' />
+Cambiar Estado de Solicitud
+</div>
+
+<div class='sub-content'>
+
+<table style='width:100%;font-size:12px;'>
+
+<tr>
+<td style='text-align: right;width:35%;'>N&uacute;mero de Solicitud:</td>
+<td><b><?php echo $solicitud['sol_id']; ?></b></td>
+</tr>
+<tr>
+<td style='text-align: right;'>Fecha de Emisi&oacute;n:</td>
+<td><b><?php echo $solicitud['sol_fecha']; ?></b></td>
+</tr>
+<tr>
+<td style='text-align: right;'>Funcionario Emisor:</td>
+<td><?php echo ($solicitud['f1_func_nombre']); ?></td>
+</tr>
+<tr>
+<td style='text-align: right;'>Lugar de Or&iacute;gen:</td>
+<td><?php echo ($solicitud['sol_ubica']); ?></td>
+</tr>
+<tr>
+<td style='text-align: right;'>Tipo:</td>
+<td><b><?php echo $tipo; ?></b></td>
+</tr>
+
+<?php if($solicitud['sol_tipo']*1==1) { ?>
+
+<tr>
+<td style='text-align: right;'>Item Presupuestario:</td>
+<td><b><?php echo $solicitud['sol_item_codigo']; ?></b><br />
+<?php echo $solicitud['item_glosa']; ?></td>
+</tr>
+
+<tr>
+<td style='text-align: right;'>Precio Referencial Unit.:</td>
+<td><b>$<?php echo number_format($solicitud['sol_precio_ref']*1,0,',','.'); ?>.-</b></td>
+</tr>
+
+<tr>
+<td style='text-align: right;'>Referente T&eacute;cnico:</td>
+<td><?php echo ($solicitud['sol_referente_tecnico']); ?></td>
+</tr>
+
+<?php } ?>
+
+<tr>
+<td style='text-align: right;'>Fecha Est. de Uso:</td>
+<td><?php echo ($solicitud['sol_fecha_uso']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align: right;'>Justificaci&oacute;n:</td>
+<td><?php echo ($solicitud['sol_observaciones']); ?></td>
+</tr>
+
+<tr>
+<td style='text-align: right;'>Estado Actual:</td>
+<td><b><?php echo ($solicitud['solce_desc']); ?></b></td>
+</tr>
+
+<?php if($solicitud['solce_id']==9) { ?>
+
+<tr>
+<td style='text-align: right;'>Unidad Responsable:</td>
+<td><b><?php echo ($solicitud['unidad_responsable']); ?></b></td>
+</tr>
+
+<?php } ?>
+
+</table>
+</div>
+
+<div class='sub-content'>
+
+<table style='width:100%;'>
+<tr><td style='text-align:right;width:50px;'>
+Estado:
+</td><td>
+<select id='valor' name='valor'>
+
+<?php echo $estadoshtml; ?>
+
+</select>
+</td></tr>
+
+<tr><td colspan=2>Comentarios:</td></tr>
+
+<tr>
+<td colspan=2>
+<textarea style='width:100%;height:200px;'></textarea>
+</td>
+</tr>
+
+<tr>
+<td colspan=2>
+<center>
+<input type='button' value='-- Guardar Cambio de Estado... --' 
+id='' name='' onClick='guardar_estado();' />
+</center>
+</td>
+</tr>
+
+</table>
+
+</div>
+
+</form>
+
+</body>
+
+</html>

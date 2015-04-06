@@ -1,0 +1,716 @@
+<?php
+
+  require_once("../../conectar_db.php");
+  
+  $bodegashtml = desplegar_opciones("bodega", "bod_id, bod_glosa",'1','bod_id IN ('._cav(5),')', 'ORDER BY bod_glosa'); 
+
+  $itemshtml = desplegar_opciones_sql(
+  "SELECT DISTINCT item_codigo, item_glosa 
+  FROM item_presupuestario
+  JOIN articulo ON art_item=item_codigo ORDER BY item_glosa"
+  ); 
+
+  $convenioshtml = desplegar_opciones_sql(
+  "SELECT DISTINCT convenio_id, convenio_nombre 
+  FROM convenio ORDER BY convenio_nombre"
+  ); 
+		
+?>
+
+	
+	<script>
+	
+	seltab=0;
+	
+	articulos=new Array();
+
+	cargar_listado = function() {
+	
+		if(($('buscar').value.length>0 || $('item').value!=-1) && seltab==0) {
+		
+		$('imagen_carga').style.display='';
+	
+		var myAjax = new Ajax.Updater(
+			'resultado', 
+			'abastecimiento/stock_articulos/listado_criticos.php', 
+			{
+				method: 'get', 
+				parameters: $('bodega').serialize()+'&'+$('buscar').serialize()+
+      '&'+$('item').serialize(),
+				evalScripts: true,
+		    onComplete: function() {
+          $('imagen_carga').style.display='none';
+	       }		
+			}
+			
+			);
+			
+			}
+
+			if(seltab==1) cargar_punto_pedido();
+			if(seltab==2) cargar_punto_critico();
+	
+	}
+	
+	cargar_punto_pedido = function() {
+  
+    id_bodega = $('bodega').value;
+    $('imagen_carga').style.display='';
+	
+    var myAjax = new Ajax.Updater(
+    'tab_pedido_listado',
+    'abastecimiento/stock_articulos/punto_pedido.php',
+    {
+      method: 'get',
+      parameters: $('bodega').serialize()+'&'+$('buscar').serialize()+
+      '&'+$('item').serialize()+'&'+$('convenio').serialize(),
+      onComplete: function () {
+        $('imagen_carga').style.display='none';
+      }
+    });
+  }
+  
+  cargar_punto_critico = function() {
+  
+    id_bodega = $('bodega').value;
+    $('imagen_carga').style.display='';
+	
+    var myAjax = new Ajax.Updater(
+    'tab_critico_listado',
+    'abastecimiento/stock_articulos/punto_critico.php',
+    {
+      method: 'get',
+      parameters: $('bodega').serialize()+'&'+$('buscar').serialize()+
+      '&'+$('item').serialize()+'&'+$('convenio').serialize(),
+      onComplete: function () {
+        $('imagen_carga').style.display='none';
+      }
+    });
+  }
+	
+	comprobar_item = function(articulo) {
+	
+	if(($('pedido_'+articulo).value*1)>0) {
+	
+		if(($('critico_'+articulo).value*1)>0) {
+
+			if(($('pedido_'+articulo).value*1)>($('critico_'+articulo).value*1)) {
+			
+				$('aceptar_'+articulo).style.display='';
+				$('error_'+articulo).style.display='none';
+				
+				return;
+			
+			}
+		
+		}
+	
+	}
+	
+	}
+
+	guardar_articulo = function (articulo) {
+	
+			var myAjax = new Ajax.Request(
+			'sql.php', 
+			{
+				method: 'get', 
+				parameters: 'accion=stock_critico_guardar&id='+articulo+'&'+$('bodega').serialize()+'&'+$('pedido_'+articulo).serialize()+'&'+$('critico_'+articulo).serialize()+'&'+$('gasto_'+articulo).serialize(),
+				onComplete: function (pedido_datos) {
+		
+					if(pedido_datos.responseText=='OK') {
+					
+						$('pedido_'+articulo).style.background='inherit';
+						$('critico_'+articulo).style.background='inherit';
+						$('error_'+articulo).src='iconos/tick.png';
+						$('error_'+articulo).style.display='';
+						$('aceptar_'+articulo).style.display='none';
+						
+					} else {
+					
+						alert('ERROR:'+chr(13)+pedido_datos.responseText);
+						
+					}
+				}
+			}
+			
+			);
+	
+	} 
+	
+	ver_mods = function() {
+
+    seltab=0;
+  
+    tab_up('tab_modifica');
+    tab_down('tab_pedido');
+    tab_down('tab_critico');
+    tab_down('tab_manual');
+    
+    cargar_listado();
+  
+  }
+  
+  ver_pedido = function() {
+  
+    seltab=1;
+  
+    tab_down('tab_modifica');
+    tab_up('tab_pedido');
+    tab_down('tab_critico');
+    tab_down('tab_manual');
+    
+    cargar_punto_pedido();
+  
+  }
+  
+  ver_critico = function() {
+  
+    seltab=2;
+  
+    tab_down('tab_modifica');
+    tab_down('tab_pedido');
+    tab_up('tab_critico');
+    tab_down('tab_manual');
+    
+    cargar_punto_critico();
+  
+  }
+  
+  ver_manual = function() {
+  
+    seltab=3;
+
+    tab_down('tab_modifica');
+    tab_down('tab_pedido');
+    tab_down('tab_critico');
+    tab_up('tab_manual');
+
+    // cargar_punto_critico();
+
+  }
+
+  imprimir_pedido = function () {
+
+    bod_select = $('bodega');
+
+    nombre_bodega = bod_select.options[bod_select.selectedIndex].text;
+    filtro_codigo = trim($('buscar').value);
+
+    if(filtro_codigo!='') {
+      filtro_cods='<br>Filtro de C&oacute;digos: <b>'+filtro_codigo+'</b>';
+    } else {
+      filtro_cods='';
+    }
+
+    inputs = $('tab_pedido_listado').getElementsByTagName('input');
+    spans = $('tab_pedido_listado').getElementsByTagName('span');
+
+    for(a=0;a<inputs.length;a++)  inputs[a].style.display='none';
+    for(b=0;b<spans.length;b++) spans[b].style.display='';
+
+    informe_html = $('tab_pedido_listado').innerHTML;
+
+    for(a=0;a<inputs.length;a++)  inputs[a].style.display='';
+    for(b=0;b<spans.length;b++) spans[b].style.display='none';
+
+    imprimirHTML('<h3>Informe de Art&iacute;culos en Punto de Pedido</h3><hr>Ubicaci&oacute;n: <b>'+nombre_bodega+'</b>'+filtro_cods+'<hr><div style="font-size: 10px;">'+informe_html+'</div>');
+
+  }
+
+  imprimir_critico = function () {
+
+    bod_select = $('bodega');
+
+    nombre_bodega = bod_select.options[bod_select.selectedIndex].text;
+    filtro_codigo = trim($('buscar').value);
+
+    if(filtro_codigo!='') {
+      filtro_cods='<br>Filtro de C&oacute;digos: <b>'+filtro_codigo+'</b>';
+    } else {
+      filtro_cods='';
+    }
+
+
+    inputs = $('tab_critico_listado').getElementsByTagName('input');
+    spans = $('tab_critico_listado').getElementsByTagName('span');
+
+    for(a=0;a<inputs.length;a++)  inputs[a].style.display='none';
+    for(b=0;b<spans.length;b++) spans[b].style.display='';
+
+    informe_html = $('tab_critico_listado').innerHTML;
+
+    for(a=0;a<inputs.length;a++)  inputs[a].style.display='';
+    for(b=0;b<spans.length;b++) spans[b].style.display='none';
+
+    imprimirHTML('<h3>Informe de Art&iacute;culos en Punto de Pedido Cr&iacute;tico</h3><hr>Ubicaci&oacute;n: <b>'+nombre_bodega+'</b>'+filtro_cods+'<hr><div style="font-size: 10px;">'+informe_html+'</div>');
+
+  }
+
+  pedido_pedido = function() {
+
+      top=Math.round(screen.height/2)-150;
+      left=Math.round(screen.width/2)-300;
+
+      new_win =
+      window.open('', 'win_pedidos',
+      'toolbar=no, location=no, directories=no, status=no, '+
+      'menubar=no, scrollbars=yes, resizable=no, width=600, height=300, '+
+      'top='+top+', left='+left);
+
+      $('convenio_ped').value=$('convenio').value;
+      $('pedido_pedido_form').target='win_pedidos';
+      $('pedido_pedido_form').submit();
+
+      new_win.focus();
+
+
+  }
+
+  pedido_critico = function() {
+
+      top=Math.round(screen.height/2)-150;
+      left=Math.round(screen.width/2)-300;
+
+      new_win =
+      window.open('', 'win_pedidos',
+      'toolbar=no, location=no, directories=no, status=no, '+
+      'menubar=no, scrollbars=yes, resizable=no, width=600, height=300, '+
+      'top='+top+', left='+left);
+
+      $('convenio_crit').value=$('convenio').value;
+      $('pedido_critico_form').target='win_pedidos';
+      $('pedido_critico_form').submit();
+
+
+      new_win.focus();
+
+
+  }
+
+  pedido_manual = function() {
+
+      if(articulos.length==0) {
+        alert('No ha seleccionado art&iacute;culos.'.unescapeHTML());
+        return;
+      }
+
+      top=Math.round(screen.height/2)-150;
+      left=Math.round(screen.width/2)-300;
+
+      new_win =
+      window.open('', 'win_pedidos',
+      'toolbar=no, location=no, directories=no, status=no, '+
+      'menubar=no, scrollbars=yes, resizable=no, width=600, height=300, '+
+      'top='+top+', left='+left);
+
+      $('manual_bodega').value=$('bodega').value;
+      $('manual_nro_arts').value=articulos.length;
+
+
+      $('pedido_manual_form').target='win_pedidos';
+      $('pedido_manual_form').submit();
+
+      new_win.focus();
+
+
+  }
+
+
+  actualiza_subt=function(artnum) {
+
+    var val=$('ult_'+artnum).value;
+    var cnt=$('sug_'+artnum).value;
+
+    $('subt_'+artnum).innerHTML=formatoDinero(val*cnt);
+
+  }
+
+
+		seleccionar_articulo = function(art_id, art_codigo, artc_codigo,
+                            art_glosa, art_cantidad, art_stock, art_fecha_venc)
+    {
+
+        encontrado=false;
+
+        for(i=0;i<articulos.length;i++) {
+          if(articulos[i][0]==art_id && articulos[i][7]==art_fecha_venc) {
+            temp_cant=articulos[i][1]+art_cantidad;
+
+            articulos[i][1]+=art_cantidad;
+            articulos[i][2]=art_codigo;
+            articulos[i][3]=artc_codigo;
+            articulos[i][4]=art_glosa;
+            articulos[i][5]=art_stock;
+
+            encontrado=true;
+
+            redibujar_tabla();
+
+          }
+        }
+
+        if(!encontrado) {
+
+        var myAjax=new Ajax.Request('registro.php',
+        {
+          method:'get',
+          parameters: 'tipo=articulo_resumen&codigo='+encodeURIComponent(art_codigo),
+          onComplete: function(resp) {
+
+              try {
+
+              datos = resp.responseText.evalJSON(true);
+
+              num=articulos.length;
+              articulos[num] = new Array(8);
+              articulos[num][0]=art_id;
+              articulos[num][1]=art_cantidad;
+              articulos[num][2]=art_codigo;
+              articulos[num][3]=artc_codigo;
+              articulos[num][4]=art_glosa;
+              articulos[num][5]=art_stock;
+              articulos[num][6]=datos[8];
+              articulos[num][7]=art_fecha_venc;
+              articulos[num][8]=datos[5];
+
+              redibujar_tabla();
+
+              } catch(err) {
+                alert(err);
+              }
+
+          }
+        });
+
+        }
+
+
+
+		}
+
+		redibujar_tabla = function() {
+
+      table_html='<table style="width:100%;"><tr class="tabla_header"><td style="width:100px;"><b>Cod. Interno</td><td><b>Glosa</td><td><b>Forma Farm.</td><td><b>Stock</td><td><b>Cant.</td><td style="width:50px;">Accion</td></tr>';
+
+      for(i=0;i<articulos.length;i++) {
+
+        if(i%2==0) clase='tabla_fila'; else clase='tabla_fila2';
+
+        table_html+='<tr class="'+clase+'" style="" onMouseOver="this.className=\'mouse_over\';" onMouseOut="this.className=\''+clase+'\'"><input type="hidden" id="art_'+i+'" name="art_'+i+'" value="'+articulos[i][0]+'"><input type="hidden" id="art_'+i+'" name="cod_'+i+'" value="'+articulos[i][2]+'"><input type="hidden" id="art_'+i+'" name="nom_'+i+'" value="'+articulos[i][4]+'"><input type="hidden" id="art_'+i+'" name="for_'+i+'" value="'+articulos[i][8]+'"><input type="hidden" id="sug_'+i+'" name="sug_'+i+'" value="'+articulos[i][1]+'"><input type="hidden" id="art_'+i+'" name="ult_'+i+'" value="'+articulos[i][6]+'"><td style="text-align:right;">'+articulos[i][2]+'</td><td>'+articulos[i][4]+'</td><td style="text-align:left;">'+articulos[i][8]+'</td><td style="text-align:right;">'+articulos[i][5]+'</td><td style="text-align:right;">'+articulos[i][1]+'</td><td><center><img src="iconos/delete.png" onClick="quitar_art('+i+');"></center></td></tr>';
+      }
+
+      table_html+='</table>';
+
+      $('tab_manual_listado').innerHTML=table_html;
+
+    }
+
+		quitar_art = function(numero) {
+
+      var articulos_tmp=new Array();
+      var cnt=0;
+
+
+      for(i=0;i<articulos.length;i++) {
+        if(i!=numero) {
+          articulos_tmp[cnt]=articulos[i]; cnt++;
+        }
+      }
+
+      articulos=articulos_tmp;
+
+      redibujar_tabla();
+
+		}
+		
+		var info_art_id=-1;
+		
+		info_articulo = function(art_id) {
+    
+      var val=$('gasto_calc').value;
+      
+      // Evita que lo pida dos veces seguidas al cambiar de campo...
+      if(art_id+''+val==info_art_id) return;
+      
+      info_art_id=art_id+''+val;
+      
+      var t=new Date().getTime();
+    
+      var html='<center><span id="gasto_loader"><br><br><img src="imagenes/ajax-loader3.gif"></span><img style="display:none;" onLoad="this.style.display=\'\';$(\'gasto_loader\').style.display=\'none\';" src="abastecimiento/stock_articulos/calcular_gasto.php?art_id='+art_id+'&bod_id='+$('bodega').value+'&g='+val+'&t='+t+'"></center>';
+      
+      $('info_articulo').innerHTML=html;
+
+    
+    }
+    
+    xls_busqueda = function() {
+
+    var __ventana = window.open('abastecimiento/bincard_articulos/bincard.php?xls&'+$("bincard").serialize(), '_self');
+    
+  
+  }
+
+
+
+	</script>
+
+	<center>
+
+	<table width=750><tr><td>
+
+	<div class='sub-content'>
+	<div class='sub-content'><b>Puntos de Pedido</b></div>
+
+	<div class='sub-content'>
+	<table>
+	<tr><td style='text-align: right;'>Bodega/Ubicaci&oacute;n:</td>
+	<td colspan=3>
+	<select id='bodega' name='bodega' onChange='cargar_listado();'>
+  <?php echo $bodegashtml; ?>
+  </select>
+	<img src='imagenes/ajax-loader1.gif' id='imagen_carga' style='display: none;'>
+  </td></tr>
+  <tr><td style='text-align: right;'>Filtro:</td>
+	<td colspan=3>
+  <input type='text' id='buscar' name='buscar' onChange='cargar_listado();' size=75>
+  </td></tr>
+	<tr>
+  <td style='text-align: right;'>
+  Rubro/Item:
+  </td>
+  <td>
+  <select id='item' name='item' onChange='cargar_listado();'>
+  <option value=-1 SELECTED>(Cualquier Rubro...)</option>
+  <?php echo $itemshtml; ?>
+  </select>
+  </td>
+  <td style='text-align: right;'>Convenio:</td>
+  <td>
+  <select id='convenio' name='convenio' onChange='cargar_listado();'>
+  <option value=-2>(Todos los Art&iacute;culos...)</option>
+  <option value=-1 SELECTED>(Art&iacute;culos sin Convenio...)</option>
+  <?php echo $convenioshtml; ?>
+  </select>
+  
+  </td>
+  </tr>
+  </table>
+	</div>
+	
+  <table width=780 cellpadding=0 cellspacing=0>
+	<tr><td>
+
+	    <table cellpadding=0 cellspacing=0>
+      <tr><td>
+		  <div class='tabs' id='tab_modifica' style='cursor: default;'
+      onClick='ver_mods();'>
+      <img src='iconos/wrench.png'>
+      Mantenci&oacute;n</div>
+		  </td><td>
+		  <div class='tabs_fade' id='tab_pedido' style='cursor: pointer;'
+      onClick='ver_pedido();'>
+      <img src='iconos/error.png'>
+      Art&iacute;culos en Punto de Pedido</div>
+		  </td><td>
+		  <div class='tabs_fade' id='tab_critico' style='cursor: pointer;'
+      onClick='ver_critico();'>
+      <img src='iconos/exclamation.png'>
+      Art&iacute;culos en Nivel Cr&iacute;tico</div>
+		  </td><td>
+		  <div class='tabs_fade' id='tab_manual' style='cursor: pointer;'
+      onClick='ver_manual();'>
+      <img src='iconos/user.png'>
+      Manual</div>
+		  </td></tr>
+      </table>
+
+</td></tr>
+<tr><td>
+  
+  <div class='tabbed_content' style='height:310px; overflow: auto;'>
+
+  <div id='tab_modifica_content'>
+
+  <div id='resultado'
+	style='height:235px; overflow: auto;'>
+	<center>(No se ha efectuado una b&uacute;squeda...)</center>
+	</div>
+	
+  
+  <table style='width:100%;' cellpadding=0 cellspacing=0>
+	<tr><td style='background-color:white;'>
+	<div id='info_articulo' style='height:60px;overflow:hidden;'>
+
+	</div>
+	</td><td style='width:100px;'>
+	
+  <center><u><b>Calcular Gasto</b></u><br /><br />
+	<select id='gasto_calc'>
+  <option value='0' SELECTED>Mensual</option>
+	<option value='1'>Semanal</option>
+	</select>
+	</center>
+	
+	</td></tr>
+	</table>
+	
+	</div>
+
+	<div id='tab_pedido_content' style='display: none;'>
+    <form id='pedido_pedido_form' name='pedido_pedido_form'
+    onSubmit="return false;"
+    action="abastecimiento/stock_articulos/generar_pedidos.php" method="post">
+
+	<input type='hidden' id='convenio_ped' name='convenio_ped' value=''>
+	<div id='tab_pedido_listado' class = 'sub-content2' style='height: 240px; overflow: auto;'>
+    </div>
+    </form>
+	<center>
+
+	<table cellpadding=0 cellspacing=0><tr><td>
+
+  <div class='boton'>
+	<table><tr><td>
+	<img src='iconos/printer.png'>
+	</td><td>
+	<a href='#' onClick='imprimir_pedido();'><span id='texto_boton'>Imprimir Listado...</span></a>
+	</td></tr></table>
+	</div>
+
+  </td><td>
+
+  <div class='boton'>
+	<table><tr><td>
+	<img src='iconos/application_view_list.png'>
+	</td><td>
+	<a href='#' onClick='pedido_pedido();'><span id='texto_boton'>Generar Pedido(s)...</span></a>
+	</td></tr></table>
+	</div>
+
+
+  </td></tr></table>
+
+  </center>
+
+	</div>
+
+	<div id='tab_critico_content' style='display: none;'>
+    <form id='pedido_critico_form' name='pedido_critico_form'
+    onSubmit="return false;"
+    action="abastecimiento/stock_articulos/generar_pedidos.php" method="post">
+
+	<input type='hidden' id='convenio_crit' name='convenio_crit' value=''>
+    <div id='tab_critico_listado' class = 'sub-content2' style='height: 240px; overflow: auto;'>
+    </div>
+
+     </form>
+	<center>
+
+	<table cellpadding=0 cellspacing=0><tr><td>
+
+	<div class='boton'>
+	<table><tr><td>
+	<img src='iconos/printer.png'>
+	</td><td>
+	<a href='#' onClick='imprimir_critico();'><span id='texto_boton'>Imprimir Listado...</span></a>
+	</td></tr></table>
+	</div>
+
+	</td><td>
+
+	<div class='boton'>
+	<table><tr><td>
+	<img src='iconos/application_view_list.png'>
+	</td><td>
+	<a href='#' onClick='pedido_critico();'><span id='texto_boton'>Generar Pedido(s)...</span></a>
+	</td></tr></table>
+	</div>
+	
+	
+	</td>
+	<td>
+
+	<div class='boton'>
+	<table><tr><td>
+	<img src='iconos/page_excel.png'>
+	</td><td>
+	<a href='#' onClick='xls_busqueda();'><span id='texto_boton'>Descargar XLS (MS Excel)...</span></a>
+	</td></tr></table>
+	</div>
+	
+	
+	</td></tr></table>
+	
+  
+  </center>
+	
+	</div>
+
+
+
+	<div id='tab_manual_content' style='display: none;'>
+
+	<form id='pedido_manual_form' name='pedido_manual_form'
+    onSubmit="return false;"
+    action="abastecimiento/stock_articulos/generar_pedidos.php" method="post">
+
+	<input type='hidden' id='manual_bodega' name='manual_bodega' value=''>
+	<input type='hidden' id='manual_nro_arts' name='manual_nro_arts' value=''>
+
+
+  <div id='tab_manual_listado' class = 'sub-content2' style='height: 240px; overflow: auto;'>
+
+  </div>
+
+	</form>
+
+	<center>
+
+	<table cellpadding=0 cellspacing=0><tr><td>
+
+	<div class='boton'>
+	<table><tr><td>
+	<img src='iconos/add.png'>
+	</td><td>
+	<a href='#' onClick='buscar_codigos_barra($("bodega").value,seleccionar_articulo,0, "buscar_arts", "bodega");'><span id='texto_boton'>Agregar Art&iacute;culos...</span></a>
+	</td></tr></table>
+	</div>
+
+	</td><td>
+
+	<div class='boton'>
+	<table><tr><td>
+	<img src='iconos/printer.png'>
+	</td><td>
+	<a href='#' onClick='imprimir_manual();'><span id='texto_boton'>Imprimir Listado...</span></a>
+	</td></tr></table>
+	</div>
+	
+	</td><td>
+
+	<div class='boton'>
+	<table><tr><td>
+	<img src='iconos/application_view_list.png'>
+	</td><td>
+	<a href='#' onClick='pedido_manual();'><span id='texto_boton'>Generar Pedido(s)...</span></a>
+	</td></tr></table>
+	</div>
+	
+	
+	</td></tr></table>
+	
+	
+	
+  </center>
+	
+	</div>
+
+  </div>
+	
+	</td></tr></table>
+	
+	</div>
+	
+</td></tr></table>
+	

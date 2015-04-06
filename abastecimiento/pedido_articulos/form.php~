@@ -1,0 +1,253 @@
+<?php
+
+  require_once("../../conectar_db.php");
+  
+  $bodegashtml = desplegar_opciones("bodega", "bod_id, bod_glosa",'1','bod_id IN ('._cav(27),')', 'ORDER BY bod_glosa');
+  
+  $servs="'".str_replace(',','\',\'',_cav2(9))."'";
+
+  $servicioshtml = desplegar_opciones_sql("SELECT centro_ruta, centro_nombre FROM centro_costo 
+					WHERE centro_gasto AND centro_ruta IN (".$servs.")
+					ORDER BY centro_nombre", NULL, '', "font-style:italic;color:#555555;");   
+  
+  $controlhtml = desplegar_opciones("receta_tipo_talonario", 
+	"tipotalonario_id, tipotalonario_medicamento_clase",'-1','true',
+  'ORDER BY tipotalonario_id'); 
+
+
+?>	
+  
+<script>
+  var lista=new Array();
+  var ids=new Array();	
+  
+  buscar_reposicion = function(){
+  
+  params=$('origen').serialize()+'&'+$('destino').serialize();
+   
+   	var myAjax=new Ajax.Request(
+		'abastecimiento/pedido_articulos/listado_reposicion.php',
+		{
+				method:'get',
+				parameters:params,
+				onComplete:function(r) {
+					var datos=r.responseText.evalJSON(true);
+					
+					if(datos!=','){
+						lista=datos[0];
+						//alert(lista.toSource());
+						ids=datos[1].split(',');
+						redibujar_detalle();
+						alert('Listado de art&iacute;culos pendientes de despacho en pedidos anteriores.\nSi desea olvidar lo pedido indique con un 0 (CERO).'.unescapeHTML());
+					}else{
+						var html='<table style="width:100%;font-size:11px;"><tr class="tabla_header"><td>#</td><td>C&oacute;digo</td><td>Descripci&oacute;n</td><td>Forma</td><td>Pendiente</td><td>Cantidad</td></tr></table>';
+						$('lista_productos').innerHTML=html;
+						alert('Usted no regista pedidos pendientes de despacho. Ingrese art&iacute;culos que desea pedir'.unescapeHTML());
+					}
+				}
+		}
+	);
+			
+  }
+  
+ agregar_detalle=function() {
+
+		 if($('art_id').value==0 || $('art_id').value=='') {
+			 alert('Debe seleccionar el art&iacute;culo.'.unescapeHTML()); return;
+		 }
+		 if($('cant').value=='' || ($('cant').value*1)!=$('cant').value) {
+			 alert('Debe ingresar una cantidad.'); $('cant').focus(); return;
+		 }
+		 
+		 //alert($('art_id').value);
+		 ids.push([$('art_id').value]);
+		 //console.log(ids);
+		 
+		 var idx=$('art_id').value;	 
+		 lista[idx]=new Object();
+		 lista[idx].art_id=$('art_id').value;
+		 lista[idx].art_codigo=$('codigo').value;
+		 lista[idx].art_glosa=$('art_nombre').innerHTML;
+		 lista[idx].art_forma=$('art_forma').innerHTML;
+		 lista[idx].pendiente=0;
+		 lista[idx].cantidad=$('cant').value;
+		 lista[idx].pedidos='';
+		 
+		 //console.log(lista[idx]);
+		 
+		  $('art_id').value='';
+		  $('codigo').value='';
+		  $('art_nombre').innerHTML='';
+		  $('art_forma').innerHTML='';
+
+		  $('cant').value='';
+		  
+		  redibujar_detalle();
+		  $('codigo').focus();		  
+	  }
+
+
+redibujar_detalle=function() {
+
+	var i=1;
+	var idshtml='';
+	
+	var html='<table style="width:100%;font-size:11px;"><tr class="tabla_header"><td>#</td><td>C&oacute;digo</td><td>Descripci&oacute;n</td><td>Forma</td><td>Pendiente</td><td>Cantidad</td></tr>';    
+    i=0;
+    if(ids.length>0){
+    	while(i<ids.length){
+    
+    	//alert(lista[ids[i]].toSource());
+ 
+    	clase=(i%2==0)?'tabla_fila':'tabla_fila2';
+    
+		html+='<tr class="'+clase+'"><td ><input type="hidden" name="art_pedidos_'+ids[i]+'" id="art_pedidos_'+ids[i]+'" value="'+lista[ids[i]].pedidos+'" >'+(i+1)+'</td>';
+		html+='<td>'+lista[ids[i]].art_codigo+'</td>';
+		html+='<td>'+lista[ids[i]].art_glosa+'</td>';
+		html+='<td>'+lista[ids[i]].art_forma+'</td>';
+		html+='<td>'+lista[ids[i]].pendiente+'</td>';
+		html+='<td><center><input style="text-align:right;" name="cant_'+ids[i]+'" id="cant_'+ids[i]+'" value="'+lista[ids[i]].cantidad+'" size=6></center></td>';
+		html+='</tr>';
+		idshtml+=ids[i]+',';
+	 i++;
+    }
+    html+='<tr><td><input type="hidden" name="ids" id="ids" value="'+idshtml+'"</td></tr>';
+   }
+	html+='</table>' 
+
+	$('lista_productos').innerHTML=html;   	
+}
+
+abrir_pedido = function (pedido_numero) {
+
+  l=(screen.availWidth/2)-250;
+
+  t=(screen.availHeight/2)-200;
+
+  win = window.open('visualizar.php?pedido_nro='+pedido_numero, 'ver_pedido',
+
+                    'scrollbars=no, toolbar=no, left='+l+', top='+t+', '+
+
+                    'resizable=no, width=500, height=445');             
+
+  win.focus();
+}
+
+  verifica_tabla = function() {
+  
+  if(!confirm('Est&aacute; seguro que desea continuar? \nEsto terminar&aacute; los pedidos anteriores dejando solo este pedido vigente.'.unescapeHTML())) return;
+
+   params=$('pedido').serialize();
+   
+   	var myAjax=new Ajax.Request(
+		'abastecimiento/pedido_articulos/generar_reposicion.php',
+		{
+				method:'post',
+				parameters:params,
+				onComplete:function(r) {
+					var dato=r.responseText.evalJSON(true);
+					
+					if(dato[0]) {
+						abrir_pedido(dato[1]);
+						buscar_reposicion();						
+					} else {
+						alert('ERROR:\n\n'+r.responseText);
+					}
+				}
+		});
+	  
+	}
+			
+	</script>
+  
+  
+  <center>
+  <table><tr><td style='width:850px;'>
+  
+  <div class='sub-content'>
+  <div class='sub-content'><img src='iconos/page_refresh.png'> <b>Pedido de Art&iacute;culos</b></div>
+  
+  <form name='pedido' id='pedido'>
+  
+  <table>
+  <tr><td style='text-align: right;'>Origen:</td>
+  <td>
+  <select name='origen' id='origen' onChange='buscar_reposicion();'>
+  <?php echo $bodegashtml; echo $servicioshtml; ?>
+  </select>
+  </td></tr>
+  <tr><td style='text-align: right;'>Destino:</td>
+  <td>
+  <select name='destino' id='destino' onChange='buscar_reposicion();'>
+  <?php echo $bodegashtml; ?>
+  </select>
+  </td></tr>
+  </table>
+  
+  <div class='sub-content' id='listado_detalle'>
+  <div class='sub-content'>
+  <img src='iconos/script.png'> <b>Listado de Art&iacute;culos</b><br /><br />
+  <img src='iconos/add.png'><input type='text' id='codigo' name='codigo'
+  onKeyUp='if(event.which==13){$("cant").focus();}'>
+  <input type='hidden' name='art_id' id='art_id' >
+  <span id='art_nombre' name='art_nombre' ></span><br />
+  &nbsp;&nbsp;&nbsp;&nbsp;Cantidad:&nbsp;<input type='text' name='cant' id='cant' size=6
+  onKeyUp='if(event.which==13){agregar_detalle();}'>
+  <span id='art_forma' name='art_forma'></span>  
+  	</div>
+  <div class='sub-content2' id='lista_productos' style='height: 250px; overflow:auto;'>
+  (No ha seleccionado art&iacute;culos...)
+  </div>
+  
+  </div>
+  
+  <center>
+  <table><tr><td>
+		<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/script_go.png'>
+		</td><td>
+		<a href='#' onClick='verifica_tabla();'> Generar Reposici&oacute;n...</a>
+		</td></tr></table>
+		</div>
+		</td></tr></table>
+		</div>
+		</td></tr></table>
+  </center>
+  
+  </form>
+  </div>
+  
+  </td></tr></table>
+  
+  <script>
+  
+	seleccionar_articulo = function(d) {
+	
+		//alert(d.toSource());
+      	
+      	$('codigo').value=d[1];
+      	$('art_nombre').innerHTML=d[2];
+      	$('art_id').value=d[5];
+      	$('art_forma').innerHTML=d[3];
+      	
+      }
+      
+      autocompletar_articulo = new AutoComplete(
+      'codigo', 
+      'autocompletar_sql.php',
+      function() {
+        if($('codigo').value.length<3) return false;
+      
+        return {
+          method: 'get',
+          parameters: 'tipo=buscar_arts&'+$('codigo').serialize()
+        }
+      }, 'autocomplete', 350, 200, 250, 1, 3, seleccionar_articulo);
+	
+
+	buscar_reposicion();
+	
+	
+  </script>
+  

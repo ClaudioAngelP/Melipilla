@@ -1,0 +1,46 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$nomd_id=$_POST['nomd_id']*1;
+	
+	$f=cargar_registros_obj("
+		SELECT * FROM nomina_detalle_adjuntos WHERE nomd_id=$nomd_id
+		ORDER BY nomda_nombre	
+	", true);
+
+	if(!$f) exit();
+
+?>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td>Nombre</td>
+<td style='width:50%;'>Descripci&oacute;n</td>
+<td style='width:80px;'>Tama&ntilde;o</td>
+<td style='width:40px;'>Eliminar</td>
+</tr>
+
+<?php 
+
+	for($i=0;$i<sizeof($f);$i++) {
+	
+		$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+	
+		print("
+		<tr class='$clase'
+		onMouseOver='this.className=\"mouse_over\";' 
+		onMouseOut='this.className=\"".$clase."\";'>
+		<td>".$f[$i]['nomda_nombre']."</td>		
+		<td>".$f[$i]['nomda_descripcion']."</td>		
+		<td style='text-align:right;'><i>".number_format(filesize('../../ficha_clinica/adjuntos/'.$f[$i]['nomda_archivo'])/1024,0,',','.')." KB</i></td>		
+		<td><center><img src='../../iconos/magnifier.png' onClick='abrir_adjunto(".$f[$i]['nomda_id'].");' style='cursor:pointer;' /></center></td>		
+		<td><center><img src='../../iconos/delete.png' onClick='eliminar_adjunto(".$f[$i]['nomda_id'].");' style='cursor:pointer;' /></center></td>		
+		</tr>		
+		");	
+		
+	}
+
+?>
+
+</table>

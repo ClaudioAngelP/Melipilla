@@ -1,0 +1,29 @@
+I8,A,001
+
+
+Q1199,024
+q831
+rN
+S4
+D7
+ZT
+JF
+OD
+R16,0
+f100
+N
+A66,781,3,3,2,2,N,"HOSPITAL SAN JOSÉ DE MELIPILLA"
+A106,473,3,3,2,2,N,"RUT 61.602.123-0"
+B602,1071,3,1,6,18,85,B,"{$ficha}"
+A50,1119,3,5,2,1,N,"{$ficha}"
+A166,1160,3,2,2,2,N,"RUN: {$rut}"
+A198,1160,3,2,2,2,N,"PASAPORTE: {$pasaporte}"
+A262,1160,3,2,2,2,N,"NOMBRES: {$nombres}"
+A294,1160,3,2,2,2,N,"APELLIDOS: {$apellidos}"
+A358,1160,3,2,2,2,N,"SEXO: {$sexo} FECHA DE NAC.: {$fecha_nac}"
+A390,1160,3,2,2,2,N,"DOMICILIO: {$domicilio}"
+A454,1160,3,2,2,2,N,"TELEFONO: {$telefono}"
+A486,1160,3,2,2,2,N,"APODERADO: {$representante}"
+A518,1160,3,2,2,2,N,"PREVISIÓN: {$prevision}"
+A550,1160,3,2,2,2,N,"FECHA CREACIÓN FICHA: {$fecha_creacion}"
+P1

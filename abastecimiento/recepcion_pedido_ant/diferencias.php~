@@ -1,0 +1,22 @@
+<?php
+
+  require_once('../../conectar_db.php');
+  
+  $pedido_id=($_GET['id_pedido']*1);
+  $pedido_nro=($_GET['numero_pedido']*1);
+  $log_id=($_GET['id_log']*1);
+  $arts=json_decode($_POST['det']);
+    
+    pg_query($conn, "START TRANSACTION;");
+
+	
+
+
+
+    
+    pg_query($conn, "COMMIT;");
+    
+    die('OK');
+
+  
+?>

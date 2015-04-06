@@ -1,0 +1,36 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$hosp_id=$_POST['hosp_id']*1;
+	$doc_id=$_POST['doc_id']*1;
+	$cie10=pg_escape_string(utf8_decode($_POST['diag_cod']));
+	$diag=pg_escape_string(utf8_decode($_POST['diagnostico']));
+	
+	$hest_id=$_POST['hest_id']*1;
+	$hcon_id=$_POST['hcon_id']*1;
+	$observacion=pg_escape_string(utf8_decode($_POST['observacion']));
+	$necesidad=pg_escape_string(utf8_decode($_POST['necesidad']));
+	
+	pg_query("
+		UPDATE hospitalizacion SET
+			hosp_doc_id=$doc_id,
+			hosp_diag_cod='$cie10',
+			hosp_diagnostico='$diag',
+			
+		WHERE hosp_id=$hosp_id	
+	");
+	
+	pg_query("INSERT INTO hospitalizacion_registro
+		VALUES (DEFAULT,$hosp_id ,current_timestamp,$hest_id ,$hcon_id );
+	");
+	if(trim($observacion)!='')
+	pg_query("INSERT INTO hospitalizacion_observaciones
+		VALUES (DEFAULT,$hosp_id ,current_timestamp,'$observacion',".$_SESSION['sgh_usuario_id']." );
+	");
+	if(trim($necesidad)!='')
+	pg_query("INSERT INTO hospitalizacion_necesidades
+		VALUES (DEFAULT,$hosp_id ,current_timestamp,'$necesidad',".$_SESSION['sgh_usuario_id']." );
+	");
+
+?>

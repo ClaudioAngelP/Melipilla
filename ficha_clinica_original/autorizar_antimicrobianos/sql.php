@@ -1,0 +1,20 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$hospam_id=$_POST['hospam_id']*1;
+	$estado=$_POST['estado']*1;
+	
+	$func_id=$_SESSION['sgh_usuario_id']*1;
+	print("UPDATE hospitalizacion_autorizacion_meds SET 
+				hospam_estado=$estado, 
+				hospam_fecha_autorizado=CURRENT_TIMESTAMP, 
+				hospam_func_id2=$func_id
+			 WHERE hospam_id=$hospam_id;");
+	pg_query("UPDATE hospitalizacion_autorizacion_meds SET 
+				hospam_estado=$estado, 
+				hospam_fecha_autorizado=CURRENT_TIMESTAMP, 
+				hospam_func_id2=$func_id
+			 WHERE hospam_id=$hospam_id;");
+
+?>

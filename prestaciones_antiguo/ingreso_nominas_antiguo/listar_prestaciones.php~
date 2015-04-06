@@ -1,0 +1,80 @@
+<?php
+
+  require_once('../../conectar_db.php');
+  
+  function img($t) {
+    if($t=='t') return '<center><img src="iconos/tick.png" 
+                                  width=8 height=8></center>';
+    else return '<center><img src="iconos/cross.png" 
+                                  width=8 height=8></center>';
+  }
+
+  
+  $fecha = pg_escape_string($_POST['fecha1']);
+  $centro_ruta = pg_escape_string($_POST['centro_ruta']);
+
+  $lista = cargar_registros_obj("
+  SELECT 
+    COALESCE(pac_rut, pac_pasaporte, pac_id::text) AS pac_codigo,
+    pac_appat,pac_apmat,pac_nombres,
+    presta_codigo, glosa, presta_id, presta_cant, presta_compra, presta_auge,
+    
+    presta_diag_cod
+  FROM prestacion
+  JOIN pacientes USING (pac_id)
+  JOIN codigos_prestacion ON codigo = presta_codigo
+  WHERE centro_ruta='$centro_ruta' AND date_trunc('day', presta_fecha)='$fecha'
+  ORDER BY pac_appat, pac_apmat, pac_nombres
+  ");
+
+?>
+<table style='width:100%;' class='lista_small'>
+<tr class='tabla_header'>
+<td>RUT/ID</td>
+<td>Paterno</td>
+<td>Materno</td>
+<td>Nombres</td>
+<td>C&oacute;d. Prestaci&oacute;n</td>
+<td>Descripci&oacute;n Prestaci&oacute;n</td>
+<td>Cantidad</td>
+<td>Compra Servicios</td>
+<td>AUGE</td>
+<td>Diagn&oacute;stico</td>
+<td>Eliminar</td>
+</tr>
+
+<?php 
+
+  if($lista)
+  for($i=0;$i<count($lista);$i++) {
+  
+    ($i%2==0) ? $clase='tabla_fila' : $clase='tabla_fila2';
+  
+    print("
+    <tr class='$clase'
+    onMouseOver='this.className=\"mouse_over\";'
+    onMouseOut='this.className=\"".$clase."\";'>
+    <td style='text-align:right;'>".$lista[$i]['pac_codigo']."</td>
+    <td>".htmlentities(strtoupper($lista[$i]['pac_appat']))."</td>
+    <td>".htmlentities(strtoupper($lista[$i]['pac_apmat']))."</td>
+    <td>".htmlentities(strtoupper($lista[$i]['pac_nombres']))."</td>
+    <td style='text-align:center;'>".$lista[$i]['presta_codigo']."</td>
+    <td>".htmlentities($lista[$i]['glosa'])."</td>
+    <td style='text-align:center;'>".($lista[$i]['presta_cant'])."</td>
+    <td>".img($lista[$i]['presta_compra'])."</td>
+    <td>".img($lista[$i]['presta_auge'])."</td>
+    <td>".htmlentities($lista[$i]['presta_diag_cod'])."</td>
+    <td>
+    <center>
+    <img src='iconos/delete.png' style='cursor:pointer;'
+    onClick='eliminar_prestacion(".$lista[$i]['presta_id'].");'>
+    </center>
+    </td>
+    </tr>
+    ");
+  
+  }
+
+?>
+
+</table>

@@ -1,0 +1,144 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	
+	$convenio_id=$_GET['convenio_id']*1;
+	
+	pg_query("
+
+	UPDATE convenio_detalle AS c1 SET 
+	
+	conveniod_monto_utilizado=(
+			SELECT SUM(stock_subtotal) FROM convenio AS c2
+			JOIN convenio_detalle USING (convenio_id)
+			JOIN documento ON doc_prov_id=prov_id
+			JOIN logs ON log_tipo=1 AND log_doc_id=doc_id AND log_fecha BETWEEN convenio_fecha_inicio AND convenio_fecha_final
+			JOIN stock ON stock_log_id=log_id AND stock_art_id=c1.art_id
+			WHERE c2.convenio_id=c1.convenio_id AND art_id=c1.art_id
+	), 
+	
+	conveniod_monto_comprometido=(
+			SELECT SUM(ordetalle_subtotal) FROM convenio AS c3
+			JOIN convenio_detalle USING (convenio_id)
+			JOIN orden_compra ON orden_prov_id=prov_id AND orden_fecha BETWEEN convenio_fecha_inicio AND convenio_fecha_final
+			JOIN orden_detalle ON ordetalle_orden_id=orden_id AND ordetalle_art_id=c1.art_id
+			WHERE c3.convenio_id=c1.convenio_id AND art_id=c1.art_id
+	)
+	
+	WHERE convenio_id=$convenio_id;
+	
+	");
+	
+	$c=cargar_registro("
+		SELECT * FROM convenio 
+		JOIN proveedor USING (prov_id)
+		WHERE convenio_id=$convenio_id
+	", true);
+	
+	$d=cargar_registros_obj("
+		SELECT * FROM convenio_detalle 
+		JOIN articulo USING (art_id)
+		WHERE convenio_id=$convenio_id
+		ORDER BY art_glosa;
+	", true);
+	
+	
+
+?>
+
+<html>
+<title>Visualizar Convenio</title>
+
+<?php cabecera_popup('../..'); ?>
+
+
+<script>
+
+function ver_detalle(conveniod_id)  {
+	
+	window.open('ver_convenio_detalle.php?conveniod_id='+conveniod_id,
+    'win_talonarios');
+
+	
+}
+
+</script>
+
+<body class='fuente_por_defecto popup_background'>
+
+<center>
+<h2><?php echo $c['convenio_nombre']; ?></h2><br />
+Proveedor: <?php echo '<b>'.$c['prov_rut'].'</b> '.$c['prov_glosa']; ?><br />
+<h3>Monto Total: $<?php echo number_format($c['convenio_monto']*1,0,',','.'); ?>.-</h3><br /><br />
+</center>
+
+<table style='width:100%;font-size:12px;'>
+	<tr class='tabla_header'>
+		<td>C&oacute;digo</td>
+		<td style='width:50%;'>Art&iacute;culo</td>
+		<td>Comprometido ($)</td>
+		<td>Cantidad</td>
+		<td>P. Unit. ($)</td>
+		<td>Devengado ($)</td>
+		<td>&nbsp;</td>
+	</tr>
+	
+<?php 
+
+	$mc=0; $md=0;
+
+	for($i=0;$i<sizeof($d);$i++) {
+		
+		$clase=$i%2==0?'tabla_fila':'tabla_fila2';
+
+		if($d[$i]['conveniod_cantidad_recepcionada']!=0)
+			$unit=$d[$i]['conveniod_monto_utilizado']/$d[$i]['conveniod_cantidad_recepcionada'];
+		else
+			$unit=0;
+			
+		$mc+=$d[$i]['conveniod_monto_comprometido']*1;
+		$md+=$d[$i]['conveniod_monto_utilizado']*1;
+	
+		print("
+			<tr class='$clase'>
+			<td style='text-align:right;'>".$d[$i]['art_codigo']."</td>
+			<td>".$d[$i]['art_glosa']."</td>
+			<td style='text-align:right;'>$".number_format($d[$i]['conveniod_monto_comprometido']*1,0,',','.').".-</td>
+			<td style='text-align:right;'>".number_format($d[$i]['conveniod_cantidad_recepcionada']*1,0,',','.')."</td>
+			<td style='text-align:right;'>$".number_format($unit,0,',','.').".-</td>
+			<td style='text-align:right;'>$".number_format($d[$i]['conveniod_monto_utilizado']*1,0,',','.').".-</td>
+			<td><center>
+			<img src='../../iconos/magnifier.png' onClick='ver_detalle(".$d[$i]['conveniod_id'].");' style='cursor:pointer;' />
+			</center></td>
+			</tr>
+		");
+		
+	}
+	
+	$pc=$mc*100/$c['convenio_monto']*1;
+	$pd=$md*100/$c['convenio_monto']*1;
+	
+	print("
+	<tr class='tabla_header'>
+	<td colspan=2 style='text-align:right;'>Total Comprometido:</td>
+	<td style='text-align:right;font-weight:bold;'>$".number_format($mc,0,',','.').".-</td>
+	<td colspan=2 style='text-align:right;'>Total Devengado:</td>
+	<td style='text-align:right;font-weight:bold;'>$".number_format($md,0,',','.').".-</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr class='tabla_header'>
+	<td colspan=2 style='text-align:right;'>Comprometido:</td>
+	<td style='text-align:right;font-weight:bold;'>".number_format($pc,2,',','.')."%</td>
+	<td colspan=2 style='text-align:right;'>Devengado:</td>
+	<td style='text-align:right;font-weight:bold;'>".number_format($pd,2,',','.')."%</td>
+		<td>&nbsp;</td>
+	</tr>
+	");
+
+?>	
+	
+	
+</table>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+<?php
+
+function codificar_url($r) {
+	$buffer='';
+	for($i=0;$i<sizeof($r);$i++) {
+		$buffer.=urlencode($r[$i][0]).'='.urlencode($r[$i][1]);
+		if($i<sizeof($r)-1) $buffer.='&';	
+	}
+	return $buffer;
+}
+
+// INIT CURL
+$ch = curl_init();
+
+// SET URL FOR THE POST FORM LOGIN
+curl_setopt($ch, CURLOPT_URL, 'https://www.mercadopublico.cl/Portal/login.aspx');
+curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+curl_setopt ($ch, CURLOPT_COOKIEJAR, 'cookie.txt');
+curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+// ENABLE HTTP POST
+curl_setopt ($ch, CURLOPT_POST, 0);
+curl_setopt ($ch, CURLOPT_POSTFIELDS,'');
+
+$store = curl_exec ($ch);
+
+preg_match("'<input.*type=\"hidden\".*id=\"validacion\" value=\"(.*?)\".*/>'si", $store, $validacion);
+preg_match("'<input.*type=\"hidden\".*id=\"__VIEWSTATE\" value=\"(.*?)\".*/>'si", $store, $viewstate);
+preg_match("'<input.*type=\"hidden\".*id=\"__EVENTVALIDATION\" value=\"(.*?)\".*/>'si", $store, $eventvalidation);
+
+/*
+echo 'viewstate='.$viewstate[1].'<br>';
+echo 'eventvalidation='.$eventvalidation[1].'<br>';
+echo 'validacion='.$validacion[1].'<br>';
+*/
+
+curl_setopt ($ch, CURLOPT_POST, 1);
+
+$request=array(
+array('__VIEWSTATE',$viewstate[1]),
+array('__EVENTVALIDATION',$eventvalidation[1]),
+array('txtUser','nmartinez'),
+array('txtPassword','LUNA'),
+array('btnLogin.x','37'),
+array('btnLogin.y','19'),
+array('txtSearch',''),
+array('validacion',$validacion[1]));
+
+
+curl_setopt ($ch, CURLOPT_POSTFIELDS, codificar_url($request));
+
+// EXECUTE 1st REQUEST (FORM LOGIN)
+$store = curl_exec ($ch);
+
+//echo $store;
+
+curl_setopt ($ch, CURLOPT_POST, 0);
+
+// OBTENER LISTADO DE ORDENES DE COMPRA A DESCARGAR
+curl_setopt($ch, CURLOPT_URL, 'http://www.mercadopublico.cl/PurchaseOrder/Modules/PO/SearchPurchaseOrder.aspx');
+
+// EXECUTE 2nd REQUEST (FILE DOWNLOAD)
+$formulario_ot = curl_exec ($ch);
+
+//echo $formulario_ot;
+
+preg_match("'<input.*type=\"hidden\".*id=\"__VIEWSTATE\" value=\"(.*?)\".*/>'si", $formulario_ot, $viewstate);
+preg_match("'<input.*type=\"hidden\".*id=\"__EVENTVALIDATION\" value=\"(.*?)\".*/>'si", $formulario_ot, $eventvalidation);
+
+/*
+echo 'viewstate='.$viewstate[1].'<br>';
+echo 'eventvalidation='.$eventvalidation[1].'<br>';
+echo 'validacion='.$validacion[1].'<br>';
+*/
+
+
+$request=array(
+array('__EVENTTARGET',''),
+array('__EVENTARGUMENT',''),
+array('__VIEWSTATE',$viewstate[1]),
+array('__EVENTVALIDATION',$eventvalidation[1]),
+array('txtPOCode',''),
+array('txtName',''),
+array('cboOrderBy','porDate'),
+array('txtProv',''),
+array('calFrom','23/5/2010'),
+array('cboState','-1'),
+array('calTo','24/5/2010'),
+array('cboBuyUnit','2700'),
+array('btnSearch','Buscar'));
+
+curl_setopt ($ch, CURLOPT_POST, 1);
+
+// SET POST PARAMETERS : FORM VALUES FOR EACH FIELD
+curl_setopt ($ch, CURLOPT_POSTFIELDS, codificar_url($request));
+
+$listado_ot = curl_exec ($ch);
+
+echo $listado_ot;
+
+preg_match_all("/WizardDonwloadXMLOC\.aspx\?enc=(.*?)';/si", $listado_ot, $ots);
+
+for($i=0;$i<sizeof($ots[1]);$i++) {
+
+	echo 'DESCARGANDO '.$ots[1][$i].'<br />';
+	
+	curl_setopt ($ch, CURLOPT_POST, 0);
+	curl_setopt ($ch, CURLOPT_POSTFIELDS, '');
+	
+	curl_setopt($ch, CURLOPT_URL, 'http://www.mercadopublico.cl/PurchaseOrder/Modules/PO/WizardDonwloadXMLOC.aspx?enc='.$ots[1][$i]);
+
+	$ot=curl_exec ($ch);
+	
+	$f=fopen('ot'.$i.'.xml', 'w');
+	
+	fwrite($f, $ot);	
+	
+	fclose($f);
+	
+}
+
+// CLOSE CURL
+curl_close ($ch); 
+
+?>

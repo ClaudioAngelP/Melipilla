@@ -1,0 +1,15 @@
+<?php 
+
+	require_once('../conectar_db.php');
+
+	$clirut=$_GET['clirut'];
+	
+	$d=explode('-',$clirut);
+	
+	$r=cargar_registro("SELECT * FROM clientes 
+								LEFT JOIN comunas USING (comcod)								
+								WHERE clirut=".($d[0]*1), true);
+
+	echo json_encode($r);
+
+?>

@@ -1,0 +1,89 @@
+<?php
+
+	require_once('../../conectar_db.php');
+	    
+	    
+	function graficar_item($datos) {
+	
+		$t=$datos[0]*1;
+		
+		$v=($datos[1]*100/$t);
+		$a=($datos[2]*100/$t);
+		$b=($datos[3]*100/$t);
+		$r=100-($v+$a+$b);
+	
+		$html='<table style="width:200px;border:1px solid black;height:20px;" cellpadding=0 cellspacing=0>';
+		$html.='<tr>';
+		if($v>0) $html.='<td style="width:'.$v.'%;background-color:red;text-align:center;overflow:hidden;">'.(($v>5)?number_format($v,0,',','.').'%':'').'</td>';
+		if($a>0) $html.='<td style="width:'.$a.'%;background-color:yellow;text-align:center;">'.(($a>5)?number_format($a,0,',','.').'%':'').'</td>';
+		if($b>0) $html.='<td style="width:'.$b.'%;background-color:blue;text-align:center;color:#ffffff;">'.(($b>5)?number_format($b,0,',','.').'%':'').'</td>';
+		$html.='<td style="width:'.$r.'%;text-align:right;background-color:yellowgreen;overflow:hidden;">'.(($r>10)?number_format($r,0,',','.').'%':'').'</td>';
+		$html.="</tr></table>";
+		
+		return $html;	
+		
+	}
+    
+?>
+
+<table style='width: 100%;' cellspacing=0>
+    <tr class='tabla_header' style='font-weight: bold;'>
+        <td style='width: 15%;'>
+            C&oacute;digo
+        </td>
+        <td style='width:45%;'>
+            Descripci&oacute;n
+        </td>
+        <td>
+            Requerimientos
+        </td>
+        <td>
+            Compromiso
+        </td>
+        <td>
+            Disponibilidad
+        </td>
+        <td>
+            Devengado
+        </td>
+        <td>
+            Pagado
+        </td>
+        <td>
+            Gr&aacute;fico Anual
+        </td>
+    </tr>
+    <?php
+
+        $gastos = cargar_registros_obj("
+        						SELECT * FROM item_presupuestario_sigfe
+                        ORDER BY item_codigo");
+                            
+        for($i=0;$i<sizeof($gastos);$i++)
+        {
+            ($i%2==0) ? $clase='tabla_fila' : $clase='tabla_fila2';
+            print("
+            
+            <tr class='".$clase."'
+            onMouseOver='this.className=\"mouse_over\";'
+            onMouseOut='this.className=\"".$clase."\";'
+            onClick='cargar_gasto(".$gasto[0].");'>
+				
+				<td style='text-align:right;font-weight:bold;'>".$gastos[$i]['item_codigo']."</td>
+				<td>".htmlentities($gastos[$i]['item_nombre'])."</td>
+				<td style='text-align:right;'>$".number_format($gastos[$i]['item_requerimiento'],0,',','.').".-</td>
+				<td style='text-align:right;'>$".number_format($gastos[$i]['item_compromiso'],0,',','.').".-</td>
+				<td style='text-align:right;'>$".number_format($gastos[$i]['item_disponibilidad'],0,',','.').".-</td>
+				<td style='text-align:right;'>$".number_format($gastos[$i]['item_devengado'],0,',','.').".-</td>
+				<td style='text-align:right;'>$".number_format($gastos[$i]['item_pagado'],0,',','.').".-</td>
+
+				<td style='text-align:center;'>".graficar_item(array($gastos[$i]['item_requerimiento'],$gastos[$i]['item_pagado'],$gastos[$i]['item_devengado']-$gastos[$i]['item_pagado'],$gastos[$i]['item_compromiso']-$gastos[$i]['item_devengado']))."</td>
+
+            </tr>
+            
+            ");
+        }
+
+    ?>
+
+</table>

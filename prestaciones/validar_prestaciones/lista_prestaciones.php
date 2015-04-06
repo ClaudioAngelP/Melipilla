@@ -1,0 +1,74 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$pac_id=$_POST['pac_id'];
+	$prev_id=$_POST['prev_id'];
+	$fecha=$_POST['fecha1'];
+	
+	$presta=cargar_registros_obj("
+								 SELECT *, presta_fecha::date FROM prestacion 
+								 JOIN prestacion_origen USING (porigen_id)
+								 LEFT JOIN mai ON ((grupo || sub_grupo || presta) = presta_codigo_v) AND corr='0000'
+								 WHERE pac_id=$pac_id AND presta_fecha::date='$fecha'	
+	", true);
+
+	switch($prev_id) {
+		case 1: $copago='precio'; break;	
+		case 2: $copago='copago_b'; break;
+		case 3: $copago='copago_c'; break;	
+		case 4: $copago='copago_d'; break;
+		default: $copago='precio'; break;
+	}
+
+?>
+
+<table style='width:100%;'>
+<tr class='tabla_header'>
+<td>Fecha/Hora</td>
+<td>Or&iacute;gen</td>
+<td>C&oacute;digo</td>
+<td>Cant.</td>
+<td>Descripci&oacute;n</td>
+<td>Acci&oacute;n</td>
+</tr>
+
+<?php 
+
+	$total=0;
+
+	for($i=0;$i<sizeof($presta);$i++) {
+	
+		$clase=($i%2==0)?'tabla_fila':'tabla_fila2';	
+
+		$cnt=$presta[$i]['presta_cant']*1;
+	
+		$accion='';
+		
+		$accion.='<option value="-10" SELECTED>(Sin Acci&oacute;n...)</option>';	
+		$accion.='<option value="1">Aceptar</option>';	
+		$accion.='<option value="2">Homologar</option>';	
+		$accion.='<option value="3">Corregir</option>';	
+		$accion.='<option value="-1">Eliminar</option>';	
+		$accion.='<option value="-2">Pendiente...</option>';	
+	
+		print("
+			<tr class='$clase'>
+			<td style='text-align:center;'>".$presta[$i]['presta_fecha']."</td>
+			<td style='text-align:center;'>".$presta[$i]['porigen_nombre']."</td>
+			<td style='text-align:center;font-weight:bold;'>".$presta[$i]['presta_codigo_v']."</td>
+			<td style='text-align:center;font-weight:bold;'>".$cnt."</td>
+			<td style='font-size:8px;'>".$presta[$i]['presta_desc']."</td>
+			<td style='text-align:center;'>
+			<select id='act_".$presta[$i]['presta_id']."' name='act_".$presta[$i]['presta_id']."'>
+			".$accion."
+			</select>
+			</td>
+			</tr>		
+		");	
+		
+	}
+
+?>
+
+</table>

@@ -1,0 +1,27 @@
+<?php 
+
+	require_once('../conectar_db.php');
+	
+	$f=explode("\n",file_get_contents('medicos.csv'));
+	
+	for($i=1;$i<sizeof($f);$i++) {
+	
+		$r=explode('|',utf8_decode($f[$i]));
+		
+		$prut=explode('-',$r[0]);
+		$rut=($prut[0]*1).'-'.strtoupper($prut[1]);		
+		$pat=$r[2];		
+		$mat=$r[3];		
+		$nom=$r[4];		
+		
+		pg_query("INSERT INTO doctores VALUES (
+			DEFAULT,
+			'$rut',
+			'$pat',
+			'$mat',
+			'$nom'
+		);");	
+		
+	}
+
+?>

@@ -1,0 +1,472 @@
+<?php
+
+require_once('../../conectar_db.php');
+require_once('../../ficha_clinica/ficha_basica.php');
+
+$servs="'".str_replace(',','\',\'',_cav2(51))."'";
+
+$servicioshtml = desplegar_opciones_sql( 
+  "SELECT centro_ruta, centro_nombre FROM centro_costo WHERE centro_ruta ILIKE '.subdireccinmdica.%'
+  ORDER BY centro_nombre", NULL, '', ""); 
+  
+$prioridadhtml = desplegar_opciones("prioridad", 
+	"prior_id, prior_desc",$oa['oa_prioridad'],'true','ORDER BY prior_id');
+
+?>
+
+<script>
+
+    casos_auge = function() {
+
+    	var myAjax2=new Ajax.Request(
+      'prestaciones/casos_vigentes.php',
+      {
+        method:'post',
+        parameters:'pac_id='+encodeURIComponent($('paciente_id').value),
+        onComplete: function(dat) {
+
+          d=dat.responseText.evalJSON(true);
+
+          try {
+
+          if(d) {
+
+            var html='<select id="ca_id" name="ca_id">';
+            html+='<option value="0" SELECTED>(Evento sin caso...)</option>';
+
+            for(var n=0;n<d.length;n++) {
+
+              html+='<option value="'+d[n].id_sigges+'">';
+              html+=''+d[n].ca_patologia+'</option>';
+
+            }
+
+            html+='</select>';
+
+            $('select_pat').innerHTML=html;
+
+            //if(d.length==1) actualizar_ramas();
+
+          } else {
+
+            $('select_pat').innerHTML='<i>Paciente no registra Casos AUGE vigentes.</i>';
+
+          }
+
+          } catch(err) {
+            console.error(err);
+          }
+
+        }
+
+      });
+
+    }
+
+
+	verifica_tabla_oa = function() {
+			if($('carp_id').value*1==0) {
+				alert('Debe seleccionar una Carpeta.'.unescapeHTML());
+				return;
+			}
+			
+			if($('paciente_id').value*1==0) {
+				alert('Debe seleccionar un paciente.'.unescapeHTML());
+				return;
+			}
+			
+			$('diag_cod').disabled=false;
+			
+		  var params=$('paciente').serialize();
+		  params+='&'+$('orden_cabecera').serialize();
+		  params+='&'+$('orden_cuerpo').serialize();
+
+			var myAjax = new Ajax.Request(
+			'prestaciones/orden_hospitalizacion/sql.php', 
+
+			{
+				method: 'post', 
+				parameters: params,
+				onComplete: function (pedido_datos) {
+
+				  if(pedido_datos.responseText=='OK') {
+
+						alert('Orden de Atenci&oacute;n registrada exitosamente.'.unescapeHTML());
+						cambiar_pagina("prestaciones/orden_hospitalizacion/form.php");
+
+					} else {
+
+						alert('ERROR:\\n'+pedido_datos.responseText.unescapeHTML());
+
+					}
+
+				}
+
+			}
+
+			
+
+			);
+
+		
+
+		}
+
+
+
+</script>
+
+
+
+<center>
+
+<div class='sub-content' style="width:700px;">
+
+<div class='sub-content' 
+style='background-color:#cccccc;text-align:center;font-weight:bold;'>
+Orden de Hospitalizaci&oacute;n
+</div>
+<?php desplegar_ficha_basica('casos_auge();'); ?>
+
+<form id='orden_cabecera' name='orden_cabecera' onSubmit='return false;'>		
+
+	<div class='sub-content'>
+
+		
+
+	<div align='right'>
+
+	<table><tr>
+    
+	<td style='text-align:right;' >Servicio Cl&iacute;nico:</td>
+    <td>
+
+    <select id='centro_ruta' name='centro_ruta'>
+
+    <?php echo $servicioshtml; ?>
+
+    </select>
+
+    </td><td style="text-align:right;width:150px;" >GES:</td>
+<td><select id='ges' name='ges'>
+		<option value='0'>No</option>
+		<option value='1'>S&iacute;</option>
+	</select>
+</td>
+	<td style='text-align: right;'><b>N&uacute;mero Folio:</b></td>
+
+		<td><input type='text' name='nro_folio' id='nro_folio' size=12
+		style='text-align:center;'></td></tr>
+
+	<tr><td style='text-align: right;'>Carpeta HGF:</td>
+
+		<td width='45%' style='text-align: left;' colspan=3>
+
+		<input type='hidden' id='carp_id' name='carp_id' value=''>
+
+    <input type='text' id='carpeta' name='carpeta' value='' size=45>
+
+    </td>
+	<td style='text-align:right;'>
+    Fecha O.A.:
+    </td><td>
+    <input type='text' size=8 style='text-align:center;' 
+    id='fecha' name='fecha' value='<?php echo date('d/m/Y'); ?>' />
+    <img src='iconos/calendar.png' id='fecha_boton' />
+    </td>
+	</tr>
+
+	</table>
+
+	</div>
+
+		
+
+		</div>
+
+		
+
+		</form>
+
+
+
+
+
+
+
+
+
+<form id='orden_cuerpo' name='orden_cuerpo' 
+onSubmit='return false;'>
+
+<div class='sub-content'>
+
+<div class='sub-content'>
+
+<img src='iconos/layout.png'>
+
+<b>Datos de la Orden de Atenci&oacute;n</b>
+
+</div>
+
+<div class='sub-content2'>
+
+<table style="width:100%;">
+
+<tr><td style="text-align:right;width:150px;" class='tabla_fila2'>Problema de salud AUGE:</td>
+<td id='select_pat' class='tabla_fila'>
+<i>(Seleccione Paciente...)</i>
+</td></tr>
+<tr>
+<td style="text-align:right;width:150px;" class='tabla_fila2'>Tipo:</td>
+<td class='tabla_fila'><select id='tipo_aten' name='tipo_aten'>
+		<option value='0'>Hospitalizaci&oacute;n Quir&uacute;rgica</option>
+		<option value='1'>Hospitalizaci&oacute;n M&eacute;dica</option>
+		<option value='2'>Procedimiento</option>	  
+	  </select></td>
+</tr>
+<tr>
+<td style="text-align:right;width:150px;" class='tabla_fila2'>Prioridad:</td>
+<td class='tabla_fila'>
+	<select id='prioridad' name='prioridad'>
+			<?php echo $prioridadhtml; ?>
+   </select>
+</td>
+</tr>
+<tr>
+
+<td style='text-align:right;' class='tabla_fila2'>
+
+C&oacute;digo Prestaci&oacute;n:
+
+</td>
+
+<td class='tabla_fila'>
+<input type='hidden' id='codigo_prestacion' name='codigo_prestacion'
+value=''>
+
+<input type='text' id='cod_presta' name='cod_presta'>
+
+</td>
+
+</tr>
+<tr><td class='tabla_fila2' style='text-align:right;' valign='top'>Descripci&oacute;n Prestaci&oacute;n:</td>
+<td class='tabla_fila' id='desc_presta' style='text-align:justify;' valign='top'>
+(Ingrese C&oacute;digo FONASA...)
+</td>
+</tr>
+<tr><td style='width:100px;text-align:right;' class='tabla_fila2'>
+M&eacute;dico Solicitante:
+</td><td class='tabla_fila' style='text-align:left;'>
+<input type='hidden' id='doc_id' name='doc_id' value=''>
+<input type='text' id='rut_medico' name='rut_medico' size=10
+style='text-align: center;' value='' disabled>
+<input type='text' id='nombre_medico' 
+value='' name='nombre_medico' size=45>
+</td></tr>
+
+<tr>
+<td style='text-align:right;' class='tabla_fila2'>Diagn&oacute;stico CIE10:</td>
+<td colspan=3 class='tabla_fila'>
+<input type='text' id='diag_cod' name='diag_cod' value='' DISABLED size=5 style='font-weight:bold;text-align:center;' />
+<input type='text' id='diagnostico' value='' name='diagnostico' size=35 onDblClick='$("diag_cod").value=""; $("diagnostico").value="";' />
+</td>
+</tr>
+
+<tr>
+<td valign='top' style='text-align: right;' class='tabla_fila2'>Fecha Probable de Intervenci&oacute;n:</td>
+<td class='tabla_fila'>
+ <input type='text' size=8 style='text-align:center;' 
+    id='fecha_aten' name='fecha_aten' value='' />
+    <img src='iconos/calendar.png' id='fecha_aten_boton' /></td>
+</tr>
+<tr>
+<td valign='top' style='text-align: right;' class='tabla_fila2'>Observaci&oacute;n:</td>
+<td class='tabla_fila'><textarea id='oa_observacion' name='oa_observacion' cols="50" rows="3"></textarea></td> <!-- <input type="text "id='oa_observacion' name='oa_observacion' size=45 /> -->
+</tr>
+
+
+</table>
+
+</div>
+
+</div>
+
+
+
+</form>
+
+
+
+<div class='sub-content'>
+
+<center>
+
+	<table><tr><td>
+
+		<div class='boton'>
+
+		<table><tr><td>
+
+		<img src='iconos/accept.png'>
+
+		</td><td>
+
+		<a href='#' onClick='verifica_tabla_oa();'>Ingresar Orden de Atenci&oacute;n...</a>
+
+		</td></tr></table>
+
+		</div>
+
+		</td><td>
+
+		<div class='boton'>
+
+		<table><tr><td>
+
+		<img src='iconos/delete.png'>
+
+		</td><td>
+
+		<a href='#' onClick='cambiar_pagina("prestaciones/orden_hospitalizacion/form.php");'>
+
+		Limpiar Formulario...</a>
+
+		</td></tr></table>
+
+		</div>
+
+	</td></tr></table>
+
+</center>
+
+</div>
+
+
+</div>
+
+</center>
+
+
+
+<script>
+
+    Calendar.setup({
+
+        inputField     :    'fecha',
+        ifFormat       :    '%d/%m/%Y',
+        showsTime      :    false,
+        button          :   'fecha_boton'
+
+    });
+    
+    Calendar.setup({
+
+        inputField     :    'fecha_aten',
+        ifFormat       :    '%d/%m/%Y',
+        showsTime      :    false,
+        button          :   'fecha_aten_boton'
+
+    });
+    
+
+    seleccionar_especialidad = function(d) {
+
+      $('esp_id').value=d[0];
+      $('esp_desc').value=d[2].unescapeHTML();
+
+    }
+
+    seleccionar_carpeta = function(d) {
+
+      $('carp_id').value=d[0];
+      $('carpeta').value=d[1].unescapeHTML();
+      $('tipo_aten').value=d[2];
+
+    }
+    
+    autocompletar_carpeta = new AutoComplete(
+      'carpeta', 
+      'autocompletar_sql.php',
+      function() {
+        if($('carpeta').value.length<3) return false;
+
+        return {
+          method: 'get',
+          parameters: 'tipo=carpeta&'+$('carpeta').serialize()+'&'+$('ges').serialize()+'&'+$('centro_ruta').serialize()
+        }
+
+      }, 'autocomplete', 350, 100, 150, 1, 1, seleccionar_carpeta);
+      
+      
+    seleccionar_prestacion = function(presta) {
+
+      $('codigo_prestacion').value=presta[0];
+      $('desc_presta').innerHTML=presta[2];
+
+    }
+
+    lista_prestaciones=function() {
+
+        if($('cod_presta').value.length<3) return false;
+
+        var params='tipo=prestacion&'+$('cod_presta').serialize();
+
+        return {
+          method: 'get',
+          parameters: params
+        }
+
+    }
+
+
+    autocompletar_prestaciones = new AutoComplete(
+      'cod_presta', 
+      'autocompletar_sql.php',
+      lista_prestaciones, 'autocomplete', 350, 100, 150, 1, 3, seleccionar_prestacion);
+          
+    ingreso_rut=function(datos_medico) {
+      	$('doc_id').value=datos_medico[3];
+      	$('rut_medico').value=datos_medico[1];
+    }
+
+    autocompletar_medicos = new AutoComplete(
+      	'nombre_medico', 
+      	'autocompletar_sql.php',
+      function() {
+        if($('nombre_medico').value.length<3) return false;
+        
+        return {
+          method: 'get',
+          parameters: 'tipo=medicos&'+$('nombre_medico').serialize()
+        }
+    }, 'autocomplete', 350, 200, 250, 1, 2, ingreso_rut);
+
+    $('paciente_id').observe('change', casos_auge);
+    
+    
+    ingreso_diagnosticos=function(datos_diag) {
+      	
+      	var cie10=datos_diag[0].charAt(0)+datos_diag[0].charAt(1)+datos_diag[0].charAt(2);
+      	cie10+='.'+datos_diag[0].charAt(3);
+      	
+      	$('diag_cod').value=cie10;
+      	$('diagnostico').value=datos_diag[2].unescapeHTML();
+      	
+      }
+    
+    
+    autocompletar_diagnosticos = new AutoComplete(
+      	'diagnostico', 
+      	'autocompletar_sql.php',
+      function() {
+        if($('diagnostico').value.length<3) return false;
+        
+        return {
+          method: 'get',
+          parameters: 'tipo=diagnostico_tapsa&cadena='+encodeURIComponent($('diagnostico').value)
+        }
+      }, 'autocomplete', 350, 200, 250, 1, 2, ingreso_diagnosticos);
+
+
+</script>

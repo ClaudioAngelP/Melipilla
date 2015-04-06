@@ -1,0 +1,223 @@
+<?php
+      require_once('../../conectar_db.php');
+
+
+
+
+
+    $id_orden = $_POST['id_orden']*1;
+
+    $id_proveedor = $_POST['proveedor_id']*1;
+
+    $articulos=json_decode($_POST['articulos']);
+
+    $pedidos=json_decode($_POST['pedidos']);
+
+    $orden_numero=($_POST['orden_numero']);
+
+    $cont_pedidos=($_POST['cont_pedidos']);
+
+	$fecha=($_POST['fecha']);
+    $orden_descuento = $_POST['orden_dsc']*1;
+
+    if(isset($_POST['ivaincl']))
+
+    {
+
+        $iva_incl=true;
+
+    }
+
+    else
+
+    {
+
+        $iva_incl = false;
+
+    }
+
+    if(isset($_POST['exectoiva']))
+
+    {
+
+        $exeiva=true;
+
+    }
+
+    else
+
+    {
+
+        $exeiva=false;
+
+    }
+	
+	 if(isset($_POST['fecha']))
+    {
+
+        $exfecha=true;
+
+    }
+
+    else
+
+    {
+
+        $exfecha=false;
+
+    }
+
+    
+
+    pg_query($conn, "START TRANSACTION;");
+
+    
+
+    
+
+    pg_query($conn,"update orden_compra set orden_prov_id=".$id_proveedor." where orden_id=".$id_orden."" );
+
+	if($orden_descuento){
+		pg_query($conn,"update orden_compra set orden_descuento=".$orden_descuento." where orden_id=".$id_orden."");
+	}
+
+    if($cont_pedidos!=0)
+
+    {
+
+        pg_query($conn, "delete from orden_pedido where orden_id=".$id_orden."");
+
+        
+
+        for($i=0;$i<count($pedidos);$i++)
+
+        {
+
+            pg_query($conn,"insert into orden_pedido VALUES (".$id_orden.", ".$pedidos[$i]->id_pedido.")");
+
+        }
+
+    }
+
+   
+
+    if(count($articulos)!=0)
+
+    {
+
+        pg_query($conn,"delete from orden_detalle where ordetalle_orden_id=".$id_orden."");
+
+
+
+        pg_query($conn,"delete from orden_servicios where orserv_orden_id=".$id_orden."");
+
+
+
+        for($i=0;$i<count($articulos);$i++)
+
+        {
+
+            if($iva_incl)
+
+            {
+
+                $subtotal=$articulos[$i]->subtotal/$_global_iva;
+
+            }
+
+            else
+
+            {          
+
+                $subtotal=$articulos[$i]->subtotal;
+
+            }
+
+
+
+
+
+            if($articulos[$i]->art_id!=='(n/a)')
+
+            {
+
+                pg_query($conn,"insert into orden_detalle(ordetalle_id, ordetalle_orden_id, ordetalle_art_id,
+
+                                ordetalle_cant, ordetalle_subtotal)
+
+                                VALUES (default, ".$id_orden.", ".$articulos[$i]->art_id.",
+
+                                ".$articulos[$i]->cant.", ".$subtotal.")");
+
+
+
+            }
+
+            else
+
+            {
+
+                pg_query($conn,"insert into orden_servicios(orserv_id, orserv_orden_id, orserv_glosa,
+
+                                orserv_subtotal, orserv_item, orserv_cant)
+
+                                VALUES (default,".$id_orden.",'".$articulos[$i]->glosa."',
+
+                                ".$subtotal.",'".$articulos[$i]->item_codigo."',
+
+                                ".$articulos[$i]->cant.")");
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+
+    }
+
+    if($exeiva)
+
+    {
+
+        pg_query($conn,"update orden_compra set orden_iva=1.00 where orden_id=".$id_orden."");
+
+    }
+
+    else
+
+    {
+
+        pg_query($conn,"update orden_compra set orden_iva=1.19 where orden_id=".$id_orden."");
+
+    }
+	 if($exfecha)
+
+    {
+
+        pg_query($conn,"update orden_compra set orden_fecha=".$fecha." where orden_id=".$id_orden."");
+
+    }
+
+
+	
+
+
+
+
+
+    pg_query($conn, "COMMIT;");
+
+
+
+    //die(json_encode(Array(true)));
+
+    die(json_encode(Array(true,$id_orden)));
+
+
+ ?>

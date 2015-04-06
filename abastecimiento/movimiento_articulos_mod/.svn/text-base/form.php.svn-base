@@ -1,0 +1,414 @@
+<?php
+
+  require_once("../../conectar_db.php");
+  
+	$bodegashtml = desplegar_opciones("bodega", "bod_id, bod_glosa",'1','1=1',
+	'ORDER BY bod_glosa'); 
+	
+	$institucionhtml = desplegar_opciones("institucion_solicita", 
+	"instsol_id, instsol_desc",'','true','ORDER BY instsol_desc'); 
+	
+?>
+	
+	<script type='text/javascript'>
+	
+		articulos_sel=0;
+		art_num=0;
+		buscar_win='';
+		seleccion_txt='';
+	
+		abrir_busqueda = function() {
+		
+			var myAjax = new Ajax.Updater(
+			'detalle_prod',
+			'mostrar.php', 
+			{
+				method: 'get', 
+				parameters: 'tipo=stock&codigo_art='+$('prod_codigo').value+'&bodega_origen='+$('bodega_origen').value
+			
+      }
+			
+			);
+		
+		}
+		
+		abrir_busqueda_vencidos = function() {
+		
+			buscar_win = window.open('mostrar.php?tipo=productos_vencidos&'+$('bodega_origen').serialize(),
+			'buscar_productos', 'left='+(screen.width-500)+',top='+(screen.height-470)+',width=480,height=400,status=0');
+			
+			buscar_win.focus();
+		
+		}
+		
+		abrir_busqueda_balance = function() {
+		
+			buscar_win = window.open('mostrar.php?tipo=balance_prestamo&'+$('bodega_origen').serialize(),
+			'buscar_productos', 'left='+(screen.width-500)+',top='+(screen.height-470)+',width=480,height=400,status=0');
+			
+			buscar_win.focus();
+		
+		}
+		
+		quitar_art = function(numero) {
+		
+			Element.remove('art_'+numero);
+			
+			articulos_sel = $('seleccion').getElementsByTagName('table');
+			
+			if(articulos_sel.length==1) {
+				art_num=0;
+				articulos_sel=0;
+				$('nosel').style.display='';
+				$('seleccion').style.display='none';
+			}
+		
+		}
+		
+		limpiar_art = function() {
+		
+			$('seleccion').innerHTML = seleccion_txt;
+			
+			art_num=0;
+			articulos_sel=0;
+			$('nosel').style.display='';
+			$('seleccion').style.display='none';
+			
+			if(buscar_win!=null && buscar_win!='') buscar_win.close();
+			
+		}
+		
+		seleccionar_articulo = function(idarticulo,cantidad,venc_tipo) {
+		
+			idarticulo=idarticulo*1;
+			cantidad=cantidad*1;
+		
+			var myAjax = new Ajax.Request(
+			'mostrar.php', 
+			{
+				method: 'get', 
+				parameters: 'tipo=sel_stock&id='+idarticulo+'&'+$('bodega_origen').serialize()+'&cantidad='+cantidad+'&venc_tipo='+venc_tipo,
+				onComplete: function (pedido_datos) {
+					
+					alert(pedido_datos.responseText);
+					
+					detalle_art='';
+					
+					for(i=1;i<datos.length;i++) {
+						detalle_art+=datos[i][0]+'='+datos[i][1];
+						if(i<(datos.length-1)) { detalle_art=detalle_art+'!'; } 
+					}
+					
+					i=0;
+					
+					producto='<table id=\"art_'+art_num+'\" name=\"art_'+art_num+'\" width=610><input type=\"hidden\" name=\"id_art_'+art_num+'\" value=\"'+idarticulo+'\"><input type=\"hidden\" name=\"detalle_art_'+art_num+'\" value=\"'+datos[0][2]+'\">';
+					
+					datos.each( function(dato) {
+					
+						if(i==0) { 
+							clase='tabla_fila'; clase2=''; estilo='<b>'; 
+							
+							if(dato[3]!=null) {
+							agregar='<td rowspan='+datos.length+' width=\"5%%\"><center><a href=\"#\"><img src=\"borrar.png\" onClick=\"quitar_art('+art_num+')\" border=0></a></center></td>';
+							} else {
+							agregar='<td rowspan=1 width=\"5%%\"><center><a href=\"#\"><img src=\"iconos/delete.png\" onClick=\"quitar_art('+art_num+')\" border=0></a></center></td>';
+							}
+							
+							producto+='<tr class=\"'+clase+'\"><td class=\"'+clase2+'\" style=\"text-align: right;\">'+estilo+dato[0]+'</td><td class=\"'+clase2+'\" width=\"70%%\">'+estilo+dato[1]+'</td><td  width=\"10%%\" class=\"derecha\">'+estilo+dato[2]+'</td>'+agregar+'</tr>';
+					
+						} else { 
+							clase='tabla_fila2'; clase2='derecha'; estilo=''; agregar='';
+						
+							if(dato[0]!=null) {
+						
+					producto+='<tr class=\"'+clase+'\"><td class=\"'+clase2+'\" width=\"50%%\" colspan=2>'+estilo+dato[0]+'</td><td  width=\"10%%\" class=\"derecha\"> '+estilo+dato[1]+'</td>'+agregar+'</tr>';
+					
+								}
+						}
+						
+						i++;
+						
+					});	
+					
+					producto+='</table>';
+					
+					if(articulos_sel==0) {
+						$('nosel').style.display='none';
+						$('seleccion').style.display='';
+						
+						articulos_sel=1;
+					}
+					
+					$('seleccion').innerHTML+=producto;
+					
+					art_num++;
+					
+					buscar_win.$('buscar').value='';
+					buscar_win.$('buscar').focus();
+					
+				}
+			}
+			
+			);
+			
+		}
+		
+		verifica_tabla = function() {
+		
+			if($('tipo_movimiento').value!=3 && $('tipo_movimiento').value!=2) {
+      
+      if($('bodega_origen').value==$('bodega_destino').value) {
+				alert('La ubicacion de or&iacute;gen no puede ser la misma que la de destino.'.unescapeHTML());
+				return;
+			}
+
+			}
+		
+			if(art_num==0) {
+				alert('No ha seleccionado productos para trasladar.');
+				return;
+			
+			}
+			
+			if($('tipo_movimiento').value!=3 && $('tipo_movimiento').value!=2
+      && $('tipo_movimiento').value!=1) {
+      
+      if(($('numero_pedido').value*1)==0) {
+				alert('Debe ingresar un n&uacute;mero de pedido.'.unescapeHTML());
+				return;
+			}
+			
+			}
+			
+			var myAjax = new Ajax.Request(
+			'sql.php', 
+			{
+				method: 'get', 
+				parameters: 'accion=traslado_stock&cant='+art_num+'&'+$('buscar_form').serialize(),
+				onComplete: function (pedido_datos) {
+				
+				alert(pedido_datos.responseText);
+					
+					if(pedido_datos.responseText=='OK') {
+						if($('tipo_movimiento').value!=3)
+                      alert('Traslado ingresado exitosamente.');
+            else      alert('Baja de productos realizada exitosamente.');
+            
+					} else {
+						alert('ERROR:\\n'+pedido_datos.responseText);
+						
+					}
+				}
+			}
+			
+			);
+		}
+		
+		corrige_campos = function() {
+		
+		switch($('tipo_movimiento').value) {
+			case '2':
+			$('bodega_destino').style.display='none';
+			$('institucion_destino').style.display='';
+			$('destino_no').style.display='none';
+			$('nro_pedido_no').style.display='';
+			$('numero_pedido').style.display='none';
+			$('boton_agregar').style.display='';
+			$('boton_vencidos').style.display='none';
+			$('boton_balance').style.display='';
+			break;
+			case '3':
+			$('bodega_destino').style.display='none';
+			$('institucion_destino').style.display='none';
+			$('destino_no').style.display='';
+			$('nro_pedido_no').style.display='';
+			$('numero_pedido').style.display='none';
+			$('boton_agregar').style.display='none';
+			$('boton_vencidos').style.display='';
+			$('boton_balance').style.display='none';
+			break;
+			case '1':
+			$('bodega_destino').style.display='';
+			$('institucion_destino').style.display='none';
+			$('destino_no').style.display='none';
+			$('nro_pedido_no').style.display='';
+			$('numero_pedido').style.display='none';
+			$('boton_agregar').style.display='';
+			$('boton_vencidos').style.display='none';
+			$('boton_balance').style.display='';
+			break;
+			case '0':
+			$('bodega_destino').style.display='';
+			$('institucion_destino').style.display='none';
+			$('destino_no').style.display='none';
+			$('nro_pedido_no').style.display='none';
+			$('numero_pedido').style.display='';
+			$('boton_agregar').style.display='';
+			$('boton_vencidos').style.display='none';
+			$('boton_balance').style.display='none';
+			break;
+			
+		}
+		
+		limpiar_art();
+		
+		}
+		
+	</script>
+	
+	<center>
+	
+	<table width=650><tr><td>
+		
+	<center>
+	<form name='buscar_form' id='buscar_form'>
+	
+		<div id='bodega_origen_div' class='sub-content' style='width:650px;'>
+		<div class='sub-content'><img src='iconos/building.png'>
+		<b>Ubicaciones</b></div>
+		<table>
+		<tr><td class='derecha'>
+		Tipo:
+		</td><td>
+		
+		<select name='tipo_movimiento' id='tipo_movimiento'
+		onChange='corrige_campos();'>
+		<option value=0>Traslado Interno</option>
+		<option value=1>Pr&eacute;stamo/Devoluci&oacute;n (Int.)</option>
+		<option value=2>Pr&eacute;stamo/Devoluci&oacute;n (Ext.)</option>
+		<option value=3>Baja por Vencimiento</option>
+		<option value=4>Ingreso por Excendente</option>
+		<option value=5>Ingreso por Regalo</option>
+		</select>
+		
+		</td><tr>
+		<tr><td class='derecha'>
+		Or&iacute;gen:
+		</td><td>
+		<select name='bodega_origen' id='bodega_origen'>
+		<?php echo $bodegashtml; ?>
+		</select>
+		</td></tr><tr><td class='derecha'>
+		Destino:
+		</td><td>
+		<select name='bodega_destino' id='bodega_destino'>
+		<?php echo $bodegashtml; ?>
+		</select>
+		<select name='institucion_destino' id='institucion_destino' 
+		style='display:none; width=200px;'>
+		<?php echo $institucionhtml; ?>
+		</select>
+		<span id='destino_no' style='display: none;'><b><i>(No Aplicable...)</i></b></span>
+		</td></tr>
+		<tr><td class='derecha'>
+		Nro. de Pedido:</td><td>
+		<span id='nro_pedido_no' style='display: none;'><b><i>(No Aplicable...)</i></b></span>
+		<input type='text' id='numero_pedido' name='numero_pedido' size=7 style='text-align: right;'>
+		</td></tr>
+		</table>
+		</div>
+		
+	<br>
+	<center>
+		
+	<div style='width: 500px;' id='boton_agregar'>
+	<div id='seleccion_prods' class='sub-content'>
+	<div class='sub-content2'>
+	<table>
+  <tr>
+  <td>C&oacute;digo Int:</td>
+	<td><input type='text' id='prod_codigo' name='prod_codigo'
+  onKeyUp='if(event.which==13) { abrir_busqueda(); }'
+  >
+  <img src='iconos/zoom_in.png' style='cursor: pointer;' 
+  onClick='
+  buscar_articulos("prod_codigo", function() { abrir_busqueda(); } );
+  '>
+  </td>
+  </tr>
+  <tr><td id='detalle_prod' colspan=2></td></tr>
+  </table>
+  </div>
+	<center>
+	<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/add.png'>
+		</td><td>
+		<a href='#' onClick='abrir_busqueda();'>Agregar Productos...</a>
+		</td></tr></table>
+		</div>
+	</div>
+	</div>
+	
+	<div style='width: 350px; display: none;' id='boton_vencidos'>
+	<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/date_error.png'>
+		</td><td>
+		<a href='#' onClick='abrir_busqueda_vencidos();'>Seleccionar Productos Vencidos...</a>
+		</td></tr></table>
+		</div>
+	</div>
+	
+	<div style='width: 350px; display: none;' id='boton_balance'>
+	<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/page_refresh.png'>
+		</td><td>
+		<a href='#' onClick='abrir_busqueda_balance();'>Balance de Pr&eacute;stamos...</a>
+		</td></tr></table>
+		</div>
+	</div>
+	
+	
+	<div class='sub-content' style='width:650px;'>
+	<div class='sub-content'><img src='iconos/page.png'>
+	<b>Selecci&oacute;n de Productos</b></div>
+	<div id='nosel'>
+	<center>(No se han seleccionado productos a trasladar...)
+	</div>
+	<div id='seleccion' name='seleccion' class='sub-content2' style='display: none;'>
+	<center>
+	<table id='tabla_seleccion' width=610>
+	<tr class='tabla_header'><td><b>C&oacute;digo Int.</b></td><td width=70%%><b>Glosa</b></td>
+	<td width=10%%><b>Total</b><td width=5%%>&nbsp;</td></td></tr>
+	
+	</table>
+	</center>
+	</div>
+	</div>
+	
+	<div class='sub-content'>
+	<center>
+	
+	<table><tr><td>
+		<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/accept.png'>
+		</td><td>
+		<a href='#' onClick='verifica_tabla();'>Realizar Traslado...</a>
+		</td></tr></table>
+		</div>
+		</td><td>
+		<div class='boton'>
+		<table><tr><td>
+		<img src='iconos/delete.png'>
+		</td><td>
+		<a href='#' onClick='cambiar_pagina(\"Traslado/Pr&eacute;stamo de Productos\",\"traslado\");'>
+		Limpiar Formulario...</a>
+		</td></tr></table>
+		</div>
+	</td></tr></table>
+	
+	</center>
+	</div>
+	
+	</center>
+	
+	</form>
+	</center>
+	
+	</td></tr></table>
+	
+	<script> seleccion_txt=$('seleccion').innerHTML; </script>
+  

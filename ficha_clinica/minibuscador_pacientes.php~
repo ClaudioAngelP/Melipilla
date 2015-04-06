@@ -1,0 +1,109 @@
+<?php 
+
+	$__buscador_script=false;
+
+	function desplegar_buscador_pacientes($ruta='', $callback_func='', $n=0) {
+
+?>
+
+<table cellpadding=0 cellspacing=0>
+<tr><td>
+<select id="paciente_tipo_id_<?php echo $n; ?>" 
+	name="paciente_tipo_id_<?php echo $n; ?>" style="font-size:10px;" >
+  <option value=0 SELECTED>R.U.T.</option>
+  <option value=1>Pasaporte</option>
+  <option value=2>Cod. Interno</option>
+</select>
+</td><td>
+<input type='text' 
+id='paciente_rut_<?php echo $n; ?>' 
+name='paciente_rut_<?php echo $n; ?>'
+style="font-size:10px;" value='' size=15 
+onKeyPress='
+if(event.which==13) __buscar_paciente(<?php echo $n; ?>);'>
+<input type='hidden' id='pac_id_<?php echo $n; ?>' 
+name='pac_id_<?php echo $n; ?>' value=''>
+</td><td>
+<img src='<?php echo $ruta; ?>iconos/zoom_in.png' style='cursor:pointer;'
+onClick='buscar_pacientes("paciente_rut_<?php echo $n; ?>",
+function() { __buscar_paciente(<?php echo $n; ?>); });'>
+</td><td style='font-weight:bolder;' 
+id='nom_pac_<?php echo $n; ?>'>
+&nbsp;
+</td></tr>
+</table>
+
+<?php 
+
+	if(!$__buscador_script) {
+		$__buscador_script=true;
+		
+?>
+
+<script>
+
+    __buscar_paciente = function(n)
+    {
+        
+        if($('paciente_rut_'+n).value.charAt(0)=='R')
+        {
+            $('paciente_tipo_id_'+n).value=0;
+            $('paciente_rut_'+n).value=
+            $('paciente_rut_'+n).value.substring(1,$('paciente_rut_'+n).value.length);
+        }
+        else if($('paciente_rut_'+n).value.charAt(0)=='P')
+        {
+            $('paciente_tipo_id_'+n).value=1;
+            $('paciente_rut_'+n).value=
+            $('paciente_rut_'+n).value.substring(1,$('paciente_rut_'+n).value.length);
+        }
+        else if($('paciente_rut_'+n).value.charAt(0)=='I')
+        {
+            $('paciente_tipo_id_'+n).value=2;
+            $('paciente_rut_'+n).value=
+            $('paciente_rut_'+n).value.substring(1,$('paciente_rut_'+n).value.length);
+        }
+        var params='paciente_rut='+encodeURIComponent($('paciente_rut_'+n).value);
+        params+='&paciente_tipo_id='+encodeURIComponent($('paciente_tipo_id_'+n).value);
+        var myAjax = new Ajax.Request(
+			'<?php echo $ruta; ?>registro.php', 
+			{
+                method: 'get',
+				parameters: 'tipo=paciente&'+params,
+				onComplete: function (pedido_datos)
+                {
+                    if(pedido_datos.responseText=='')
+                    {
+                            alert('Paciente no encontrado.');
+                            $('paciente_rut_'+n).select();
+                            $('paciente_rut_'+n).focus();
+                            return;
+                        
+                    }
+                    else
+                    {
+                        var datosxxx=pedido_datos.responseText.evalJSON(true);
+                        var nombre=datosxxx[3];
+								nombre+=' '+datosxxx[4];
+								nombre+=' '+datosxxx[2];
+								$('pac_id_'+n).value=datosxxx[0];
+								$('nom_pac_'+n).innerHTML=nombre;
+								<?php echo $callback_func; ?>
+                    }
+				
+                }
+            }
+			);
+    }
+
+
+</script>
+
+<?php		
+		
+	}
+	
+	}
+
+?>
+

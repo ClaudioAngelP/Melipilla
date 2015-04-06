@@ -1,0 +1,20 @@
+  Orden de Hospitalización
+
+- No permitir modificación de Previsión
+- Agregar la palabra "Segun" a Información Provisional Fonasa
+- Agregar fecha digitación y fecha orden de atención
+- En combo Lateralidad, debe existir un nuevo item " bilateral superior, inferior"
+
+  Lista Espera Unificada
+
+- Btn "remover" debe decir "Egreso O.A Lista Espera"
+- Al seleccionar icono "telefono" se debe visualizar " Gestión"
+- NO se debe generar la impresión de FAP al "generar nuevo ingreso"
+- Corregir ortografia Ej:  "Presición Diagnostica"
+- Se debe cambiar check por bton de "Terminar Fap" y debe estar sobre el btn "Protocolo Qx"
+
+  Validaciones
+
+- Al presionar btn "Protocolo Qx" se debe validar que todos los campos esten llenos, mostrando msj de alerta
+- Si no se ha presionado btn "Terminar Fap" no se debe ver btn "Protocolo Quirurgico"
+

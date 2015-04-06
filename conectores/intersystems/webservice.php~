@@ -1,0 +1,89 @@
+<?php 
+
+	$wsdl='SMGES.BS.WSService.CLS.wsdl';
+
+	if(isset($_GET['wsdl']) OR isset($_GET['WSDL'])) {
+		header('Content-type: text/xml');
+		readfile($wsdl); exit();
+	}
+	
+	if(isset($_GET['soap_method']) OR sizeof($_POST)>0 OR 
+		$HTTP_RAW_POST_DATA!=null) {
+		
+		if(isset($_GET['soap_method'])) 
+			$method=$_GET['soap_method'];
+		elseif(isset($_POST['soap_method'])) 
+			$method=$_POST['soap_method'];
+		else 
+			$method='';
+		
+		switch($method) {
+			
+			case 'TestConnection':
+				header('Content-type: text/xml');
+				print("<SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:s='http://www.w3.org/2001/XMLSchema'> 
+  <SOAP-ENV:Body><TestConnectionResponse xmlns=\"InterSystems\"><TestConnectionResult>1</TestConnectionResult></TestConnectionResponse></SOAP-ENV:Body> 
+</SOAP-ENV:Envelope>"); break;
+				
+			default:
+				header('Content-type: text/xml');
+				print("<SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:s='http://www.w3.org/2001/XMLSchema'><SOAP-ENV:Body>");
+
+				foreach($_GET AS $key => $value) {
+					$data['get'][$key]=$value;	
+				}
+
+				foreach($_POST AS $key => $value) {
+					$data['post'][$key]=$value;	
+				}
+				
+				$data['raw_post_data']=$HTTP_RAW_POST_DATA;
+				file_put_contents("data/".date('Y-m-d-h-m-s'),json_encode($data));				
+
+				$xmlString = preg_replace("/(<\/?)(\w+):([^>]*>)/", "$1$2$3", 
+									$data['raw_post_data']);
+
+
+				$xml=simplexml_load_string($xmlString);
+				
+				$event=$xml->{"SOAP-ENVEnvelope"}[0]->{"SOAP-ENVBody"}[0]->SendEvent[0]->pRequest[0]->asXML();
+
+				print("<SendEventResponse>");
+				print("<SendEventResult>OK</SendEventResult>");
+				print("<pResponse>".$event."</pResponse>");
+				print("</SendEventResponse");
+
+				print("</SOAP-ENV:Body></SOAP-ENV:Envelope>");				
+				break;
+					
+		}
+
+		exit();
+		
+	}
+
+		
+?>
+
+<html>
+<title>SCV Webservice</title>
+
+<body>
+
+<h2>Bienvenido al webservice de <b>SISTEMAS EXPERTOS LTDA.</b>.</h2><br/><br/>
+
+<div style="background-color:#dddddd;">
+Acceder <a href='webservice.php?wsdl'>Descripci&oacute;n del Servicio</a>.<br/><br/>
+
+Acepta los siguientes eventos:<br /><br />
+</div>
+
+<ul>
+<li>SendEvent</li>
+<li>SendQuery</li>
+<li><a href='webservice.php?soap_method=TestConnection'>TestConnection</a> [GET]</li>
+</ul>
+
+</body>
+
+</html>

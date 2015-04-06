@@ -1,0 +1,34 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$pp_id=$_POST['pp_id']*1;
+	$pp_rut=pg_escape_string($_POST['pp_rut']);
+	$pp_paterno=pg_escape_string(utf8_decode($_POST['pp_paterno']));
+	$pp_materno=pg_escape_string(utf8_decode($_POST['pp_materno']));
+	$pp_nombres=pg_escape_string(utf8_decode($_POST['pp_nombres']));
+	$pp_caracteristicas=pg_escape_string(utf8_decode($_POST['pp_caracteristicas']));
+	$pp_desc=pg_escape_string(utf8_decode($_POST['pp_desc']));
+	
+	if($pp_id!=0)
+	pg_query("UPDATE personal_pabellon SET
+			pp_rut='$pp_rut',
+			pp_paterno='$pp_paterno',
+			pp_materno='$pp_materno',
+			pp_nombres='$pp_nombres',
+			pp_caracteristicas='$pp_caracteristicas',			
+			pp_desc='$pp_desc'			
+	WHERE pp_id=$pp_id");
+	else 
+	pg_query("
+		INSERT INTO personal_pabellon VALUES (
+			DEFAULT,
+			'$pp_rut', '$pp_paterno', '$pp_materno', '$pp_nombres', '$pp_caracteristicas'		
+		);	
+	");
+	
+	$r=cargar_registros_obj("SELECT * FROM personal_pabellon ORDER BY pp_id", true);
+	
+	echo json_encode($r);
+
+?>

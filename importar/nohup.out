@@ -1,0 +1,1362 @@
+
+Linea:0 Rut:4965049-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4965049-3')
+
+Linea:1 Rut:2605229-7
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('2605229-7')
+
+Linea:2 Rut:6394190-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('6394190-5')
+
+Linea:3 Rut:9146304-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('9146304-0')
+
+Linea:4 Rut:14464413-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('14464413-1')
+
+Linea:5 Rut:3966226-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3966226-4')
+
+Linea:6 Rut:18778893-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('18778893-5')
+
+Linea:7 Rut:22300645-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('22300645-0')
+
+Linea:8 Rut:19588558-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('19588558-3')
+
+Linea:9 Rut:18212806-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18212806-6')
+
+Linea:10 Rut:6077975-9
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('6077975-9')
+
+Linea:11 Rut:6226954-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6226954-5')
+
+Linea:12 Rut:14464413-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('14464413-1')
+
+Linea:13 Rut:14464413-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('14464413-1')
+
+Linea:14 Rut:10294714-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('10294714-2')
+
+Linea:15 Rut:9495077-5
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('9495077-5')
+
+Linea:16 Rut:14424263-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('14424263-7')
+
+Linea:17 Rut:7769566-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('7769566-4')
+
+Linea:18 Rut:18213076-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('18213076-1')
+
+Linea:19 Rut:9145859-4
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('9145859-4')
+
+Linea:20 Rut:7293912-3
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('7293912-3')
+
+Linea:21 Rut:21131593-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('21131593-8')
+
+Linea:22 Rut:21440559-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('21440559-8')
+
+Linea:23 Rut:4756142-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4756142-6')
+
+Linea:24 Rut:10479969-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('10479969-8')
+
+Linea:25 Rut:8931969-2
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('8931969-2')
+
+Linea:26 Rut:6633554-2
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('6633554-2')
+
+Linea:27 Rut:15867716-4
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('15867716-4')
+
+Linea:28 Rut:10163916-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10163916-9')
+
+Linea:29 Rut:10163916-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10163916-9')
+
+Linea:30 Rut:4772781-2
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('4772781-2')
+
+Linea:31 Rut:3994633-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3994633-5')
+
+Linea:32 Rut:3539086-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3539086-3')
+
+Linea:33 Rut:15406139-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('15406139-8')
+
+Linea:34 Rut:10911589-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10911589-4')
+
+Linea:35 Rut:7737238-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('7737238-5')
+
+Linea:36 Rut:5739469-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5739469-2')
+
+Linea:37 Rut:22113353-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('22113353-6')
+
+Linea:38 Rut:22448501-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('22448501-8')
+
+Linea:39 Rut:22712155-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('22712155-6')
+
+Linea:40 Rut:17397654-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('17397654-2')
+
+Linea:41 Rut:22858176-3
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('22858176-3')
+
+Linea:42 Rut:23751251-0
+UPDATE pacientes SET prev_id=5, pac_tramo='',sex_id=0 WHERE upper(pac_rut)=upper('23751251-0')
+
+Linea:43 Rut:22818164-1
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('22818164-1')
+
+Linea:44 Rut:22300645-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('22300645-0')
+
+Linea:45 Rut:4416988-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4416988-6')
+
+Linea:46 Rut:23776560-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('23776560-5')
+
+Linea:47 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:48 Rut:23404798-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('23404798-1')
+
+Linea:49 Rut:6916238-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('6916238-K')
+
+Linea:50 Rut:10286059-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10286059-4')
+
+Linea:51 Rut:5616095-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5616095-7')
+
+Linea:52 Rut:4269235-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4269235-2')
+
+Linea:53 Rut:5009682-3
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('5009682-3')
+
+Linea:54 Rut:8146724-2
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('8146724-2')
+
+Linea:55 Rut:15404037-4
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('15404037-4')
+
+Linea:56 Rut:7735894-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7735894-3')
+
+Linea:57 Rut:17082139-4
+UPDATE pacientes SET prev_id=6, pac_tramo='',sex_id=1 WHERE upper(pac_rut)=upper('17082139-4')
+
+Linea:58 Rut:18840507-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18840507-K')
+
+Linea:59 Rut:16114958-6
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('16114958-6')
+
+Linea:60 Rut:20124031-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('20124031-K')
+
+Linea:61 Rut:19412009-5
+UPDATE pacientes SET prev_id=6, pac_tramo='',sex_id=1 WHERE upper(pac_rut)=upper('19412009-5')
+
+Linea:62 Rut:17683453-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('17683453-6')
+
+Linea:63 Rut:13931463-8
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('13931463-8')
+
+Linea:64 Rut:13555726-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13555726-9')
+
+Linea:65 Rut:16931420-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('16931420-9')
+
+Linea:66 Rut:18408471-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('18408471-6')
+
+Linea:67 Rut:14046275-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('14046275-6')
+
+Linea:68 Rut:15710181-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('15710181-1')
+
+Linea:69 Rut:8764207-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8764207-0')
+
+Linea:70 Rut:17764802-7
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('17764802-7')
+
+Linea:71 Rut:15623802-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('15623802-3')
+
+Linea:72 Rut:15624180-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('15624180-6')
+
+Linea:73 Rut:19985065-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('19985065-2')
+
+Linea:74 Rut:17399145-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('17399145-2')
+
+Linea:75 Rut:14379595-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('14379595-0')
+
+Linea:76 Rut:13559761-9
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('13559761-9')
+
+Linea:77 Rut:19442877-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('19442877-4')
+
+Linea:78 Rut:20336379-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('20336379-6')
+
+Linea:79 Rut:16291695-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('16291695-5')
+
+Linea:80 Rut:16640308-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('16640308-1')
+
+Linea:81 Rut:16843979-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('16843979-2')
+
+Linea:82 Rut:15866426-7
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('15866426-7')
+
+Linea:83 Rut:3953238-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3953238-7')
+
+Linea:84 Rut:4455841-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4455841-6')
+
+Linea:85 Rut:10371020-0
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('10371020-0')
+
+Linea:86 Rut:6916238-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('6916238-K')
+
+Linea:87 Rut:11552981-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('11552981-1')
+
+Linea:88 Rut:4412220-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4412220-0')
+
+Linea:89 Rut:10956634-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10956634-9')
+
+Linea:90 Rut:10539665-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10539665-1')
+
+Linea:91 Rut:4573185-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4573185-5')
+
+Linea:92 Rut:12777566-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('12777566-4')
+
+Linea:93 Rut:9514998-7
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('9514998-7')
+
+Linea:94 Rut:3391904-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3391904-2')
+
+Linea:95 Rut:3182486-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3182486-9')
+
+Linea:96 Rut:22448501-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('22448501-8')
+
+Linea:97 Rut:22113353-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('22113353-6')
+
+Linea:98 Rut:22712155-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('22712155-6')
+
+Linea:99 Rut:17397654-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('17397654-2')
+
+Linea:100 Rut:22858176-3
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('22858176-3')
+
+Linea:101 Rut:22783283-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('22783283-5')
+
+Linea:102 Rut:23751251-0
+UPDATE pacientes SET prev_id=5, pac_tramo='',sex_id=0 WHERE upper(pac_rut)=upper('23751251-0')
+
+Linea:103 Rut:10071003-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10071003-K')
+
+Linea:104 Rut:23469107-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('23469107-4')
+
+Linea:105 Rut:23477071-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('23477071-3')
+
+Linea:106 Rut:20605034-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('20605034-9')
+
+Linea:107 Rut:15622589-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('15622589-4')
+
+Linea:108 Rut:14313100-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('14313100-9')
+
+Linea:109 Rut:14379683-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('14379683-3')
+
+Linea:110 Rut:16855660-8
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('16855660-8')
+
+Linea:111 Rut:12179210-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('12179210-9')
+
+Linea:112 Rut:7602616-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('7602616-5')
+
+Linea:113 Rut:7152908-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7152908-8')
+
+Linea:114 Rut:19750391-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('19750391-2')
+
+Linea:115 Rut:15405601-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('15405601-7')
+
+Linea:116 Rut:13773207-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13773207-6')
+
+Linea:117 Rut:16577609-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('16577609-7')
+
+Linea:118 Rut:16291802-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('16291802-8')
+
+Linea:119 Rut:17986032-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('17986032-5')
+
+Linea:120 Rut:19750310-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('19750310-6')
+
+Linea:121 Rut:18487790-2
+UPDATE pacientes SET prev_id=6, pac_tramo='',sex_id=1 WHERE upper(pac_rut)=upper('18487790-2')
+
+Linea:122 Rut:10524912-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('10524912-8')
+
+Linea:123 Rut:18594376-3
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18594376-3')
+
+Linea:124 Rut:21173649-6
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('21173649-6')
+
+Linea:125 Rut:4152814-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4152814-1')
+
+Linea:126 Rut:17426788-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('17426788-K')
+
+Linea:127 Rut:16951307-4
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('16951307-4')
+
+Linea:128 Rut:14007434-9
+UPDATE pacientes SET prev_id=6, pac_tramo='',sex_id=1 WHERE upper(pac_rut)=upper('14007434-9')
+
+Linea:129 Rut:3755106-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3755106-6')
+
+Linea:130 Rut:3755106-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3755106-6')
+
+Linea:131 Rut:8277728-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('8277728-8')
+
+Linea:132 Rut:6516594-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6516594-5')
+
+Linea:133 Rut:2186301-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('2186301-7')
+
+Linea:134 Rut:11552981-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('11552981-1')
+
+Linea:135 Rut:9341339-3
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('9341339-3')
+
+Linea:136 Rut:12580559-0
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('12580559-0')
+
+Linea:137 Rut:12105412-4
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('12105412-4')
+
+Linea:138 Rut:4118389-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4118389-6')
+
+Linea:139 Rut:11607925-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('11607925-9')
+
+Linea:140 Rut:5616095-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5616095-7')
+
+Linea:141 Rut:8764207-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8764207-0')
+
+Linea:142 Rut:12178495-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('12178495-5')
+
+Linea:143 Rut:3849573-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3849573-9')
+
+Linea:144 Rut:3585407-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3585407-K')
+
+Linea:145 Rut:5424071-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5424071-6')
+
+Linea:146 Rut:4576785-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4576785-K')
+
+Linea:147 Rut:4205612-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4205612-K')
+
+Linea:148 Rut:3760046-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3760046-6')
+
+Linea:149 Rut:8700613-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('8700613-1')
+
+Linea:150 Rut:4626711-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4626711-7')
+
+Linea:151 Rut:4620694-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4620694-0')
+
+Linea:152 Rut:4059289-K
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('4059289-K')
+
+Linea:153 Rut:6729700-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6729700-8')
+
+Linea:154 Rut:8917297-7
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8917297-7')
+
+Linea:155 Rut:7006380-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7006380-8')
+
+Linea:156 Rut:6215621-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6215621-K')
+
+Linea:157 Rut:6166810-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6166810-1')
+
+Linea:158 Rut:15623427-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('15623427-3')
+
+Linea:159 Rut:7183538-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7183538-3')
+
+Linea:160 Rut:12867146-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('12867146-3')
+
+Linea:161 Rut:4833307-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4833307-9')
+
+Linea:162 Rut:6666785-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6666785-5')
+
+Linea:163 Rut:13340146-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13340146-6')
+
+Linea:164 Rut:7112456-8
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('7112456-8')
+
+Linea:165 Rut:7805237-6
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('7805237-6')
+
+Linea:166 Rut:7195272-K
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('7195272-K')
+
+Linea:167 Rut:7112456-8
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('7112456-8')
+
+Linea:168 Rut:11697254-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('11697254-9')
+
+Linea:169 Rut:5029723-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5029723-3')
+
+Linea:170 Rut:6707762-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6707762-8')
+
+Linea:171 Rut:5302124-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5302124-7')
+
+Linea:172 Rut:7528792-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7528792-5')
+
+Linea:173 Rut:5751291-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5751291-1')
+
+Linea:174 Rut:6443800-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6443800-K')
+
+Linea:175 Rut:7921554-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('7921554-6')
+
+Linea:176 Rut:4056437-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4056437-3')
+
+Linea:177 Rut:10371020-0
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('10371020-0')
+
+Linea:178 Rut:4686793-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4686793-9')
+
+Linea:179 Rut:8787884-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('8787884-8')
+
+Linea:180 Rut:13560288-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('13560288-4')
+
+Linea:181 Rut:7273818-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7273818-7')
+
+Linea:182 Rut:12104110-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('12104110-3')
+
+Linea:183 Rut:5719021-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5719021-3')
+
+Linea:184 Rut:8207983-1
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('8207983-1')
+
+Linea:185 Rut:6664240-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('6664240-2')
+
+Linea:186 Rut:5879564-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5879564-K')
+
+Linea:187 Rut:4459000-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4459000-K')
+
+Linea:188 Rut:13340146-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13340146-6')
+
+Linea:189 Rut:4417319-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4417319-0')
+
+Linea:190 Rut:8849711-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8849711-2')
+
+Linea:191 Rut:10012940-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10012940-K')
+
+Linea:192 Rut:14416579-9
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('14416579-9')
+
+Linea:193 Rut:4416210-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4416210-5')
+
+Linea:194 Rut:4416988-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4416988-6')
+
+Linea:195 Rut:6030323-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6030323-1')
+
+Linea:196 Rut:4327407-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4327407-4')
+
+Linea:197 Rut:6684202-9
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('6684202-9')
+
+Linea:198 Rut:9999527-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('9999527-0')
+
+Linea:199 Rut:6971140-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6971140-5')
+
+Linea:200 Rut:8764631-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('8764631-9')
+
+Linea:201 Rut:5373564-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5373564-9')
+
+Linea:202 Rut:11552981-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('11552981-1')
+
+Linea:203 Rut:4460251-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4460251-2')
+
+Linea:204 Rut:5439282-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5439282-6')
+
+Linea:205 Rut:8905954-2
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('8905954-2')
+
+Linea:206 Rut:8497181-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8497181-2')
+
+Linea:207 Rut:6957454-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6957454-8')
+
+Linea:208 Rut:14569799-9
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('14569799-9')
+
+Linea:209 Rut:5084588-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5084588-5')
+
+Linea:210 Rut:7241260-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7241260-5')
+
+Linea:211 Rut:5335626-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5335626-5')
+
+Linea:212 Rut:14379511-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('14379511-K')
+
+Linea:213 Rut:7312932-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('7312932-K')
+
+Linea:214 Rut:8916087-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8916087-1')
+
+Linea:215 Rut:7129922-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7129922-8')
+
+Linea:216 Rut:6391667-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6391667-6')
+
+Linea:217 Rut:4236838-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4236838-5')
+
+Linea:218 Rut:6502019-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('6502019-K')
+
+Linea:219 Rut:5511608-3
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('5511608-3')
+
+Linea:220 Rut:5511603-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5511603-2')
+
+Linea:221 Rut:11169959-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('11169959-3')
+
+Linea:222 Rut:9444764-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('9444764-K')
+
+Linea:223 Rut:13559239-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13559239-0')
+
+Linea:224 Rut:11169959-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('11169959-3')
+
+Linea:225 Rut:4444281-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4444281-7')
+
+Linea:226 Rut:13287527-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13287527-8')
+
+Linea:227 Rut:10524912-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('10524912-8')
+
+Linea:228 Rut:17061450-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('17061450-K')
+
+Linea:229 Rut:6798160-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6798160-K')
+
+Linea:230 Rut:18488384-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18488384-8')
+
+Linea:231 Rut:6022432-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('6022432-3')
+
+Linea:232 Rut:13706478-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('13706478-2')
+
+Linea:233 Rut:19985038-5
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('19985038-5')
+
+Linea:234 Rut:7545545-3
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('7545545-3')
+
+Linea:235 Rut:5302121-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5302121-2')
+
+Linea:236 Rut:4237576-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4237576-4')
+
+Linea:237 Rut:9685042-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('9685042-5')
+
+Linea:238 Rut:15866719-3
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('15866719-3')
+
+Linea:239 Rut:16447903-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('16447903-K')
+
+Linea:240 Rut:9642273-3
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('9642273-3')
+
+Linea:241 Rut:10524867-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10524867-9')
+
+Linea:242 Rut:23776560-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('23776560-5')
+
+Linea:243 Rut:6279277-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6279277-9')
+
+Linea:244 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:245 Rut:5838463-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5838463-1')
+
+Linea:246 Rut:7730832-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('7730832-6')
+
+Linea:247 Rut:5501736-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5501736-0')
+
+Linea:248 Rut:4854597-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4854597-1')
+
+Linea:249 Rut:13457712-6
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('13457712-6')
+
+Linea:250 Rut:9107949-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('9107949-6')
+
+Linea:251 Rut:11697466-5
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('11697466-5')
+
+Linea:252 Rut:19411708-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('19411708-6')
+
+Linea:253 Rut:16291881-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('16291881-8')
+
+Linea:254 Rut:18777970-7
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18777970-7')
+
+Linea:255 Rut:14456594-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('14456594-0')
+
+Linea:256 Rut:9915381-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('9915381-4')
+
+Linea:257 Rut:23256727-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('23256727-9')
+
+Linea:258 Rut:8176784-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('8176784-K')
+
+Linea:259 Rut:21610758-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('21610758-6')
+
+Linea:260 Rut:22806266-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('22806266-9')
+
+Linea:261 Rut:11230645-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('11230645-5')
+
+Linea:262 Rut:9268606-K
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('9268606-K')
+
+Linea:263 Rut:20604835-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('20604835-2')
+
+Linea:264 Rut:14312624-2
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('14312624-2')
+
+Linea:265 Rut:11552825-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('11552825-4')
+
+Linea:266 Rut:18832598-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18832598-K')
+
+Linea:267 Rut:10005389-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10005389-6')
+
+Linea:268 Rut:10814898-5
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('10814898-5')
+
+Linea:269 Rut:15624277-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('15624277-2')
+
+Linea:270 Rut:16856344-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('16856344-2')
+
+Linea:271 Rut:10235131-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10235131-2')
+
+Linea:272 Rut:14034649-7
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('14034649-7')
+
+Linea:273 Rut:13341212-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13341212-3')
+
+Linea:274 Rut:9104985-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('9104985-6')
+
+Linea:275 Rut:19068836-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('19068836-4')
+
+Linea:276 Rut:20964640-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('20964640-4')
+
+Linea:277 Rut:20310763-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('20310763-3')
+
+Linea:278 Rut:23220243-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('23220243-2')
+
+Linea:279 Rut:23776387-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('23776387-4')
+
+Linea:280 Rut:15116192-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('15116192-8')
+
+Linea:281 Rut:21131593-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('21131593-8')
+
+Linea:282 Rut:23752561-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('23752561-2')
+
+Linea:283 Rut:22649817-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('22649817-6')
+
+Linea:284 Rut:24529712-2
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('24529712-2')
+
+Linea:285 Rut:17397550-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('17397550-3')
+
+Linea:286 Rut:12411912-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('12411912-K')
+
+Linea:287 Rut:14086278-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('14086278-9')
+
+Linea:288 Rut:13341128-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13341128-3')
+
+Linea:289 Rut:20336379-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('20336379-6')
+
+Linea:290 Rut:14495226-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('14495226-K')
+
+Linea:291 Rut:15404518-K
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('15404518-K')
+
+Linea:292 Rut:12411817-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('12411817-4')
+
+Linea:293 Rut:10235214-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10235214-9')
+
+Linea:294 Rut:9786783-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('9786783-6')
+
+Linea:295 Rut:6394190-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('6394190-5')
+
+Linea:296 Rut:4196614-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4196614-9')
+
+Linea:297 Rut:6289227-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6289227-7')
+
+Linea:298 Rut:5093364-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5093364-4')
+
+Linea:299 Rut:8155528-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('8155528-1')
+
+Linea:300 Rut:16617112-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('16617112-1')
+
+Linea:301 Rut:11395034-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('11395034-K')
+
+Linea:302 Rut:6674991-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6674991-6')
+
+Linea:303 Rut:3963189-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3963189-K')
+
+Linea:304 Rut:5838463-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5838463-1')
+
+Linea:305 Rut:4350579-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4350579-3')
+
+Linea:306 Rut:3960915-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3960915-0')
+
+Linea:307 Rut:3755106-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3755106-6')
+
+Linea:308 Rut:14379985-9
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('14379985-9')
+
+Linea:309 Rut:22428318-0
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('22428318-0')
+
+Linea:310 Rut:5593460-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5593460-6')
+
+Linea:311 Rut:13340301-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('13340301-9')
+
+Linea:312 Rut:13340146-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('13340146-6')
+
+Linea:313 Rut:4950890-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4950890-5')
+
+Linea:314 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:315 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:316 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:317 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:318 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:319 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:320 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:321 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:322 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:323 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:324 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:325 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:326 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:327 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:328 Rut:4181715-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4181715-1')
+
+Linea:329 Rut:7941284-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7941284-8')
+
+Linea:330 Rut:14006936-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('14006936-1')
+
+Linea:331 Rut:12178914-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('12178914-0')
+
+Linea:332 Rut:5256484-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5256484-0')
+
+Linea:333 Rut:5691058-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5691058-1')
+
+Linea:334 Rut:2297408-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('2297408-4')
+
+Linea:335 Rut:10321864-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10321864-0')
+
+Linea:336 Rut:9565673-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('9565673-0')
+
+Linea:337 Rut:5439282-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5439282-6')
+
+Linea:338 Rut:12039948-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('12039948-9')
+
+Linea:339 Rut:9741394-0
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('9741394-0')
+
+Linea:340 Rut:7461989-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('7461989-4')
+
+Linea:341 Rut:18488587-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18488587-5')
+
+Linea:342 Rut:22783283-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('22783283-5')
+
+Linea:343 Rut:8161697-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('8161697-3')
+
+Linea:344 Rut:4017022-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4017022-7')
+
+Linea:345 Rut:4350579-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4350579-3')
+
+Linea:346 Rut:6174230-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('6174230-1')
+
+Linea:347 Rut:7890716-9
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('7890716-9')
+
+Linea:348 Rut:9484038-4
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('9484038-4')
+
+Linea:349 Rut:3892153-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3892153-3')
+
+Linea:350 Rut:12053217-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('12053217-0')
+
+Linea:351 Rut:10286777-7
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('10286777-7')
+
+Linea:352 Rut:12677572-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('12677572-5')
+
+Linea:353 Rut:14257197-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('14257197-8')
+
+Linea:354 Rut:10507479-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('10507479-4')
+
+Linea:355 Rut:3412308-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3412308-K')
+
+Linea:356 Rut:8858506-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('8858506-2')
+
+Linea:357 Rut:8305447-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8305447-6')
+
+Linea:358 Rut:8085650-4
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('8085650-4')
+
+Linea:359 Rut:11363643-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('11363643-2')
+
+Linea:360 Rut:5367453-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5367453-4')
+
+Linea:361 Rut:9931974-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('9931974-7')
+
+Linea:362 Rut:7158997-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7158997-8')
+
+Linea:363 Rut:20287969-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('20287969-1')
+
+Linea:364 Rut:3398117-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3398117-1')
+
+Linea:365 Rut:22836040-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('22836040-6')
+
+Linea:366 Rut:6183221-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('6183221-1')
+
+Linea:367 Rut:20311291-2
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('20311291-2')
+
+Linea:368 Rut:10295188-3
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('10295188-3')
+
+Linea:369 Rut:16176590-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('16176590-2')
+
+Linea:370 Rut:14380066-0
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('14380066-0')
+
+Linea:371 Rut:5348851-K
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('5348851-K')
+
+Linea:372 Rut:5697673-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5697673-6')
+
+Linea:373 Rut:19411665-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('19411665-9')
+
+Linea:374 Rut:5496908-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5496908-2')
+
+Linea:375 Rut:9311521-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('9311521-K')
+
+Linea:376 Rut:8695232-7
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('8695232-7')
+
+Linea:377 Rut:20604037-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('20604037-8')
+
+Linea:378 Rut:8068808-3
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8068808-3')
+
+Linea:379 Rut:9323703-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('9323703-K')
+
+Linea:380 Rut:14136978-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('14136978-4')
+
+Linea:381 Rut:6426739-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6426739-6')
+
+Linea:382 Rut:19068914-K
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('19068914-K')
+
+Linea:383 Rut:7168999-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('7168999-9')
+
+Linea:384 Rut:1940710-1
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('1940710-1')
+
+Linea:385 Rut:3695243-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3695243-1')
+
+Linea:386 Rut:20124642-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('20124642-3')
+
+Linea:387 Rut:11800229-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('11800229-6')
+
+Linea:388 Rut:19069606-5
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('19069606-5')
+
+Linea:389 Rut:19749448-4
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('19749448-4')
+
+Linea:390 Rut:8591570-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('8591570-3')
+
+Linea:391 Rut:3046858-9
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('3046858-9')
+
+Linea:392 Rut:19442877-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('19442877-4')
+
+Linea:393 Rut:17399145-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('17399145-2')
+
+Linea:394 Rut:23428352-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('23428352-9')
+
+Linea:395 Rut:3917932-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3917932-6')
+
+Linea:396 Rut:14559056-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('14559056-6')
+
+Linea:397 Rut:14258223-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('14258223-6')
+
+Linea:398 Rut:6501825-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6501825-K')
+
+Linea:399 Rut:7168999-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('7168999-9')
+
+Linea:400 Rut:5739469-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('5739469-2')
+
+Linea:401 Rut:5569190-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('5569190-8')
+
+Linea:402 Rut:20336379-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('20336379-6')
+
+Linea:403 Rut:22947298-4
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('22947298-4')
+
+Linea:404 Rut:7801255-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7801255-2')
+
+Linea:405 Rut:23464696-6
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('23464696-6')
+
+Linea:406 Rut:10882053-5
+UPDATE pacientes SET prev_id=6, pac_tramo='',sex_id=0 WHERE upper(pac_rut)=upper('10882053-5')
+
+Linea:407 Rut:17082069-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('17082069-K')
+
+Linea:408 Rut:22306267-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('22306267-9')
+
+Linea:409 Rut:15406264-5
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('15406264-5')
+
+Linea:410 Rut:14185390-2
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('14185390-2')
+
+Linea:411 Rut:8048583-2
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('8048583-2')
+
+Linea:412 Rut:2386824-5
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('2386824-5')
+
+Linea:413 Rut:12411912-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('12411912-K')
+
+Linea:414 Rut:18528977-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('18528977-K')
+
+Linea:415 Rut:21627500-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('21627500-4')
+
+Linea:416 Rut:12411912-K
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('12411912-K')
+
+Linea:417 Rut:13559761-9
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('13559761-9')
+
+Linea:418 Rut:14246116-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('14246116-1')
+
+Linea:419 Rut:17986562-9
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('17986562-9')
+
+Linea:420 Rut:10071006-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('10071006-4')
+
+Linea:421 Rut:13355564-1
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('13355564-1')
+
+Linea:422 Rut:11067856-8
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=1 WHERE upper(pac_rut)=upper('11067856-8')
+
+Linea:423 Rut:19411408-7
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('19411408-7')
+
+Linea:424 Rut:18488272-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('18488272-8')
+
+Linea:425 Rut:15624236-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('15624236-5')
+
+Linea:426 Rut:3792829-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('3792829-1')
+
+Linea:427 Rut:7664374-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7664374-1')
+
+Linea:428 Rut:7191779-7
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('7191779-7')
+
+Linea:429 Rut:10911589-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10911589-4')
+
+Linea:430 Rut:6498125-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('6498125-0')
+
+Linea:431 Rut:17426788-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('17426788-K')
+
+Linea:432 Rut:16856096-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('16856096-6')
+
+Linea:433 Rut:19442877-4
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('19442877-4')
+
+Linea:434 Rut:5115911-K
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('5115911-K')
+
+Linea:435 Rut:9341339-3
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('9341339-3')
+
+Linea:436 Rut:16856096-6
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('16856096-6')
+
+Linea:437 Rut:18488272-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('18488272-8')
+
+Linea:438 Rut:15328908-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('15328908-5')
+
+Linea:439 Rut:14312624-2
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=1 WHERE upper(pac_rut)=upper('14312624-2')
+
+Linea:440 Rut:4872972-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('4872972-K')
+
+Linea:441 Rut:20236511-6
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('20236511-6')
+
+Linea:442 Rut:7778390-3
+UPDATE pacientes SET prev_id=4, pac_tramo='D',sex_id=0 WHERE upper(pac_rut)=upper('7778390-3')
+
+Linea:443 Rut:8919407-5
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=0 WHERE upper(pac_rut)=upper('8919407-5')
+
+Linea:444 Rut:19284444-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('19284444-4')
+
+Linea:445 Rut:10265791-8
+UPDATE pacientes SET prev_id=1, pac_tramo='A',sex_id=1 WHERE upper(pac_rut)=upper('10265791-8')
+
+Linea:446 Rut:4515776-8
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('4515776-8')
+
+Linea:447 Rut:2297408-4
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('2297408-4')
+
+Linea:448 Rut:19128316-3
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('19128316-3')
+
+Linea:449 Rut:9393121-1
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('9393121-1')
+
+Linea:450 Rut:8699634-0
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('8699634-0')
+
+Linea:451 Rut:7861004-2
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=0 WHERE upper(pac_rut)=upper('7861004-2')
+
+Linea:452 Rut:14495226-K
+UPDATE pacientes SET prev_id=2, pac_tramo='B',sex_id=1 WHERE upper(pac_rut)=upper('14495226-K')
+
+Linea:453 Rut:22609630-2
+UPDATE pacientes SET prev_id=3, pac_tramo='C',sex_id=0 WHERE upper(pac_rut)=upper('22609630-2')

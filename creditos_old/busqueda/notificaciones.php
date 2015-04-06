@@ -1,0 +1,178 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+	require_once('../../num2texto.php');
+	require_once('../../fpdf/fpdf.php');
+
+	$dias=$_POST['dias']*1;
+	$signo=$_POST['signo'];
+	$comp=$_POST['comp'];
+	$orden=$_POST['orden']*1;	
+
+	if($orden==0) {
+		$qorden="ORDER BY deuda DESC";
+	} else {
+		$qorden="ORDER BY ultimo_pago";
+	}
+	
+	$fecha_w="cuofec::date $comp (current_date $signo $dias)";	
+
+	
+	$vmes[1]='Enero';
+	$vmes[2]='Febrero';
+	$vmes[3]='Marzo';
+	$vmes[4]='Abril';
+	$vmes[5]='Mayo';
+	$vmes[6]='Junio';
+	$vmes[7]='Julio';
+	$vmes[8]='Agosto';
+	$vmes[9]='Septiembre';
+	$vmes[10]='Octubre';
+	$vmes[11]='Noviembre';
+	$vmes[12]='Diciembre';
+	
+
+	$l=cargar_registros_obj("
+	SELECT DISTINCT *, crefec::date AS crefec FROM (
+		
+		SELECT 
+		*,
+		(SELECT SUM(cuopag::integer) FROM cuotas WHERE crecod=creditos.crecod) 
+		AS pagado,
+		(SELECT SUM(cuomon::bigint - COALESCE(cuopag::bigint, 0)) FROM cuotas 
+			WHERE crecod=creditos.crecod
+			AND $fecha_w
+		) AS deuda,
+		(SELECT MAX(cuofecpag) FROM cuotas
+			WHERE crecod=creditos.crecod)::date AS ultimo_pago
+		FROM creditos WHERE cretip='N'
+	) AS foo
+	 
+	JOIN clientes USING (clirut)
+	LEFT JOIN comunas USING (comcod)	
+	WHERE deuda > 0	
+	$qorden
+	");
+
+	
+	$cementerio='PLAYA ANCHA';
+	$fecha=date('d/m/Y');
+	
+	class PDF extends FPDF {
+		function header() {
+
+			GLOBAL $bolnum;
+
+			$this->SetFont('Arial','BU', 18);
+
+			$this->Image('../../imagenes/logo_cementerio.jpg',0,5,40,35);
+			$this->Image('../../imagenes/logo_corporacion.jpg',165,10,50,28);
+			//$this->Image('../../imagenes/boletin_backgr.jpg',90,120,180,180);
+
+			$this->Ln(20);
+			//$this->Cell(200,10,utf8_decode('Notificaci&oacute;n de Morosidad',0,0,'C');	
+			//$this->Ln();
+		
+			$this->SetFontSize(10);		
+			$this->SetY(55);	
+		
+		}
+
+		function footer() {
+
+			$this->SetY(335);
+			$this->SetFont('','',10);
+			//$this->Cell(200,6,utf8_decode('PÃ¡gina '.$this->PageNo().' de {nb}'),0,0,'C');
+			
+		}
+
+	}	
+
+		function page_footer() {
+
+			GLOBAL $conf,$pdf;
+
+			$pdf->SetFontSize(12);
+			$pdf->SetY(320);
+			$pdf->SetFont('','B');	
+			$pdf->Cell(100,6,trim($conf['nombre1']),0,0,'C');	
+			$pdf->Cell(100,6,trim($conf['nombre2']),0,0,'C');
+			$pdf->Ln();	
+			$pdf->SetFont('','');	
+			$pdf->Cell(100,6,$conf['cargo1'],0,0,'C');	
+			$pdf->Cell(100,6,$conf['cargo2'],0,0,'C');
+			$pdf->Ln();
+			$pdf->Ln();			
+			$pdf->SetFontSize(10);
+				
+		}
+
+	
+	$pdf=new PDF('P','mm','Legal');
+	$pdf->AliasNbPages();
+	
+	$pdf->SetAutoPageBreak(true,20);
+
+	for($i=0;$i<sizeof($l);$i++) {
+	
+		$pdf->AddPage();
+			
+		$pdf->SetFillColor(200,200,200);	
+	
+		$pdf->SetFont('Arial','', 10);
+		
+		$pdf->Cell(90,10,'Cementerio de ',0,0,'R');
+		$pdf->Cell(50,10,$cementerio,0,0,'C');
+		$pdf->Cell(30,10,utf8_decode('Fecha Emisión:'),0,0,'R');
+		$pdf->Cell(30,10,$fecha,0,0,'C');
+		$pdf->Ln(40);
+
+		$pdf->SetFont('','',16);
+
+		$pdf->Cell(200,10,utf8_decode('CARTA COBRANZA X D.C/AÑO'), 0,0,'C');
+		$pdf->Ln(20);
+
+		$pdf->SetFont('','',12);
+
+		$pdf->Cell(200,5,'Sr(a).',0,1,'L');
+
+		$pdf->Cell(200,5,$l[$i]['clinom'].' '.$l[$i]['clipat'].' '.$l[$i]['climat'],0,1,'L');
+		$pdf->Cell(200,5,$l[$i]['clidir'],0,1,'L');
+		$pdf->Cell(200,5,$l[$i]['comdes'],0,1,'L');
+		
+		$pdf->Cell(200,5,'Presente',0,0,'L');
+		$pdf->Ln(20);
+
+		$pdf->SetFont('','',10);
+		
+		$f2=mktime();
+		
+		$f=explode('/',$l[$i]['ultimo_pago']);		
+		
+		$f1=mktime(0,0,0,$f[1]*1,$f[0]*1,$f[2]*1);		
+		
+		$dias=floor(($f2-$f1)/86400);
+
+		$pdf->Multicell(200,5,str_replace('<br>',"\n",str_replace("\n",'',utf8_decode('	
+De nuestra consideración: <br><br>
+
+Junto con saludarle cordialmente, venimos en recordar que de acuerdo a nuestros registros, el crédito que contrajo con el Cementerio Playa Ancha el '.$l[$i]['crefec'].'  por $'.number_format($l[$i]['cretot'],0,',','.').'.-, tiene una morosidad en su pago.<br><br>
+
+En efecto, el último pago efectuado fue el '.$l[$i]['ultimo_pago'].', manteniendo un saldo por pagar de $'.number_format($l[$i]['cretot']*1-$l[$i]['pagado']*1,0,',','.').'.-, de los cuales $'.number_format($l[$i]['deuda'],0,',','.').'.-, tiene un atraso de '.$dias.' días.<br><br>
+
+Para evitar cargos de cobranzas, multas y reajustes, lo invitamos a regularizar la deuda contraída.<br><br>
+
+Nuestras oficinas lo atenderán de lunes a domingo entre las 8:30 y las 17:00 horas.<br><br>
+
+Atentamente, <br><br>
+'))));
+		$pdf->Ln(10);
+		$pdf->Cell(200,7,utf8_decode('Juan Carlos Salgado T.'),0,1,'C');
+		$pdf->Cell(200,7,utf8_decode('Director de Cementerios'),0,1,'C');
+		$pdf->Cell(200,7,utf8_decode('Corporación Municipal de Valparaíso'),0,1,'C');
+
+	}
+
+	$pdf->Output('NOTIFICACIONES_'.str_replace('/','-',$fecha).'.pdf','I');	
+
+?>

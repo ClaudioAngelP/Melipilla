@@ -1,0 +1,146 @@
+<?php 
+
+    require_once('../../conectar_db.php');
+    
+    $fecha=pg_escape_string($_POST['fecha']);
+
+    $vigentes=escapeshellarg($_FILES['vigentes']['tmp_name']);
+    $vencidas=escapeshellarg($_FILES['vencidas']['tmp_name']);
+
+    $total=0;
+    $error='';
+
+    if(file_exists('./tmp')) {
+        system('rm -rf tmp');
+    }
+    
+    $testear_fecha=cargar_registros_obj("
+        SELECT * FROM fechas_monitoreo_ges WHERE fecha='$fecha'
+    ");
+    
+    if($testear_fecha) {
+        $error="Monitoreo de fecha $fecha ya fu&eacute; ingresado al sistema.";
+    }
+    
+    if($error=='') {
+    	mkdir("tmp", 0777);
+
+    //apache_setenv('LANG','es_CL.UTF-8');
+
+    system("./xls2csv -f%d-%m-%Y -s cp1252 -d utf-8 $vigentes > tmp/vigentes.csv");
+    
+	 if(trim(file_get_contents('tmp/vigentes.csv'))=='') { 
+	 	move_uploaded_file($_FILES['vigentes']['tmp_name'], 'tmp/vigentes.html');
+	 	unlink('tmp/vigentes.csv');
+	 	$f1=file_get_contents('tmp/vigentes.html');
+	   $t1=substr_count($f1,"</tr>");
+	 } else {
+	 	$f1=file_get_contents('tmp/vigentes.csv');
+	   $t1=substr_count($f1,"\n");
+	 }   
+    
+    system("./xls2csv -f%d-%m-%Y -s cp1252 -d utf-8 $vencidas > tmp/vencidos.csv");
+
+	 if(trim(file_get_contents('tmp/vencidos.csv'))=='') { 
+	 	move_uploaded_file($_FILES['vencidas']['tmp_name'], 'tmp/vencidos.html');
+	 	unlink('tmp/vencidos.csv');
+	 	$f2=file_get_contents('tmp/vencidos.html');
+    	$t2=substr_count($f2,"</tr>");
+	 } else {
+	 	$f2=file_get_contents('tmp/vencidos.csv');
+    	$t2=substr_count($f2,"\n");
+	 }    
+    
+    
+    
+    $total=$t1+$t2;
+
+    system("echo '$t1|$t2|0' > tmp/file_sizes");
+    system("echo '".$fecha."' > tmp/date");
+    system("echo '0' > tmp/pointer");
+    system("echo '$total' > tmp/end_pointer");  
+    }
+    
+?>
+
+
+<html>
+<title>Abrir Proceso de Monitoreo GES</title>
+
+<?php cabecera_popup('../..'); ?>
+
+<script>
+
+var puntero=0; var total=<?php echo $total; ?>
+
+function procesar() {
+
+    var myAjax=new Ajax.Request(
+        'sql_proceso.php',
+        {
+            method:'post',
+            onComplete: function(r) {
+            	$('resultado').innerHTML=r.responseText;
+            }
+        }
+    );
+
+}
+
+/*
+function procesando(r) {
+
+    puntero=r.responseText*1;
+    
+    $('procesando').innerHTML='<b>Terminado</b>';
+    
+    //if(porcentaje<100) procesar(); else
+    $('resultado').innerHTML='Proceso finalizado exitosamente.';
+
+}
+*/
+
+
+</script>
+
+<body class='fuente_por_defecto popup_background'>
+
+<div class='sub-content'>
+<img src='../../iconos/cog.png'> Generando Proceso de Monitoreo para el <b><?php echo $fecha; ?></b>
+</div>
+
+<div class='sub-content'>
+<table style='width:100%;'>
+<tr><td style='text-align:right;width:150px;'>Total de Registros:</td>
+<td><b><?php echo $total; ?></b></td></tr>
+
+<tr><td style='text-align:right;'>Procesando:</td>
+<td id='procesando'>
+<?php if($error=='') { ?>
+<img src='../../imagenes/ajax-loader3.gif'>
+<?php } else { ?>
+<b>ERROR</b>
+<?php } ?>
+</td></tr>
+
+</table>
+</div>
+
+<div class='sub-content'>
+<img src='../../iconos/cog_go.png'> Resultado</b>
+</div>
+
+<div class='sub-content2' id='resultado'>
+<?php if($error=='') { ?>
+(Espere a que concluya el proceso...)
+<?php } else { echo $error; } ?>
+</div>
+
+
+</body>
+</html>
+
+
+<?php if($error=='') { ?>
+<script> procesar(); </script>
+<?php } ?>

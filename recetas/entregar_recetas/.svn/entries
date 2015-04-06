@@ -1,0 +1,40 @@
+8
+
+dir
+50
+http://svn.bitraise.com/hospital/recetas/entregar_recetas
+http://svn.bitraise.com/hospital
+
+
+
+2007-06-22T13:23:45.768110Z
+50
+scv
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+4a0664c4-ad31-0410-a049-99a730ccbe62
+
+form.php
+file
+
+
+
+
+2007-06-21T15:16:52.066064Z
+595d0f44b185d4f39c332460098a6714
+2007-06-22T13:23:45.768110Z
+50
+scv
+

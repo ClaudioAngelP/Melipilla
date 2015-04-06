@@ -1,0 +1,40 @@
+8
+
+dir
+50
+http://svn.bitraise.com/hospital/abastecimiento/recepcion_articulos
+http://svn.bitraise.com/hospital
+
+
+
+2007-06-22T13:23:45.768110Z
+50
+scv
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+4a0664c4-ad31-0410-a049-99a730ccbe62
+
+form.php
+file
+
+
+
+
+2007-06-21T06:14:37.663344Z
+cd10bce0297e77d2de2f0fc5d56a8964
+2007-06-22T13:23:45.768110Z
+50
+scv
+

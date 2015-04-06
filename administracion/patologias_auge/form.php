@@ -1,0 +1,371 @@
+
+  <script>
+  
+  
+    agregar_patologia=function() {
+    
+      $('lista_patologias').style.display='none';
+      $('detalle_patologia').style.display='';
+      
+      $('descripcion_patologia').innerHTML='';
+    
+      $('pat_id').value='';
+      $('ramas').value='';
+      $('nombre_patologia').value='';
+      $('via').value=0;
+      $('nombre_patologia').focus();
+    
+    }
+    
+    cancelar_patologia=function() {
+    
+      $('lista_patologias').style.display='';
+      $('detalle_patologia').style.display='none';
+    
+    }
+    
+    guardar_patologia=function() {
+    
+      var myAjax=new Ajax.Request(
+      'administracion/patologias_auge/sql_cabecera.php',
+      {
+        method: 'post',
+        parameters: $('cabecera_pat').serialize(),
+        onComplete: function(resp) {
+        
+          try {
+          
+            var pat_id = resp.responseText.evalJSON(true);
+            
+            if($('pat_id').value=='') {
+              $('pat_id').value=pat_id;
+              detallar_patologia();
+            } 
+            
+            listar_patologias();
+            
+          } catch(err) {
+          
+            alert(err);
+          
+          } 
+        
+        }
+      }
+      );
+    
+    }
+
+    eliminar_patologia=function() {
+
+    if(!confirm('&iquest;Est&aacute; seguro que desea eliminar esta patolog&iacute;a?'.unescapeHTML())) {
+      return;
+    }
+    
+      var myAjax=new Ajax.Request(
+      'administracion/patologias_auge/sql_cabecera.php',
+      {
+        method: 'post',
+        parameters: 'eliminar=1&'+$('cabecera_pat').serialize(),
+        onComplete: function(resp) {
+        
+          try {
+          
+            var pat_id = resp.responseText.evalJSON(true);
+
+            listar_patologias();
+            
+            $('lista_patologias').style.display='';
+            $('detalle_patologia').style.display='none';
+            
+          } catch(err) {
+          
+            alert(err);
+          
+          } 
+        
+        }
+      }
+      );
+    
+    }
+
+    
+    listar_patologias = function() {
+    
+      var myAjax=new Ajax.Updater(
+      'listado_patologias',
+      'administracion/patologias_auge/listar_patologias.php',
+      {
+        method:'get'
+      }
+      );
+    
+    }
+    
+    abrir_patologia = function(pat_id) {
+    
+      var myAjax=new Ajax.Request(
+      'administracion/patologias_auge/cargar_cabecera.php',
+      {
+        method:'post',parameters:'pat_id='+(pat_id*1),
+        onComplete: function(resp) {
+        
+          $('lista_patologias').style.display='none';
+          $('detalle_patologia').style.display='';
+
+          var pat=resp.responseText.evalJSON(true);
+
+          $('pat_id').value=pat_id;
+          $('nombre_patologia').value=pat.pat_glosa.unescapeHTML();
+          $('etapa').value=pat.etapa;
+          $('via').value=pat.pat_ingreso;
+          $('fecha1').value=pat.pat_fecha_inicio;
+                    
+          if(pat.pat_fecha_final!=null) {
+            $('fecha2').value=pat.pat_fecha_final;
+            $('indef').checked=false;
+            $('fecha2').disabled=false;
+            $('fecha2_boton').style.display='';
+          } else {
+            $('fecha2').value='';
+            $('indef').checked=true;
+            $('fecha2').disabled=true;
+            $('fecha2_boton').style.display='none';
+          
+          }
+          
+          detallar_patologia(pat_id, pat.etapa);
+        
+        }
+      }
+      );
+    
+    }
+    
+    detallar_patologia = function(pat_id, etapa) {
+    
+      var myAjax=new Ajax.Updater(
+      'descripcion_patologia',
+      'administracion/patologias_auge/describir_patologia.php',
+      {
+        method:'post',
+        parameters:'pat_id='+(pat_id*1)+'&etapa='+etapa
+      }
+      );
+    
+    }
+    
+    agregar_nivel = function(id, detpat_id) {
+    
+      params='detpat_padre_id='+(id*1)+'&pat_id='+$('pat_id').value*1;
+      params+='&detpat_id='+(detpat_id*1)+'&'+$('etapa').serialize();
+      
+      top=Math.round(screen.height/2)-210;
+      left=Math.round(screen.width/2)-325;
+        
+      new_win = 
+      window.open('administracion/patologias_auge/editar_nivel.php?'+params,
+      'win_nodo', 'toolbar=no, location=no, directories=no, status=no, '+
+      'menubar=no, scrollbars=no, resizable=no, width=650, height=430, '+
+      'top='+top+', left='+left);
+        
+      new_win.focus();
+    
+    }
+    
+    eliminar_nivel = function(detpat_id) {
+    	
+    	if( !confirm ( ("&iquest;Est&aacute; seguro que desea eliminar la prestaci&oacute;n?").unescapeHTML() ) )
+    		return;
+    
+      var myAjax=new Ajax.Request(
+      'administracion/patologias_auge/eliminar_nivel.php',
+      {
+        method:'post',
+        parameters:'detpat_id='+(detpat_id*1),
+        onComplete: function(resp) {
+          detallar_patologia($('pat_id').value, $('etapa').value);
+        }
+      }
+      );
+    
+    }
+    
+    vigencia = function() {
+    
+      if($('indef').checked) {
+        $('fecha2').value='';
+        $('fecha2_boton').style.display='none';
+        $('fecha2').disabled=true;
+      } else {
+        $('fecha2').value='<?php echo date("d/m/Y"); ?>';
+        $('fecha2_boton').style.display='';
+        $('fecha2').disabled=false;
+      }
+    
+    }
+    
+    definir_ramas = function() {
+    
+      top=Math.round(screen.height/2)-125;
+      left=Math.round(screen.width/2)-250;
+        
+      new_win = 
+      window.open('administracion/patologias_auge/definir_ramas.php?'+$('pat_id').serialize(),
+      'win_talonarios', 'toolbar=no, location=no, directories=no, status=no, '+
+      'menubar=no, scrollbars=no, resizable=no, width=500, height=250, '+
+      'top='+top+', left='+left);
+        
+      new_win.focus();
+    
+    }
+  
+  
+  </script>
+
+		<center>
+    <div class='sub-content' style='width: 650px;'>
+		
+		<div class='sub-content'><img src='iconos/chart_organisation.png'> <b>Definici&oacute;n de Patolog&iacute;as AUGE</b></div>
+		
+		<div id='lista_patologias'>
+    <center>
+		<input type='button' onClick='agregar_patologia();'
+    value='A&ntilde;adir Nueva Patolog&iacute;a...'><br><br>
+		</center>
+		
+		<div class='sub-content3' id='listado_patologias'
+		style='height: 350px; overflow: auto;'>
+		</div>
+		
+		</div>
+		
+		<div id='detalle_patologia' style='display:none;'>
+		
+		<div class='sub-content'>
+		<form id='cabecera_pat' name='cabecera_pat' onSubmit='return false;'>
+		<table style='width:100%;'>
+		<tr>
+		<td style='text-align:right;'>Nombre:
+		</td><td style='width:400px;'>
+		<input type='hidden' id='pat_id' name='pat_id' value=''>
+		<input type='text' id='nombre_patologia' name='nombre_patologia'
+    style='width:100%;text-align:left;' />
+		</td>
+    
+    <td rowspan=4>
+    <center>
+    <input type='button' value='Definir Ramas' 
+    onClick='definir_ramas();'><br>
+    
+    <input type='button' value='Guardar Datos' 
+    onClick='guardar_patologia();'><br>
+    <input type='button' value='Eliminar Patolog&iacute;a...' 
+    onClick='eliminar_patologia();'>
+    <input type='button' value='Volver Atr&aacute;s...' 
+    onClick='cancelar_patologia();'>
+    </center>
+    </td>
+    
+    </tr>
+
+    <tr>
+    
+    <td style='width:150px;text-align:right;'>
+    V&iacute;a de Ingreso:</td>
+		
+		<td>
+		<select id='via' name='via'>
+		<option value=0 SELECTED>Interconsulta</option>
+		<option value=1>I.P.D.</option>
+		</select>
+		</td>
+        
+    </tr>    
+
+    <tr>
+    
+    <td style='width:150px;text-align:right;'>
+    Etapa del Proceso:</td>
+		
+		<td>
+		<select id='etapa' name='etapa'
+    onChange='detallar_patologia($("pat_id").value, this.value);'>
+		<option value=0>Sospecha</option>
+		<option value=1>Diagn&oacute;stico</option>
+		<option value=2>Tratamiento</option>
+		<option value=3>Seguimiento</option>
+    </select>
+		</td>
+        
+    </tr>
+        
+    <tr>
+    <td style='width:150px;text-align:right;' valign='top'>
+    Fecha de Vigencia:</td>
+		<td>
+    
+    <table cellpadding=0 cellspacing=0><tr><td>
+    <input type='text' name='fecha1' id='fecha1' size=10
+    style='text-align: center;' value='<?php echo date("d/m/Y"); ?>'
+    onChange='listar_prestaciones();'>
+    <img src='iconos/date_magnify.png' id='fecha1_boton'>
+    </td>
+		<td style='width:20px;'>&nbsp;al&nbsp;</td>
+		<td style='width:120px;'>
+    <input type='text' name='fecha2' id='fecha2' size=10
+    style='text-align: center;' value='<?php echo date("d/m/Y"); ?>'
+    onChange='listar_prestaciones();'>
+    <img src='iconos/date_magnify.png' id='fecha2_boton'>
+    </td></tr>
+    <tr><td colspan=3>
+    <center>
+    <input type='checkbox' id='indef' name='indef'
+    onClick='vigencia();'>
+    Vigencia Indefinida
+    </center>
+    </td>
+    </tr></table>
+    
+    <input type='hidden' id='ramas' name='ramas' value=''>
+    
+    </td>
+    
+    
+    </tr>		
+		</table>
+		</form>
+		</div>
+		
+		<div class='sub-content3' id='descripcion_patologia'
+		style='height: 230px; overflow: auto;'>
+		</div>
+
+		
+		</div>
+		
+		</div>
+		
+		</center>
+		
+		<script>
+		
+		Calendar.setup({
+        inputField     :    'fecha1',         // id of the input field
+        ifFormat       :    '%d/%m/%Y',       // format of the input field
+        showsTime      :    false,
+        button          :   'fecha1_boton'
+    });
+
+    Calendar.setup({
+        inputField     :    'fecha2',         // id of the input field
+        ifFormat       :    '%d/%m/%Y',       // format of the input field
+        showsTime      :    false,
+        button          :   'fecha2_boton'
+    });
+
+		listar_patologias();
+		
+		</script>
+		

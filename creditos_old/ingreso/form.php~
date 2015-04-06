@@ -1,0 +1,994 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+    $prods = pg_query($conn, "
+    SELECT
+    prod_id,
+    prod_item,
+    prod_nombre,
+    prod_valor,
+    prod_moneda,
+    prod_sep_clase,
+    prod_formula,
+    prod_asignar
+    FROM productos
+    ");
+
+    if(pg_num_rows($prods)>0)  {
+
+      for($i=0; $i<pg_num_rows($prods); $i++) {
+        $arrayp[$i]=pg_fetch_row($prods);
+        $arrayp[$i][1]=htmlentities($arrayp[$i][1]);
+        $arrayp[$i][2]=htmlentities($arrayp[$i][2]);
+        $arrayp[$i][5]=htmlentities($arrayp[$i][5]);
+        $arrayp[$i][6]=htmlentities($arrayp[$i][6]);
+      }
+
+    } else { $arrayp=''; }
+
+?>
+
+<script>
+
+utm=<?php echo $utm*1; ?>;
+interes=<?php echo $conf['interes']*1; ?>;
+lista_prods=<?php print(json_encode($arrayp)); ?>;
+
+var bloquear=0;
+
+validar_rut = function() {
+
+	if(bloquear) return;
+
+	bloquear=1;
+
+	var myAjax=new Ajax.Request('ingresos/info_cliente.php',
+	{
+		method:'get',
+		parameters: $('clirut').serialize(),
+		onComplete: function(resp) {
+			d=resp.responseText.evalJSON(true);
+			
+			if(d) {
+			
+				$('clipat').value=d['clipat'].unescapeHTML();
+				$('climat').value=d['climat'].unescapeHTML();
+				$('clinom').value=d['clinom'].unescapeHTML();
+				$('clidir').value=d['clidir'].unescapeHTML();
+				$('comcod').value=d['comcod'].unescapeHTML();
+				$('comdes').value=d['comdes'].unescapeHTML();
+				$('clifon').value=d['clifon'].unescapeHTML();
+				$('clicel').value=d['clicel'].unescapeHTML();
+				$('climail').value=d['climail'].unescapeHTML();
+				$('cliobs').value=d['cliobs'].unescapeHTML();
+				$('clifnac').value=d['clifnac'].unescapeHTML();
+				$('prodesc').focus();
+				
+			} else {
+			
+				$('clipat').value='';
+				$('climat').value='';
+				$('clinom').value='';
+				$('clidir').value='';
+				$('comcod').value='';
+				$('comdes').value='';
+				$('clifon').value='';
+				$('clicel').value='';
+				$('climail').value='';
+				$('cliobs').value='';
+				$('clifnac').value='';
+				$('clipat').focus();
+							
+			}
+
+			validacion_rut($('clirut'));
+			validacion_fecha($('clifnac'));
+
+			bloquear=0;
+
+		}	
+	});
+
+}
+
+calcular_cuota=function() {
+
+	$('descuento').innerHTML='$ '+number_format($('total_descuento').value*1,0,',','.')+'.-';
+	
+	var proval=($('proval').value*1)-($('total_descuento').value*1);
+	var pie=$('pie').value*1;
+	var cuonro=$('cuonro').value*1;
+
+	if(proval<=0) {
+	
+		$('pie').value='';
+		$('pie').disabled=true;
+		pie=0;
+
+	} else {
+
+		$('pie').disabled=false;
+
+	}
+	
+	if(pie>=proval) {
+		$('ingresa').value='Ingresar Compra... >>';
+		$('cuotas0').style.display='none';
+		$('cuotas1').style.display='none';
+		$('cuotas2').style.display='none';
+		$('cuotas3').style.display='none';
+		$('cuotas4').style.display='none';
+	} else {
+		$('ingresa').value='Ingresa Cr&eacute;dito Nuevo... >>'.unescapeHTML();
+		$('cuotas0').style.display='';
+		$('cuotas1').style.display='';
+		$('cuotas2').style.display='';
+		$('cuotas3').style.display='';	
+		$('cuotas4').style.display='';	
+	}	
+	
+	if(proval<=0 || cuonro==0) {
+	
+		$('valor_cuota').innerHTML='$ 0.-';
+		$('total_interes').innerHTML='0%';
+		$('saldo_credito').innerHTML='$ 0.-';
+
+		if(proval<0) {
+			$('afavor').style.display='';
+			$('saldo_favor').innerHTML='$ '+number_format(-proval,0,',','.')+'.-';
+		} else {
+			$('afavor').style.display='none';
+		}
+
+	} else {
+
+		$('afavor').style.display='none';
+
+		var valcredito = ( proval - pie );
+		
+		if($('aplicaint').checked) {
+			
+			var inf=interes/100;
+			var fact=Math.pow(1+inf,cuonro);
+			
+			var valcuota=Math.ceil(valcredito*((inf*fact)/(fact-1)));
+			var valinteres=valcuota*cuonro;
+			var tinteres=((valinteres/valcredito)-1)*100;
+			
+		} else {
+			
+			var valcuota=Math.ceil(valcredito/cuonro);
+			var valinteres=valcuota*cuonro;
+			var tinteres=0;
+			
+		}
+		
+		$('total_interes').innerHTML=number_format(tinteres,1,',','.')+'%';
+		
+		if( valcredito > 0 )
+			$('saldo_credito').innerHTML='$ '+number_format(valcredito,0,',','.')+'.-';
+		else
+			$('saldo_credito').innerHTML='- $ '+number_format(-valcredito,0,',','.')+'.-';
+			
+		$('valor_credito').innerHTML='$ '+number_format(valinteres,0,',','.')+'.-';	
+		$('valor_cuota').innerHTML='$ '+number_format(valcuota,0,',','.')+'.-';	
+	
+	}
+
+}
+
+imprimir_boletin=function(bolnum) {
+	window.open('ingresos/imprimir_boletin.php?bolnum='+bolnum,'_blank');
+}
+
+ingresar_credito=function() {
+
+	if($('proval').value*1==0) {
+		alert("No ha seleccionado productos.");
+		return;
+	}
+	
+	if(!validacion_rut($('clirut'))) {
+		alert( "El RUT ingresado no es v&aacute;lido.".unescapeHTML() );
+		return;
+	}	
+
+	if(!validacion_fecha($('clifnac'))) {
+		alert( "La fecha de nacimiento no es v&aacute;lida.".unescapeHTML() );
+		return;
+	}	
+	
+	if(trim($('clirut').value)=='' ||
+		trim($('clipat').value)=='' ||
+		trim($('climat').value)=='' ||
+		trim($('clinom').value)=='' ||
+		trim($('clidir').value)=='') {
+	
+		alert( "Los datos del cliente est&aacute;n incompletos.".unescapeHTML() );	
+		return;
+	}
+
+	var proval=($('proval').value*1)-($('total_descuento').value*1);
+
+	if( proval > 0 && $('pie').value*1==0 ) {
+		alert( "El monto de pago/pie no ha sido ingresado." );
+		return;
+	}
+
+	params=$('credito').serialize()+'&productos='+encodeURIComponent(productos.toJSON());
+
+	$('ingresa').disabled=true;	
+	
+	var myAjax=new Ajax.Request(
+	'creditos/sql_ingreso_credito.php',
+	{
+		method:'post',
+		parameters: params,
+		onComplete: function(resp) {
+		
+			try {		
+		
+				d=resp.responseText.evalJSON(true);
+				imprimir_boletin(d[1]);
+			
+			} catch(err) {
+			
+				alert( 'ERROR:\n\n' + resp.responseText.unescapeHTML() );			
+				$('ingresa').disabled=false;	
+			
+			}
+		
+		}	
+	}	
+	);
+
+
+}
+
+pago='';
+
+forma_pago=function() {
+
+	var params='total='+($('pie').value*1);
+
+	 l=(screen.availWidth/2)-325;
+    t=(screen.availHeight/2)-250;
+        
+    win = window.open('ingresos/forma_pago.php?'+params, 
+                    '_forma_pago',
+                    'scrollbars=no, toolbar=no, left='+l+', top='+t+', '+
+                    'resizable=no, width=650, height=490');
+                    
+    win.focus();
+
+
+}
+
+definir_bloqueos=function() {
+
+	var params=($('ids_bloqueos').serialize());
+
+	 l=(screen.availWidth/2)-325;
+    t=(screen.availHeight/2)-250;
+        
+    win = window.open('ingresos/definir_bloqueos.php?'+params, 
+                    '_bloqueos',
+                    'scrollbars=no, toolbar=no, left='+l+', top='+t+', '+
+                    'resizable=no, width=650, height=490');
+                    
+    win.focus();
+
+
+}
+
+
+definir_descuentos=function() {
+
+	var params=($('bolnums').serialize()+'&'+$('total_descuento').serialize());
+
+	 l=(screen.availWidth/2)-325;
+    t=(screen.availHeight/2)-250;
+        
+    win = window.open('creditos/ingreso/definir_descuentos.php?'+params, 
+                    '_descuentos',
+                    'scrollbars=no, toolbar=no, left='+l+', top='+t+', '+
+                    'resizable=no, width=650, height=490');
+                    
+    win.focus();
+
+}
+
+definir_propietario=function() {
+
+	var params=($('ps_refcliente').serialize());
+
+	 l=(screen.availWidth/2)-325;
+    t=(screen.availHeight/2)-250;
+        
+    win = window.open('creditos/ingreso/definir_propietario.php?'+params, 
+                    '_propietario',
+                    'scrollbars=no, toolbar=no, left='+l+', top='+t+', '+
+                    'resizable=no, width=650, height=490');
+                    
+    win.focus();
+
+}
+
+
+paso2=function() {
+	$('datos_venta').style.display='';
+	$('volver_lista').style.display='';
+	$('listado_prods').style.display='none';
+	calcular_cuota();
+}
+
+paso1=function() {
+	$('datos_venta').style.display='none';
+	$('volver_lista').style.display='none';
+	$('listado_prods').style.display='';
+}
+
+</script>
+
+
+
+<center>
+
+
+<div class='sub-content' style='width:750px;'>
+
+<form id='credito' name='credito' onSubmit='return false;'>
+
+<div class='sub-content'>
+<table style='width:100%;font-size:12px;'><tr><td>
+<img src='iconos/script.png'></td><td>
+<b>Realizar Venta/Cr&eacute;dito</b>
+</td>
+
+<td style='text-align:right;width:230px;'>
+Nro. de Bolet&iacute;n:
+</td>
+
+<td>
+<input type='text' id='nbolnum' name='nbolnum' 
+style='text-align:center;' value='' size=10 />
+</td>
+
+<td style='text-align:right;'>
+Fecha:
+</td>
+
+<td>
+<input type='text' id='nbolfec' name='nbolfec' style='text-align:center;' 
+value='<?php echo date('d/m/Y'); ?>' onKeyUp='validacion_fecha(this);' size=10 />
+</td>
+
+</tr></table>
+</div>
+
+<table style='width:100%;'>
+<tr id='listado_prods'><td colspan=2>
+
+<div class='sub-content'>
+<table style='width:100%;' cellpadding=0><tr><td>
+<img src='iconos/package.png' />
+</td><td style='width:50%;'>
+<b>Detalle de Productos</b>
+</td>
+<td>Agregar:</td>
+<td><select id='t_agrega' name='t_agrega'
+onClick="
+
+	if( (this.value*1) == 0 ) {
+		$('codigo').style.display='';
+		$('combo').style.display='none';
+		$('codigo').select(); $('codigo').focus();
+	} else {
+		$('codigo').style.display='none';
+		$('combo').style.display='';	
+		$('combo').select(); $('combo').focus();
+	}
+
+">
+<option value='0' SELECTED>Productos</option>
+<option value='1'>Combos</option>
+</select></td>
+<td>
+<input type='text' id='codigo' name='codigo'>
+<input type='text' id='combo' name='combo' style='display:none;'>
+</td></tr></table>
+</div>
+<div class='sub-content2' style='height:310px;overflow:auto;' id='lista_productos'>
+
+</div>
+
+<div>
+<table style='width:100%;'>
+<tr><td style='width:300px;text-align:right;'>Total de Productos:</td>
+<td id='total_prods' 
+style='width:280px;text-align:center;font-size:18px;font-weight:bold;color:blue;'>$0.-</td>
+<td><input type='button' id='realizar' name='realizar' 
+value='Realizar Venta/Cr&eacute;dito... >>' onClick='paso2();'></td></tr>
+</table>
+</div>
+
+</td></tr>
+
+<tr style='display:none;' id='datos_venta'><td valign='top'>
+
+<div class='sub-content'>
+<img src='iconos/user.png' />
+<b>Datos del Cliente</b>
+</div>
+
+<div class='sub-content'>
+
+<table style='width:100%;' cellpadding=1>
+<tr>
+<td style='text-align:right;width:30%;'>R.U.T.:</td>
+<td style='font-weight:bold;'>
+<input type='text' id='clirut' name='clirut' 
+onKeyUp='validacion_rut(this); if(event.which==13 && validacion_rut(this)) validar_rut();' 
+onBlur='if(validacion_rut(this)) validar_rut();'
+size=10>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;width:30%;'>Paterno:</td>
+<td style='font-weight:bold;'>
+<input type='text' id='clipat' name='clipat' size=15>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Materno:</td>
+<td style='font-weight:bold;'>
+<input type='text' id='climat' name='climat' size=15>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Nombres:</td>
+<td style='font-weight:bold;'>
+<input type='text' id='clinom' name='clinom' size=15>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Fecha de Nac.:</td>
+<td style='font-weight:bold;'>
+<input type='text' id='clifnac' name='clifnac' 
+style='text-align:center;' size=10 onBlur='validacion_fecha(this);'>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Direcci&oacute;n:</td>
+<td><input type='text' id='clidir' name='clidir' size=20></td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Comuna:</td>
+<td>
+<input type='hidden' id='comcod' name='comcod'>
+<input type='text' id='comdes' name='comdes' size=20>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Tel&eacute;fono Fijo:</td>
+<td><input type='text' id='clifon' name='clifon' size=15>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Tel&eacute;fono M&oacute;vil:</td>
+<td><input type='text' id='clicel' name='clicel' size=15>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>e-mail:</td>
+<td><input type='text' id='climail' name='climail' size=15>
+</td>
+</tr>
+
+<tr>
+<td style='text-align:right;'>Observaciones:</td>
+<td><input type='text' id='cliobs' name='cliobs' size=15>
+</td>
+</tr>
+
+</table>
+
+</div>
+
+
+</td><td valign='top'>
+
+<div class='sub-content'>
+<img src='iconos/database.png'>
+<b>Datos de la Venta/Cr&eacute;dito</b>
+</div>
+
+<div class='sub-content'>
+
+<table style='width:100%;' cellpadding=1>
+<tr>
+<td style='text-align:right;'>Valor Producto(s):</td>
+<td colspan=3 id='valor_productos'
+style='font-size:18px;font-weight:bold;color:blue;'>$ 0.-</td>
+</tr>
+<input type='hidden' id='proval' name='proval' value=0>
+
+<tr>
+<td style='text-align:right;'>Descuento(s):</td>
+<td colspan=2 id='descuento'
+style='font-size:18px;font-weight:bold;color:red;'>$ 0.-</td>
+<td>
+<input type='button' style='font-size:11px;' 
+onClick='definir_descuentos();' value='Definir...'>
+</td>
+</tr>
+<input type='hidden' id='total_descuento' name='total_descuento' value=''>
+<input type='hidden' id='bolnums' name='bolnums' value=''>
+
+
+<tr>
+<td style='text-align:right;'>Pie $:</td>
+<td colspan=2><input type='text' id='pie' name='pie' 
+onKeyUp='calcular_cuota();' size=10></td>
+<td>
+<input type='hidden' id='pago_efectivo' name='pago_efectivo' value=''>
+<input type='hidden' id='pago_cheques' name='pago_cheques' value=''>
+<input type='hidden' id='pago_otras' name='pago_otras' value=''>
+<input type='button' style='font-size:11px;' 
+value='Forma de Pago...' onClick='forma_pago();'></td>
+</tr>
+
+<tr id='cuotas1'>
+<td style='text-align:right;'>Nro. de Cuotas:</td>
+<td><input type='text' id='cuonro' name='cuonro' 
+onKeyUp='calcular_cuota();' size=5 value="3">
+</td>
+<td>Inter&eacute;s:</td>
+<td id='total_interes' style='text-align:center;font-weight:bold;'>0%</td>
+</tr>
+
+<tr id='cuotas0'>
+<td style='text-align:right;'>Aplicar Inter&eacute;s:</td>
+<td><input type='checkbox' id='aplicaint' name='aplicaint' 
+onChange='calcular_cuota();' size=5 CHECKED>
+</td>
+</tr>
+
+<tr id='cuotas4'>
+<td style='text-align:right;'>D&iacute;a de Pago:</td>
+<td>
+<input type='text' id='diapago' name='diapago' 
+size=5 value="<?php echo date('d'); ?>">
+</td></tr>
+
+<tr>
+<td style='text-align:right;'>Saldo Cr&eacute;dito:</td>
+<td id='saldo_credito' colspan=3 
+style='font-size:18px;font-weight:bold;color:green;'>$ 0.-</td>
+</tr>
+
+<tr id='cuotas2'>
+<td style='text-align:right;'>Valor Cr&eacute;dito:</td>
+<td id='valor_credito' colspan=3 
+style='font-size:18px;font-weight:bold;color:green;'>$ 0.-</td>
+</tr>
+
+<tr id='cuotas3'>
+<td style='text-align:right;'>Valor Cuota:</td>
+<td id='valor_cuota' colspan=3
+style='font-size:18px;font-weight:bold;color:red;'>$ 0.-</td>
+</tr>
+
+<tr id='cuotas5'>
+<td style='text-align:right;'>Asociar Bloqueos:</td>
+<td id='valor_cuota' colspan=3
+style=''>
+<input type='hidden' id='ids_bloqueos' name='ids_bloqueos' value='' />
+<input type='button' value='Definir Bloqueos...' 
+id='bloqueos' name='bloqueos' onClick='definir_bloqueos();'>
+</td></td>
+</tr>
+
+<tr id='selprop'>
+<td style='text-align:right;'>Propietario:</td>
+<td id='valor_cuota' colspan=3
+style=''>
+<input type='hidden' id='ps_refcliente' name='ps_refcliente' value='' />
+<input type='button' value='Definir Propietario...' 
+id='defprop' name='defprop' onClick='definir_propietario();'>
+</td></td>
+</tr>
+
+<tr id='afavor' style='display:none;'>
+<td style='text-align:right;'>Saldo a Favor:</td>
+<td id='saldo_favor' colspan=3
+style='font-size:18px;font-weight:bold;color:green;'>$ 0.-</td>
+</tr>
+
+
+</table>
+
+</div>
+
+</td></tr>
+
+<tr id='volver_lista' style='display:none;'><td colspan=2>
+<div>
+<table style='width:100%;'>
+<td><input type='button' id='seleccionar' name='seleccionar' 
+value='<< Lista de Productos...' onClick='paso1();'></td>
+<td style='text-align:right;'>
+<input type='button' id='ingresa' name='ingresa'
+onClick='ingresar_credito();'
+value='Ingresar Cr&eacute;dito Nuevo... >>'>
+</td>
+</tr>
+</table>
+</div>
+</td></tr>
+
+
+</table>
+
+</form>
+
+</div>
+</center>
+
+<script> 
+
+		productos=new Array();
+
+		seleccionar_comuna=function(d) {
+
+			$('comdes').value=d[1].unescapeHTML();
+			$('comcod').value=d[0]*1;				
+
+		}
+			
+		seleccionar_producto=function(d) {
+		
+			num=productos.length;
+			productos[num]=new Object();
+			productos[num].prod_id=d[0];
+			productos[num].prod_item=d[1];
+			productos[num].prod_nombre=d[2];
+			productos[num].prod_valor=d[3]*1;
+			productos[num].prod_moneda=d[4];
+			productos[num].prod_sep_clase=d[5];
+			productos[num].prod_formula=d[6];
+			productos[num].prod_asignar=d[7];
+			productos[num].prod_sel='';
+			productos[num].prod_v=0;
+			
+			if(d[4]=='UTM')			
+				productos[num].valor=Math.round(d[3]*1*utm);
+			else
+				productos[num].valor=Math.round(d[3]*1);			
+			
+			redibujar_tabla();
+			
+			$('codigo').value='';
+			$('codigo').select();
+			$('codigo').focus();
+			
+		}
+
+		seleccionar_combo=function(d) {
+		
+			var items=d[1].split('|');
+			$('combo').value='';
+			
+			for(var i=0;i<items.length;i++) {
+				var it=items[i].split('X');
+				if(it.length==1) {
+					agregar_producto(it[0]);				
+				} else {
+					for(var j=0;j<it[1]*1;j++) {
+						agregar_producto(it[0]);
+					}
+				}			
+			}
+		
+			redibujar_tabla();
+			
+			$('combo').select();
+			$('combo').focus();
+			
+		}
+		
+		agregar_producto=function(cod) {
+			
+			for(var i=0;i<lista_prods.length;i++) {
+				if(lista_prods[i][1]==cod) {
+					d=lista_prods[i]; break;
+				}
+			}			
+			
+			num=productos.length;
+			productos[num]=new Object();
+			productos[num].prod_id=d[0];
+			productos[num].prod_item=d[1];
+			productos[num].prod_nombre=d[2];
+			productos[num].prod_valor=d[3]*1;
+			productos[num].prod_moneda=d[4];
+			productos[num].prod_sep_clase=d[5];
+			productos[num].prod_formula=d[6];
+			productos[num].prod_asignar=d[7];
+			productos[num].prod_sel='';
+			productos[num].prod_v=0;
+			
+						
+			if(d[4]=='UTM')			
+				productos[num].valor=Math.round(d[3]*1*utm);
+			else
+				productos[num].valor=Math.round(d[3]*1);			
+
+		}
+		
+		calcular_totales=function() {
+
+			var suma=0;
+			
+			for(var i=0;i<productos.length;i++) {
+				if((productos[i].prod_formula==null || 
+						productos[i].prod_formula=='') && 
+						productos[i].valor>0 )
+					suma+=productos[i].valor;
+				else {
+					productos[i].prod_v=$('valp_'+i).value*1;
+					suma+=Math.round(productos[i].prod_v);
+				}
+								
+			}
+
+			$('valor_productos').innerHTML='$ '+number_format(suma,0,',','.')+'.-';
+			$('proval').value=suma;
+			$('total_prods').innerHTML='$ '+number_format(suma,0,',','.')+'.-';
+		
+		}
+
+		
+		redibujar_tabla=function() {
+		
+			var html='<table style="width:100%;"><tr class="tabla_header">';
+			html+='<td>Item</td>';
+			html+='<td style="width:40%;">Descripci&oacute;n</td>';
+			html+='<td colspan=2>Valor</td>';
+			html+='<td style="width:15%;">Subtotal</td>';
+			html+='<td>Acci&oacute;n</td>';
+			html+='<td>Eliminar</td>';
+			html+='</tr>';
+			
+			var suma=0;
+			
+			var ver_prop=false;			
+			
+			for(var i=0;i<productos.length;i++) {
+				p=productos[i];
+				clase=(i%2==0)?'tabla_fila':'tabla_fila2';
+				html+='<tr class="'+clase+'" style="height:30px;"';
+				html+='onMouseOver="this.className=\'mouse_over\';" ';
+				html+='onMouseOut="this.className=\''+clase+'\';"> ';
+				html+='<td style="text-align:center;font-weight:bold;">'+p.prod_item+'</td>';
+				html+='<td>'+p.prod_nombre+'</td>';
+				html+='<td style="text-align:right;">'+number_format(p.prod_valor,2,',','.')+'</td>';
+				html+='<td>'+p.prod_moneda+'</td>';
+				
+				if(p.prod_valor*1>0 && (p.prod_formula==null || p.prod_formula==''))				
+					html+='<td style="text-align:right;font-weight:bold;">$&nbsp;'+number_format(p.valor,0,',','.')+'.-</td>';
+				else
+					html+='<td style="text-align:right;font-weight:bold;"><input type="text" id="valp_'+i+'" name="valp_'+i+'" style="text-align:right;width:100%;" value="'+p.prod_v+'" onKeyUp="calcular_totales();" onFocus="this.select();"></td>';				
+
+				html+='<td style="text-align:center;">';
+
+				if(p.prod_sep_clase!=null && p.prod_sep_clase!='') {
+			
+					if(p.prod_sep_clase.charAt(0)!='*') {
+
+						var func='asociar_prod';
+
+						if(p.prod_sel!='')					
+							var icono='link';
+						else
+							var icono='link_delete';
+							
+						ver_prop=true;
+							
+					} else {
+					
+						var func='datos_prod';
+
+						if(p.prod_sel!='')					
+							var icono='script_add';
+						else
+							var icono='script_delete';
+							
+					}
+					
+
+					html+='<img src="iconos/'+icono+'.png" ';
+					html+=' style="cursor:pointer;" onClick="'+func+'('+i+');"/>';
+
+				} /*else {
+
+				}*/
+
+				if(p.prod_formula==null || p.prod_formula=='') {
+					html+='';
+				} else {
+					html+='<img src="iconos/calculator.png" ';
+					html+=' style="cursor:pointer;" onClick="calc_prod('+i+');"/>';						
+				}
+
+				if(p.prod_asignar=='t') {
+					html+='<img src="iconos/database_link.png" ';
+					html+=' style="cursor:pointer;" onClick="asignar_prod('+i+');"/>';							
+				}
+				
+				html+='</td>';
+
+				html+='<td style="text-align:center;"><img src="iconos/delete.png" ';
+				html+=' style="cursor:pointer;" onClick="quitar_prod('+i+');"/></td>';
+				html+='</tr>';				
+
+				if(p.prod_formula==null || p.prod_formula=='')
+					suma+=p.valor;
+				else
+					suma+=Math.ceil(p.prod_v);
+
+			}			
+			
+			html+='</table>';		
+		
+			$('lista_productos').innerHTML=html;
+			
+			if(ver_prop) {
+				$('selprop').style.display='';				
+			} else {
+				$('selprop').style.display='none';				
+				$('ps_refcliente').value='';	
+			}
+			
+			calcular_totales();
+			calcular_cuota();		
+		
+		}
+		
+		quitar_prod=function(n) {
+			productos=productos.without(productos[n]);
+			redibujar_tabla();
+		}
+
+		asociar_prod=function(n) {
+
+			var params='clase='+encodeURIComponent(productos[n].prod_sep_clase);
+			
+			if(productos[n].prod_sel!='')
+				params+='&prod_sel='+encodeURIComponent(productos[n].prod_sel)			
+						
+		    l=(screen.availWidth/2)-375;
+		    t=(screen.availHeight/2)-230;
+		        
+		    win = window.open('ingresos/asociar_sepultura.php?'+params, 
+		                    '_ver_sepulturas',
+		                    'scrollbars=yes, toolbar=no, left='+l+', top='+t+', '+
+		                    'resizable=no, width=750, height=460');
+		    
+		    win.indice=n;                
+		    win.focus();
+
+		} 
+
+		asignar_prod=function(n) {
+
+			var params='clase='+encodeURIComponent(productos[n].prod_sep_clase);
+			
+			if(productos[n].prod_sel!='')
+				params+='&prod_sel='+encodeURIComponent(productos[n].prod_sel)			
+						
+		    l=(screen.availWidth/2)-375;
+		    t=(screen.availHeight/2)-230;
+		        
+		    win = window.open('ingresos/asignar_sepultura.php?'+params, 
+		                    '_ver_sepulturas',
+		                    'scrollbars=yes, toolbar=no, left='+l+', top='+t+', '+
+		                    'resizable=no, width=750, height=460');
+		    
+		    win.indice=n;                
+		    win.focus();
+
+		} 
+
+		datos_prod=function(n) {
+
+			var params='';
+			
+			if(productos[n].prod_sel!='')
+				params+='prod_sel='+encodeURIComponent(productos[n].prod_sel)			
+						
+		    l=(screen.availWidth/2)-375;
+		    t=(screen.availHeight/2)-230;
+		        
+		    win = window.open('ingresos/datos_sepultura.php?'+params, 
+		                    '_ver_sepulturas',
+		                    'scrollbars=yes, toolbar=no, left='+l+', top='+t+', '+
+		                    'resizable=no, width=750, height=460');
+		    
+		    win.indice=n;                
+		    win.focus();
+
+		} 
+
+		calc_prod=function(n) {
+
+			var params='formula='+encodeURIComponent(productos[n].prod_formula);
+						
+		    l=(screen.availWidth/2)-190;
+		    t=(screen.availHeight/2)-150;
+		        
+		    win = window.open('creditos/ingreso/calcular_formula.php?'+params, 
+		                    '_ver_sepulturas',
+		                    'scrollbars=no, toolbar=no, left='+l+', top='+t+', '+
+		                    'resizable=no, width=380, height=300');
+		    
+		    win.v=productos[n].valor;
+		    win.indice=n;                
+		    win.focus();
+
+		} 
+
+
+		autocompletar_productos = new AutoComplete(
+      'codigo', 
+      'autocompletar_sql.php',
+      function() {
+        if($('codigo').value.length<2) return false;
+      
+        return {
+          method: 'get',
+          parameters: 'tipo=productos&'+$('codigo').serialize()
+        }
+      }, 'autocomplete', 350, 200, 150, 1, 2, seleccionar_producto);
+
+
+		autocompletar_combos = new AutoComplete(
+      'combo', 
+      'autocompletar_sql.php',
+      function() {
+        if($('combo').value.length<2) return false;
+      
+        return {
+          method: 'get',
+          parameters: 'tipo=combos&'+$('combo').serialize()
+        }
+      }, 'autocomplete', 350, 200, 150, 2, 3, seleccionar_combo);
+
+
+		autocompletar_comunas = new AutoComplete(
+      'comdes', 
+      'autocompletar_sql.php',
+      function() {
+        if($('comdes').value.length<2) return false;
+      
+        return {
+          method: 'get',
+          parameters: 'tipo=comunas&'+$('comdes').serialize()
+        }
+      }, 'autocomplete', 350, 200, 150, 1, 1, seleccionar_comuna);
+
+
+	validacion_rut($('clirut'));
+	validacion_fecha($('clifnac'));
+
+</script>

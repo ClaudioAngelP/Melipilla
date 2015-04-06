@@ -1,0 +1,44 @@
+<?php
+  require_once('../../conectar_db.php');
+  function img($t) {    if($t=='t') return '<center><img src="iconos/tick.png"                                   width=12 height=12></center>';    else return '<center><img src="iconos/cross.png"                                   width=12 height=12></center>';  }
+
+  $ca_id = $_POST['casos_auge']*1;
+  if($ca_id!=-1) {
+
+	  list($ca)=cargar_registros_obj("	   SELECT * FROM casos_auge WHERE ca_id=$ca_id	 ");	
+	  if($ca) {
+	  	$pac_id=$ca['ca_pac_id'];
+	  } else { 
+	  	$pac_id=$_POST['pac_id'];
+	  	$ca['id_sigges']=0;
+	  }
+  
+  	$caso_w='id_caso='.$ca['id_sigges'];
+  
+  } else { 
+ 
+	$pac_id=$_POST['pac_id'];
+	$caso_w='true'; 
+  
+  }
+  $lista = cargar_registros_obj(" SELECT 
+    COALESCE(pac_rut, pac_pasaporte, pac_id::text) AS pac_codigo,    pac_appat,pac_apmat,pac_nombres, presta_desc,    presta_codigo_i, glosa, presta_id, presta_cant, presta_compra,    pac_id, presta_fecha, inst_id, date_trunc('second', presta_fecha) AS presta_fecha,
+    prestacion.id_sigges
+      FROM prestacion  JOIN pacientes USING (pac_id)  LEFT JOIN codigos_prestacion ON codigo = presta_codigo_i  WHERE pac_id=$pac_id AND $caso_w  ORDER BY prestacion.presta_fecha DESC
+  ");
+?>
+<table style='width:100%;' class='lista_small'><tr class='tabla_header'><td style='width:10%;'>Fecha</td><td>C&oacute;d. Prestaci&oacute;n</td><td style='width:50%;'>Descripci&oacute;n Prestaci&oacute;n</td><td>Cantidad</td><td>Extrasistema</td><td>Local</td><td>SIGGES</td><td>Ver</td></tr>
+<?php 
+  if($lista)  for($i=0;$i<count($lista);$i++) {
+    ($i%2==0) ? $clase='tabla_fila' : $clase='tabla_fila2';
+    print("    <tr class='$clase'    onMouseOver='this.className=\"mouse_over\";'    onMouseOut='this.className=\"".$clase."\";'>    <td style='text-align:center;'>".$lista[$i]['presta_fecha']."</td>    <td style='text-align:center;font-size:18px;'>".$lista[$i]['presta_codigo_i']."</td>    <td>".htmlentities($lista[$i]['presta_desc'])."</td>    <td style='text-align:center;'>".($lista[$i]['presta_cant'])."</td>	 <td>".img($lista[$i]['presta_compra'])."</td>
+    ");
+	 
+    print("<td>".img(($lista[$i]['inst_id']==$sgh_inst_id)?'t':'f')."</td>");
+    print("<td>".img(($lista[$i]['id_sigges']*1>0)?'t':'f')."</td>");	 
+	 print("
+    <td><center><img src='iconos/magnifier.png' style='cursor:pointer;'
+    onClick='abrir_presta(".$lista[$i]['presta_id'].");'></center></td>    </tr>    ");
+  }
+?>
+</table>

@@ -1,0 +1,99 @@
+<?php
+  require_once('../../conectar_db.php');
+  function img($t) {
+    if($t=='t') return '<center><img src="iconos/tick.png"                                   width=8 height=8></center>';    else return '<center><img src="iconos/cross.png"                                   width=8 height=8></center>';
+  }
+  $fecha = pg_escape_string($_POST['fecha1']);  
+  $esp_id = $_POST['esp_id']*1;
+  
+  if( $esp_id!=-1 ) {
+  	$w_esp='nom_esp_id='.$esp_id;	
+  } elseif( $esp_id==-1 AND _cax(300) AND !_cax(202)) {
+  	$w_esp='nom_esp_id IN ('._cav(300).')';
+  } else {
+  	$w_esp='true';
+  }
+  
+  $q="
+  SELECT     nom_id, nom_folio, esp_desc, doc_rut, doc_paterno, doc_materno, doc_nombres,
+    nom_digitar  FROM nomina
+  LEFT JOIN especialidades ON nom_esp_id=esp_id
+  LEFT JOIN doctores ON nom_doc_id=doc_id  WHERE nom_fecha::date='$fecha' AND $w_esp  ORDER BY nom_folio  ";
+  
+  $lista = cargar_registros_obj($q);
+  if($esp_id==-1)
+  $esp=desplegar_opciones_sql("
+		SELECT DISTINCT esp_id, esp_desc FROM nomina
+		JOIN especialidades ON nom_esp_id=esp_id
+  		WHERE nom_fecha::date='$fecha'
+  		ORDER BY esp_desc  ");
+
+?>
+<table style='width:100%;' class='lista_small'><tr class='tabla_header'><td>Nro. Folio</td><td>Especialidad</td><td>R.U.T.</td><td>Nombre</td><td>Editar</td></tr>
+
+<?php 
+  if($lista)  for($i=0;$i<count($lista);$i++) {
+    ($i%2==0) ? $clase='tabla_fila' : $clase='tabla_fila2';
+	 if($lista[$i]['nom_digitar']=='f') {
+	 	$color='color:#FF0000;';	
+	 } else {
+	 	$color='';
+	 }
+
+    print("    <tr class='$clase' style='$color'    onMouseOver='this.className=\"mouse_over\";'    onMouseOut='this.className=\"".$clase."\";'>    <td style='text-align:center;'>".$lista[$i]['nom_folio']."</td>    <td>".(($lista[$i]['esp_desc']))."</td>");
+
+	 if($lista[$i]['doc_rut']!='(n/a)' AND $lista[$i]['doc_rut']!='0-0') {
+	 print("        	<td style='text-align:right;'>".((formato_rut($lista[$i]['doc_rut'])))."</td>
+    ");
+    } else {
+	 print("        	<td style='text-align:right;'>&nbsp;</td>
+    ");    	
+    }
+    
+    print("   	 <td>".($lista[$i]['doc_nombres'].' '.$lista[$i]['doc_paterno'].' '.$lista[$i]['doc_materno'])."</td>    
+	 ");    
+    
+    print("<td><center>	 <img src='iconos/pencil.png' style='cursor:pointer;'	 onClick='abrir_nomina(\"".$lista[$i]['nom_folio']."\", 1);'>	 </center></td>");	 
+	 print('</tr>');
+  
+  }
+?>
+</table>
+
+<?php 
+
+	$query='';
+
+	if(_cax(202)) {
+		$query="
+		SELECT DISTINCT especialidades.esp_id, especialidades.esp_desc FROM nomina
+		JOIN especialidades ON nom_esp_id=esp_id
+		LEFT JOIN procedimiento USING (esp_id)
+  		WHERE nom_fecha::date='$fecha' AND 
+  		procedimiento.esp_id IS NULL
+  		";
+	}
+	
+	if(_cax(202) AND _cax(300)) $query.=' UNION ';	
+	
+	if(_cax(300)) {
+		$query.="SELECT DISTINCT esp_id, esp_desc FROM especialidades
+		WHERE esp_id IN ("._cav(300).")";
+	}
+	
+	$query='SELECT * FROM ('.$query.') AS foo ORDER BY esp_desc';
+	
+	$esp=desplegar_opciones_sql($query, $esp_id);
+
+?>
+
+<script>
+
+	var html='<select id="esp_id" name="esp_id">';
+	html+='<option value="-1">(Todas las Especialidades...)</option>';
+	html+=<?php echo json_encode($esp); ?>;
+	html+='</select>';
+
+	$('select_especialidades').innerHTML=html;
+
+</script>

@@ -1,0 +1,58 @@
+<?php 
+
+    require_once('../../conectar_db.php');
+
+    $fecha=pg_escape_string($_POST['fecha']);
+    $pat=pg_escape_string($_POST['pat']);
+    $estado=$_POST['estado']*1;
+    
+    $lista=cargar_registros_obj("
+        SELECT 
+        *, 
+        today()-mon_fecha_limite AS dias 
+        FROM monitoreo_ges 
+        JOIN patologias_sigges_traductor ON mon_pst_id=pst_id
+        WHERE mon_fecha='$fecha' AND mon_condicion=$estado AND pst_patologia_interna='$pat'
+    ");
+
+?>
+
+<table style='width:100%'>
+
+<tr class='tabla_header'>
+<td rowspan=2>RUT</td>
+<td rowspan=2>Nombre Completo</td>
+<td rowspan=2>Fecha Inicio</td>
+<td rowspan=2>Fecha L&iacute;mite</td>
+<td rowspan=2>Dias</td>
+<td colspan=3>Monitoreo</td>
+</tr>
+<tr class='tabla_header'>
+<td>GES</td>
+<td>SIGGES</td>
+<td>Terminado</td>
+</tr>
+
+<?php 
+    if($lista)
+    for($i=0;$i<count($lista);$i++) {
+    
+        $clase=($i%2==0)?'tabla_fila':'tabla_fila2';
+    
+        print("
+        <tr class='$clase'>
+        <td style='text-align:right;font-weight:bold;'>".htmlentities($lista[$i]['mon_rut'])."</td>
+        <td>".htmlentities($lista[$i]['mon_nombre'])."</td>
+        <td style='text-align:center;'>".htmlentities($lista[$i]['mon_fecha_inicio'])."</td>
+        <td style='text-align:center;'>".htmlentities($lista[$i]['mon_fecha_limite'])."</td>
+        <td style='text-align:center;'>".$lista[$i]['dias']."</td>
+        <td style='text-align:center;'><img src='iconos/page_edit.png'></td>
+        <td style='text-align:center;'><img src='iconos/layout_edit.png'></td>
+        <td style='text-align:center;'><img src='iconos/cross.png'></td>
+        </tr>
+        ");
+    
+    }
+?>
+
+</table>

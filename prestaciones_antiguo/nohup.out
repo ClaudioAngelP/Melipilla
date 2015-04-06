@@ -1,0 +1,43 @@
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='23...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='24...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='24...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 14
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='23...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='24...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='24...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='24...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54
+PHP Notice:  Undefined offset: 2 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Notice:  Undefined offset: 1 in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 51
+PHP Warning:  pg_query(): Query failed: ERROR:  syntax error at or near ","
+LINE 1: UPDATE pacientes SET sex_id=, pac_tramo='' WHERE pac_rut='24...
+                                    ^ in /var/www/sgh/conectores/fonasa/fonasa_certificador_previsional.php on line 54

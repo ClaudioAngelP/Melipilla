@@ -1,0 +1,101 @@
+<?php 
+
+	require_once('../conectar_db.php');
+
+	if(!isset($_POST['ps_id'])) {
+
+		$clase=pg_escape_string(utf8_decode($_POST['clase']));
+		$codigo=pg_escape_string(utf8_decode($_POST['codigo']));
+		$numero=($_POST['numero']*1);
+		$letra=pg_escape_string(utf8_decode($_POST['letra']));
+	
+	} else {
+		
+		$ps_id=($_POST['ps_id']*1);
+		
+		$ps=cargar_registro("SELECT * FROM propiedad_sepultura WHERE ps_id=$ps_id");		
+
+		$clase=pg_escape_string($ps['ps_clase']);
+		$codigo=pg_escape_string($ps['ps_codigo']);
+		$numero=pg_escape_string($ps['ps_numero']);
+		$letra=pg_escape_string($ps['ps_letra']);
+		
+	}
+
+	$estado=$_POST['estado']*1;
+	
+	$cl=cargar_registro("SELECT * FROM tipo_sepultura 
+					WHERE tsep_clase='".pg_escape_string($clase)."'");
+
+	$ubica=explode(',',$cl['tsep_estructura']);
+	$cant_e=$cl['tsep_cant_e']*1;
+	$cant_r=$cl['tsep_cant_r']*1;
+			
+	$us=cargar_registros_obj("
+		SELECT us_ubicacion, 
+		COUNT(CASE WHEN us_estado=0 THEN true ELSE null END) AS enteros, 
+		COUNT(CASE WHEN NOT us_estado=0 THEN true ELSE null END) AS reducidos
+		FROM uso_sepultura
+		WHERE sep_clase='".$clase."' AND 
+		sep_codigo='".$codigo."' AND 
+		sep_numero=".$numero." AND 
+		sep_letra='".$letra."'
+		GROUP BY us_ubicacion
+	");
+
+	for($i=0;$i<sizeof($ubica);$i++) {
+	
+		$ub[$i][0]=trim($ubica[$i]);
+		$fnd=false;	
+	
+		for($j=0;$j<sizeof($us);$j++) {
+			if(trim($us[$j]['us_ubicacion'])==$ub[$i][0]) {
+				$ub[$i][1]=$us[$j]['enteros']*1;
+				$ub[$i][2]=$us[$j]['reducidos']*1;
+				$fnd=true;
+				break;					
+			}	
+		}
+		
+		if(!$fnd) {
+			$ub[$i][1]=0; $ub[$i][2]=0;	
+		}
+
+	}
+
+	echo '<select id="sel_ubicaciones" name="sel_ubicaciones">';
+
+	$opt=false;
+
+	for($i=0;$i<sizeof($ub);$i++) {
+		
+		$fail=false;
+		
+		if(	($ub[$i][1]*1>=$cant_e AND $estado==0) OR
+				($ub[$i][2]*1>=$cant_r AND $estado!=0)	) 
+			$fail=true;
+		
+		if(!$fail) {
+
+			if($cant_e>0)
+				$ent='Ent:'.$ub[$i][1].'/'.$cant_e;
+
+			if($cant_r>0)
+				$red='Red:'.$ub[$i][2].'/'.$cant_r;
+
+			if($cant_e>0 AND $cant_r>0)
+				$esp='&nbsp;';
+			else 
+				$esp='';
+							
+			echo '<option value="'.htmlentities($ub[$i][0]).'"><b>'.htmlentities($ub[$i][0]).'</b> ['.$ent.''.$esp.''.$red.']</option>';
+			$opt=true;
+		}	
+	}
+	
+	if(!$opt)
+		echo '<option value="-1">(No se puede sepultar en el estado seleccionado...)</option>';
+
+	echo '</select>';
+
+?>

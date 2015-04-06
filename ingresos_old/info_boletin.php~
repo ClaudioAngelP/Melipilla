@@ -1,0 +1,25 @@
+<?php 
+	require_once("../conectar_db.php");
+	
+	$bolnum=$_GET['bolnum']*1;
+	
+	$b=cargar_registro("
+		SELECT *, bolfec::date AS bolfec FROM boletines
+		LEFT JOIN creditos USING (crecod)
+		LEFT JOIN clientes ON (boletines.clirut=clientes.clirut)
+		WHERE bolnum=$bolnum	
+	");
+	
+	if($b['clidv']=='') {
+	
+	$b=cargar_registro("
+		SELECT *, bolfec::date AS bolfec FROM boletines
+		LEFT JOIN creditos USING (crecod)
+		LEFT JOIN clientes ON (creditos.clirut=clientes.clirut)
+		WHERE bolnum=$bolnum	
+	");
+	
+	}
+	
+	echo json_encode($b);
+?>

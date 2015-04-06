@@ -1,0 +1,145 @@
+<?php require_once('../../config.php');
+		require_once('../sigh.php');
+	
+			set_time_limit(0);
+			error_reporting(E_ALL);
+# Resources
+# http://wiki.oracle.com/page/PHP+Oracle+FAQ
+# http://download-west.oracle.com/docs/cd/B12037_01/network.101/b10775/naming.htm#i498306
+# http://ubuntuforums.org/showthread.php?p=7581997
+        $username2 = 'INTERFACE_TERAPRIM'; 
+        
+        $password2 = 'sidra#teraprim'; //produccion
+        $host2 = '10.8.165.15'; //produccion
+        $port2 = '1521'; //produccion
+        $service_name2 = 'EMR'; //produccion
+        /*
+        $password2 = 'INTERFACE_TERAPRIMSUP'; //pruebas
+        $host2 = '10.8.165.9'; //pruebas
+        $port2 = '1523'; //pruebas
+        $service_name2 = 'EMRSUP'; //pruebas
+        */
+        $tns_service_name2 = 'SSMN_EMR'; //produccion
+        
+        /*$run=$_GET['paciente_rut'];
+        if(strlen($run)==9)
+			$run_chk=str_pad($run, 10, "0", STR_PAD_LEFT);  // agrega "0" a la izquierda;
+		*/
+
+while(1){
+		
+        $conn2 = oci_connect($username2, $password2, "//$host2:$port2/$service_name2");
+if (!$conn2) {
+    $e2 = oci_error();
+    trigger_error(htmlentities($e2['message'], ENT_QUOTES), E_USER_ERROR);
+}
+	// Prepare the statement
+
+/*$stid = oci_parse($conn2, "SELECT ID_PATIENT,PATIENT_RUN,PATIENT_RUT,PATIENT_NAMES,PATIENT_FATHER_SURNAME,
+							PATIENT_MOTHER_SURNAME,GENDER,TO_CHAR(DT_BIRTH,'DD/MM/YYYY')AS DT_BIRTH,ID_EPISODE,ID_INSTITUCION,
+							receta_id,COD_MEDICAMENTO,DESCRIPTIVO,DOSIS,UNIT_MEASURE,FREQUENCIA,DURATION,INSTRUCTIONS
+							 FROM recepta");*/
+
+
+		
+$stid = oci_parse($conn2, "SELECT * FROM  where rownum < 20");
+
+if (!$stid) {
+    $e2 = oci_error($conn2);
+    trigger_error(htmlentities($e2['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+// Perform the logic of the query
+$r = oci_execute($stid);
+if (!$r) {
+    $e2 = oci_error($stid);
+    trigger_error(htmlentities($e2['message'], ENT_QUOTES), E_USER_ERROR);
+}
+
+// Fetch the results of the query
+print "<table border='1'>\n";
+while ($row = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)) {
+  print "<tr>\n";
+    foreach ($row as $item) {
+        print "    <td>" . ($item !== null ? htmlentities($item, ENT_QUOTES) : "&nbsp;") . "</td>";
+    }
+    print "</tr>\n";
+    
+	/*
+	$ID_PATIENT_NEW=$row['ID_PATIENT_NEW'];
+	$ID_PATIENT=$row['ID_PATIENT'];
+	$FLG_STATUS=$row['FLG_STATUS'];
+	$PATIENT_RUN=$row['PATIENT_RUN'];
+	$PATIENT_RUT=$row['PATIENT_RUT'];
+	$PATIENT_NAMES=strtoupper($row['PATIENT_NAMES']);
+	$PATIENT_FATHER_SURNAME=strtoupper($row['PATIENT_FATHER_SURNAME']);
+	$PATIENT_MOTHER_SURNAME=strtoupper($row['PATIENT_MOTHER_SURNAME']);
+	if($row['GENDER']==1){$GENDER=0;}elseif($row['GENDER']==2){$GENDER=1;}elseif($row['GENDER']==3){$GENDER=2;}else{$GENDER=3;}
+	$DT_BIRTH=$row['DT_BIRTH'];
+	$ID_ADDRESS_TYPE=$row['ID_ADDRESS_TYPE']; $DESC_ADDRESS_TYPE=$row['DESC_ADDRESS_TYPE'];
+	$ADDRESS=$row['ADDRESS'].' '.$row['ADDRESS_NUMBER'].' '.$row['ADDRESS_COMPLEMENT'];
+	$ID_COMUNA=$row['ID_COMUNA']; $DESC_COMUNA=$row['DESC_COMUNA'];
+			
+			$ciud_chk=cargar_registro("SELECT ciud_id,ciud_desc FROM comunas WHERE ciud_desc ilike '%".$DESC_COMUNA."%';");
+			
+			if(!$ciud_chk){
+				pg_query("INSERT INTO comunas VALUES ((SELECT MAX(ciud_id)+1 FROM comunas),-1,'".$DESC_COMUNA."');");
+				$ciud_id=cargar_registro("SELECT MAX(ciud_id) AS ciud_id FROM comunas");
+				$ciud_id=$ciud_id['ciud_id'];
+			}else
+				$ciud_id=$ciud_chk['ciud_id'];
+			
+	$POSTAL_CODE=$row['POSTAL_CODE'];
+	$ID_COUNTRY=$row['ID_COUNTRY'];	$DESC_COUNTRY=$row['DESC_COUNTRY'];
+	$ID_STATE=$row['ID_STATE'];	$DESC_STATE=$row['DESC_STATE'];
+	$ID_CITY=$row['ID_CITY']; $DESC_CITY=$row['DESC_CITY'];	
+	$PHONE_NUM=$row['PHONE_NUM'];
+	$ID_SCHOLARSHIP=$row['ID_SCHOLARSHIP']; $DESC_SCHOLARSHIP=$row['DESC_SCHOLARSHIP'];
+	$ID_OCCUPAPTION=$row['ID_OCCUPAPTION']; $DESC_OCCUPATION=$row['DESC_OCCUPATION'];
+	$DOCUMENT_NUMBER=$row['DOCUMENT_NUMBER']; $DOCUMENT_DT_EMITED=$row['DOCUMENT_DT_EMITED']; 
+	$DOCUMENT_TYPE=$row['DOCUMENT_TYPE']; $DOCUMENT_ORG_SHIPPER=$row['DOCUMENT_ORG_SHIPPER'];
+	if($row['MARITAL_STATUS']=='S'){ $MARITAL_STATUS=1; }elseif($row['MARITAL_STATUS']=='M'){ $MARITAL_STATUS=2; }
+	elseif($row['MARITAL_STATUS']=='F'){ $MARITAL_STATUS=3; }elseif($row['MARITAL_STATUS']=='D'){ $MARITAL_STATUS=4; }
+	elseif($row['MARITAL_STATUS']=='W'){ $MARITAL_STATUS=5; }elseif($row['MARITAL_STATUS']=='U'){ $MARITAL_STATUS=6; }
+	elseif($row['MARITAL_STATUS']=='O'){ $MARITAL_STATUS=0; }else{ $MARITAL_STATUS=0; }
+	if($row['ID_HEALTH_PLAN']=='ISAPRE'){$ID_HEALTH_PLAN=5;}elseif($row['ID_HEALTH_PLAN']=='Particular'){$ID_HEALTH_PLAN=6;}
+	elseif($row['ID_HEALTH_PLAN']=='FONASA'){$ID_HEALTH_PLAN=10;}else{$ID_HEALTH_PLAN=8;}
+	$HEALTH_PLAN_NAME=$row['HEALTH_PLAN_NAME']; $NUM_HEALTH_PLAN=$row['NUM_HEALTH_PLAN'];
+	$RECORD_DATE=$row['RECORD_DATE'];
+	
+	$chk=cargar_registro("SELECT * FROM pacientes WHERE pac_rut='".$run."';");
+  
+	if(!$chk){
+	
+		if(pg_query("INSERT INTO pacientes VALUES (DEFAULT,'$run','$PATIENT_NAMES','$PATIENT_FATHER_SURNAME','$PATIENT_MOTHER_SURNAME',
+					'$DT_BIRTH', $GENDER, $ID_HEALTH_PLAN,'',-1,-1,'$ADDRESS',$ciud_id,0,$MARITAL_STATUS,'$PHONE_NUM','','','','',
+					'$ID_PATIENT',0,'','$PHONE_NUM',false,'',null,'');")) print("OK");
+
+	}else{
+		
+	    if(pg_query("UPDATE pacientes SET pac_nombres='$PATIENT_NAMES', pac_appat='$PATIENT_FATHER_SURNAME	', pac_apmat='$PATIENT_MOTHER_SURNAME',
+					pac_fc_nac='$DT_BIRTH', sex_id=$GENDER, prev_id=$ID_HEALTH_PLAN, pac_direccion='$ADDRESS', ciud_id=$ciud_id,
+					estciv_id=$MARITAL_STATUS, pac_fono='$PHONE_NUM', pac_ficha='$ID_PATIENT', pac_celular='$PHONE_NUM'
+					WHERE pac_rut='".$run."'")) print("OK");
+		
+	}*/
+	
+}
+/*if(!$row){
+
+		$chk=cargar_registro("SELECT pac_rut FROM pacientes WHERE pac_rut='".$run."';");
+		if($chk) print("OK");
+	
+}*/
+print "</table>\n";
+
+flush();
+
+oci_free_statement($stid);
+oci_close($conn2);
+
+sleep(20);
+
+}
+
+?>

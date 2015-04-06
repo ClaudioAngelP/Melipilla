@@ -1,0 +1,15 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+	$cama_id=$_POST['cama_id']*1;
+  
+	$q=pg_query ("SELECT * FROM hospitalizacion 
+				  WHERE hosp_numero_cama = $cama_id					
+				 AND hosp_fecha_egr is null");
+				
+	$d=pg_fetch_assoc($q);
+	
+	echo json_encode($d);	
+
+?>

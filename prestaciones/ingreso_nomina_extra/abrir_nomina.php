@@ -1,0 +1,95 @@
+<?php 
+
+	require_once('../../conectar_db.php');
+
+  if(isset($_POST['nom_id'])) {
+  
+  $nom_id = pg_escape_string($_POST['nom_id']*1);
+  
+  $n=cargar_registro("SELECT *, nom_fecha::date FROM nomina
+  							 LEFT JOIN doctores ON nom_doc_id=doc_id
+  							 WHERE nom_id=$nom_id", true);
+  } else {
+
+  $nom_folio = pg_escape_string($_POST['nom_folio']*1);
+  
+  $n=cargar_registro("SELECT *, nom_fecha::date FROM nomina
+  							 LEFT JOIN doctores ON nom_doc_id=doc_id
+  							 WHERE nom_folio='$nom_folio'", true);
+  							 
+  	$nom_id=$n['nom_id'];
+  	
+  }
+  
+  if(!$n) exit();
+  $lista = cargar_registros_obj("
+  SELECT 
+	pacientes.*, nomina_detalle.*, diag_desc  
+  FROM nomina_detalle
+  JOIN pacientes USING (pac_id)
+  LEFT JOIN diagnosticos ON diag_cod=nomd_diag_cod
+  WHERE nom_id=$nom_id  ORDER BY pac_ficha::bigint
+  ");
+?>
+
+<input type='hidden' id='nom_id' name='nom_id' value='<?php echo $nom_id; ?>' />
+
+<table style='width:100%;font-size:11px;' class='lista_small celdas'><tr class='tabla_header'><td>Ficha</td><td>R.U.T.</td><td>Paciente</td><td>Tipo</td><td>Extra</td><td>Acci&oacute;n</td></tr>
+
+<?php
+
+  if($lista)  for($i=0;$i<count($lista);$i++) {
+    ($i%2==0) ? $clase='tabla_fila' : $clase='tabla_fila2';
+    
+    if($lista[$i]['nomd_extra']=='S') {
+    	$disabled='';
+    } else { 
+    	$disabled='DISABLED';
+    }
+    print("    <tr class='$clase'    onMouseOver='this.className=\"mouse_over\";'    onMouseOut='this.className=\"".$clase."\";'>    <td style='text-align:center;font-weight:bold;'>".$lista[$i]['pac_ficha']."</td>    <td style='text-align:right;font-weight:bold;'>".formato_rut($lista[$i]['pac_rut'])."</td>    <td>".htmlentities(strtoupper($lista[$i]['pac_nombres'].' '.$lista[$i]['pac_appat'].' '.$lista[$i]['pac_apmat']))."</td>    
+
+	 <td><center><select onChange='calcular_totales();' $disabled
+	 id='nomd_tipo_".$lista[$i]['nomd_id']."' 
+	 name='nomd_tipo_".$lista[$i]['nomd_id']."'>
+	 <option value='N' ".($lista[$i]['nomd_tipo']!='C'?'SELECTED':'').">N</option>
+	 <option value='C' ".($lista[$i]['nomd_tipo']=='C'?'SELECTED':'').">C</option>
+	 </select></center></td>    
+
+	 <td><center><select onChange='calcular_totales();' DISABLED
+	 id='nomd_extra_".$lista[$i]['nomd_id']."' 
+	 name='nomd_extra_".$lista[$i]['nomd_id']."'>
+	 <option value='S' ".($lista[$i]['nomd_extra']=='S'?'SELECTED':'').">Si</option>
+	 <option value='N' ".($lista[$i]['nomd_extra']!='S'?'SELECTED':'').">No</option>
+	 </select></center></td>    
+		");
+		
+	 if($disabled=='') {
+	 	print("<td><center>
+		<img src='iconos/delete.png'  style='cursor:pointer;' 
+		onClick='eliminar(".($lista[$i]['nomd_id']).")' />	 	
+	 	</center></td>");	 	
+	 } else {
+	 	print("<td><center>
+		<img src='iconos/tick.png' />	 	
+	 	</center></td>");
+	 }
+
+    print("</tr>");
+  
+  }
+  
+?>
+
+</table>
+
+<script>
+
+	$('fecha_nomina').innerHTML='<?php echo $n['nom_fecha']; ?>';
+	$('medico_nomina').innerHTML='<?php echo $n['doc_nombres'].' '.$n['doc_paterno'].' '.$n['doc_materno']; ?>';
+	$('esp_nomina').innerHTML='<?php echo $n['esp_desc']; ?>';
+	
+	dnomina=<?php echo json_encode($lista); ?>;
+	
+	calcular_totales();
+
+</script>
